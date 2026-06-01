@@ -1,0 +1,28 @@
+name: site-checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  site-checks:
+    name: site-checks
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Check public boundary
+        run: scripts/check-public-boundary.sh
+
+      - name: Smoke test static site
+        run: scripts/check-static-site.sh
