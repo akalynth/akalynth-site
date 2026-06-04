@@ -963,6 +963,19 @@ select:focus-visible {
   resize: vertical;
   min-height: 90px;
 }
+.forum-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.forum-tools p {
+  margin: 0;
+}
+.forum-tools .btn {
+  width: auto;
+}
 @media (max-width: 640px) {
   .forum-board-row,
   .forum-thread-row {

@@ -150,6 +150,11 @@
     try { localStorage.setItem(FORUM_KEY, JSON.stringify(state)); }
     catch (err) { /* storage unavailable — stays in memory for the session */ }
   }
+  // Remove every thread/post created in this browser. Seed threads (static
+  // constants) are untouched. Mirrors the account "Start over" reset.
+  function clearMyPosts() {
+    try { localStorage.removeItem(FORUM_KEY); } catch (err) { /* ignore */ }
+  }
 
   // Re-read the account (same guard as loadAccount() in app.js). The account IS
   // the character, so this is the forum's posting identity.
@@ -323,6 +328,25 @@
       list.appendChild(row);
     });
     root.appendChild(list);
+
+    // "Clear my forum posts" — only when this browser holds user-created threads.
+    var mine = state.threads.length;
+    if (mine) {
+      var tools = el("article", "parchment forum-tools");
+      tools.appendChild(el("p", "muted small",
+        "You have " + mine + (mine === 1 ? " thread" : " threads") + " saved in this browser."));
+      var btn = el("button", "btn btn-ghost", "Clear my forum posts");
+      btn.type = "button";
+      btn.addEventListener("click", function () {
+        if (window.confirm("Clear all " + mine + (mine === 1 ? " thread" : " threads") +
+            " you posted on this device? This can't be undone.")) {
+          clearMyPosts();
+          renderBoardIndex();
+        }
+      });
+      tools.appendChild(btn);
+      root.appendChild(tools);
+    }
   }
 
   function renderBoardView(boardId) {
