@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forum — Akalynth: The Community Boards</title>
+    <meta
+      name="description"
+      content="The Akalynth community boards for the world of Azura — read the boards freely, sign in with a character to post. Browser-local preview-only forum; posts are not connected to any server."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231f1a13'/%3E%3Cpath d='M16 5l7 11-7 11-7-11z' fill='%23d9b25a'/%3E%3C/svg%3E"
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Akalynth" />
+    <meta property="og:title" content="The Community Boards — Akalynth" />
+    <meta
+      property="og:description"
+      content="Akalynth community boards for Azura — read freely, post as your character. Browser-local preview; not connected to any server."
+    />
+    <meta name="twitter:card" content="summary" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body data-page="forum">
+    <!--
+      Akalynth community forum. Shares chrome with index.html / houses.html.
+      BROWSER-LOCAL PREVIEW: boards and seed threads are read by everyone;
+      posting requires a signed-in character and is stored only in this browser
+      (localStorage "akalynth.forum.v1"). No server, no real accounts, no shared
+      or cross-user persistence. Classic-MMO look recreated with original CSS and
+      Akalynth branding. Forum logic lives in js/forum.js.
+    -->
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header" role="banner">
+      <div class="header-inner">
+        <a class="brand" href="index.html#home" data-nav="home">
+          <span class="brand-mark" aria-hidden="true">⚔</span>
+          <span class="brand-text">
+            <span class="brand-name">Akalynth</span>
+            <span class="brand-tag">The World of Azura</span>
+          </span>
+        </a>
+        <nav class="top-nav" aria-label="Primary">
+          <ul>
+            <li><a class="tab-btn" href="index.html#home" data-nav="home">Home</a></li>
+            <li><a class="tab-btn" href="index.html#world" data-nav="world">World</a></li>
+            <li class="requires-account"><a class="tab-btn" href="houses.html" data-nav="houses">Houses</a></li>
+            <li class="requires-account"><a class="tab-btn" href="shop.html" data-nav="shop">Shop</a></li>
+            <li><a class="tab-btn is-active" href="forum.html" data-nav="forum" aria-current="page">Forum</a></li>
+            <li><a class="tab-btn" href="account.html" data-nav="account">Account</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- Ornate sidebar -->
+      <aside class="sidebar" aria-label="Sidebar">
+        <section class="panel">
+          <h2 class="panel-title">Realm Status</h2>
+          <div class="panel-body">
+            <ul class="status-list">
+              <li><span class="dot dot-amber"></span> Stage: <strong>Pre-alpha</strong></li>
+              <li><span class="dot dot-green"></span> World: <strong>Azura</strong></li>
+              <li><span class="dot dot-green"></span> Authority model: <strong>Server-side</strong></li>
+              <li><span class="dot dot-blue"></span> Guardian: <strong>Tem (anti-bot)</strong></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="panel" id="holdings-panel">
+          <h2 class="panel-title">Your Holdings</h2>
+          <div class="panel-body">
+            <div id="holdings-empty">
+              <p class="muted small">No character yet.</p>
+              <a class="btn btn-ghost btn-block" href="account.html">Create character</a>
+            </div>
+            <div id="holdings-body" hidden>
+              <p class="holdings-name"><strong id="holdings-name">—</strong></p>
+              <p class="muted small">World: <span id="holdings-world">—</span></p>
+              <p class="holdings-gold">
+                <span class="gold" id="holdings-gold">0</span> preview gold
+              </p>
+              <p class="muted small">Premium: <strong id="holdings-premium">—</strong></p>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <!-- Parchment content column -->
+      <main class="content" id="main" role="main" tabindex="-1">
+        <p class="notice">
+          ⚠ Community preview. This forum is <strong>preview-only</strong> and lives
+          entirely in this browser; posts are <strong>not connected</strong> to any
+          server, are visible only to you, and <strong>do not persist</strong> beyond
+          this device. No real account is involved.
+        </p>
+
+        <div id="forum-root">
+          <noscript>
+            <p class="notice">The community boards need JavaScript to load.</p>
+          </noscript>
+        </div>
+      </main>
+    </div>
+
+    <footer class="site-footer" role="contentinfo">
+      <div class="footer-inner">
+        <p>© <span id="year"></span> Akalynth · The World of Azura — a pre-alpha, proof-native MMO.</p>
+        <p class="small muted">
+          Linux server + Android client. Classic-MMO aesthetic recreated with original art and copy.
+        </p>
+      </div>
+    </footer>
+
+    <script src="js/app.js" defer></script>
+    <script src="js/forum.js" defer></script>
+  </body>
+</html>
