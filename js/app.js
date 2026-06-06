@@ -1,129 +1,58 @@
 /*
- * Akalynth site behaviour: tab navigation, shop catalogue rendering,
- * and a localStorage-backed cart. Vanilla JS, no dependencies.
+ * Akalynth public site behaviour.
  *
- * Note: this is a preview storefront. No payment is processed; "checkout"
- * is illustrative while Akalynth is pre-alpha.
+ * Static frontend only: account, character, economy, property, and receipt
+ * authority live on the Akalynth API. This script calls that API and keeps only
+ * non-authoritative UI state in browser storage.
  */
 (function () {
   "use strict";
 
-  // ---- Catalogue -----------------------------------------------------------
-  // Preview prices use site-only preview coins; USD is an illustrative reference only.
-  var CATALOG = [
-    {
-      id: "coins-small",
-      name: "Pouch of Coins",
-      tag: "Coin Pack",
-      art: "🪙",
-      desc: "250 preview coins for this static storefront.",
-      coins: 250,
-      usd: 4.99,
-    },
-    {
-      id: "coins-medium",
-      name: "Chest of Coins",
-      tag: "Coin Pack",
-      art: "💰",
-      desc: "750 preview coins, plus an illustrative bonus.",
-      coins: 750,
-      usd: 12.99,
-    },
-    {
-      id: "coins-large",
-      name: "Dragon's Hoard",
-      tag: "Coin Pack",
-      art: "🐉",
-      desc: "2,000 preview coins, plus an illustrative bonus.",
-      coins: 2000,
-      usd: 29.99,
-    },
-    {
-      id: "premium-30",
-      name: "Premium Time — 30 Days",
-      tag: "Premium",
-      art: "⏳",
-      desc: "Illustrative premium preview; no entitlement is created.",
-      coins: 500,
-      usd: 9.99,
-    },
-    {
-      id: "premium-90",
-      name: "Premium Time — 90 Days",
-      tag: "Premium",
-      art: "🕰",
-      desc: "Illustrative premium preview for the static site.",
-      coins: 1200,
-      usd: 24.99,
-    },
-    {
-      id: "cosmetic-warden",
-      name: "Warden's Regalia",
-      tag: "Cosmetic",
-      art: "🛡",
-      desc: "An ornate cosmetic preview. Looks only; no entitlement is created.",
-      coins: 900,
-      usd: 14.99,
-    },
-    {
-      id: "cosmetic-lantern",
-      name: "Everlight Lantern",
-      tag: "Cosmetic",
-      art: "🏮",
-      desc: "A glowing companion lantern preview for the storefront.",
-      coins: 400,
-      usd: 6.99,
-    },
-    {
-      id: "cosmetic-mount",
-      name: "Stone Strider Mount",
-      tag: "Cosmetic",
-      art: "🐎",
-      desc: "A cosmetic mount-skin preview. No stats or entitlement.",
-      coins: 1500,
-      usd: 19.99,
-    },
+  var API_BASE =
+    window.AKALYNTH_API_BASE ||
+    (location.hostname === "localhost" || location.hostname === "127.0.0.1"
+      ? "http://127.0.0.1:3000"
+      : "https://" + "api." + "akalynth.com");
+  var CSRF_COOKIE = "akalynth_csrf";
+  var CSRF_STORE = "akalynth.csrf.v1";
+  var SELECTED_CHARACTER_STORE = "akalynth.selectedCharacter.v1";
+
+  var FALLBACK_WORLDS = [
+    { world_id: "rookguard", name: "Rookguard", description: "The threshold keep where every journey begins." },
+    { world_id: "high_city", name: "High City", description: "The city beyond the gate." },
+  ];
+  var FALLBACK_OUTFITS = [
+    { outfit_id: "male_wanderer", sex: "male", name: "Wanderer", sprite_id: "base_human_male_01" },
+    { outfit_id: "male_guard", sex: "male", name: "City Guard", sprite_id: "guard_city_01" },
+    { outfit_id: "male_mage", sex: "male", name: "Apprentice Mage", sprite_id: "mage_apprentice_01" },
+    { outfit_id: "female_wanderer", sex: "female", name: "Wanderer", sprite_id: null },
+    { outfit_id: "female_guard", sex: "female", name: "City Guard", sprite_id: null },
+    { outfit_id: "female_mage", sex: "female", name: "Apprentice Mage", sprite_id: null },
+  ];
+  var SHOP_ITEMS = [
+    { id: "healing_herb", name: "Healing Herb", tag: "Consumable", desc: "A server-authoritative in-game item. Bought with earned gold only.", gold: 5 },
+    { id: "pilgrim_mark", name: "Pilgrim Mark", tag: "Cosmetic", desc: "A non-power mark for identity and memory. No real-money purchase.", gold: 10 },
+  ];
+  var HOUSE_PLOTS = [
+    { property_id: "Azura:H1", zone: "Azura", plot_id: "H1", district: "Harbor Edge", primary_price_gold: 500, listed_price_gold: null, status: "unknown", owner_name: null, sale_count: 0 },
+    { property_id: "Azura:H2", zone: "Azura", plot_id: "H2", district: "Market Quarter", primary_price_gold: 1000, listed_price_gold: null, status: "unknown", owner_name: null, sale_count: 0 },
+    { property_id: "Azura:H3", zone: "Azura", plot_id: "H3", district: "South Gate", primary_price_gold: 2000, listed_price_gold: null, status: "unknown", owner_name: null, sale_count: 0 },
   ];
 
-  var CART_KEY = "akalynth.cart.v1";
-  var byId = {};
-  CATALOG.forEach(function (item) {
-    byId[item.id] = item;
-  });
+  var state = {
+    account: null,
+    characters: [],
+    selectedCharacterId: sessionStorage.getItem(SELECTED_CHARACTER_STORE) || "",
+    worlds: FALLBACK_WORLDS.slice(),
+    outfits: FALLBACK_OUTFITS.slice(),
+    shopItems: SHOP_ITEMS.slice(),
+    goldBalance: null,
+    apiOnline: null,
+    message: "",
+    messageKind: "info",
+    resetToken: "",
+  };
 
-  // ---- Game worlds ---------------------------------------------------------
-  // Preview entry lanes. The legacy localStorage id stays stable; the visible
-  // name follows current public copy.
-  var WORLDS = [
-    { id: "azura", name: "High City", type: "First city", region: "EU", stage: "Pre-alpha" },
-    { id: "rookhold", name: "Rookguard", type: "Onboarding", region: "NA", stage: "Pre-alpha" },
-    { id: "emberfell", name: "Emberfell", type: "Future lane", region: "EU", stage: "Planned" },
-  ];
-  var worldById = {};
-  WORLDS.forEach(function (w) {
-    worldById[w.id] = w;
-  });
-
-  // ---- House preview (fixed-price + resale) --------------------------------
-  // Public-safe housing preview: fixed-price primary purchase plus owner
-  // resale. This is local preview data only. It does not prove ownership, spend
-  // real currency, or affect live game state. Auctions are planned and shown
-  // here as non-interactive only (no bidding, no countdown, no settlement).
-  var ACCOUNT_KEY = "akalynth.account.v1";
-  var HOUSES_KEY = "akalynth.houses.v1"; // preview ownership state
-  var START_GOLD = 50000; // preview starting balance for a new character
-
-  var HOUSES = [
-    { id: "H1", name: "Harbor Edge Plot", world: "High City", district: "Harbor Edge", coords: "(10, 32)", priceGold: 500 },
-    { id: "H2", name: "Market Quarter Plot", world: "High City", district: "Market Quarter", coords: "(14, 32)", priceGold: 1000 },
-    { id: "H3", name: "South Gate Plot", world: "High City", district: "South Gate", coords: "(18, 32)", priceGold: 2000 },
-  ];
-  var houseById = {};
-  HOUSES.forEach(function (h) {
-    houseById[h.id] = h;
-  });
-
-  // ---- DOM helpers ---------------------------------------------------------
   function $(sel, root) {
     return (root || document).querySelector(sel);
   }
@@ -131,25 +60,105 @@
     return Array.prototype.slice.call((root || document).querySelectorAll(sel));
   }
   function fmt(n) {
-    return n.toLocaleString("en-US");
+    return Number(n || 0).toLocaleString("en-US");
+  }
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+  function attr(value) {
+    return escapeHtml(value).replace(/'/g, "&#39;");
+  }
+  function setText(sel, txt) {
+    var el = $(sel);
+    if (el) el.textContent = txt;
+  }
+  function setMessage(msg, kind) {
+    state.message = msg || "";
+    state.messageKind = kind || "info";
+    renderAccountPortal();
+  }
+  function pageName() {
+    return document.body ? document.body.getAttribute("data-page") || "" : "";
+  }
+
+  function readCookie(name) {
+    var parts = document.cookie ? document.cookie.split(";") : [];
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i].trim();
+      if (part.indexOf(name + "=") === 0) return decodeURIComponent(part.slice(name.length + 1));
+    }
+    return "";
+  }
+  function csrfToken() {
+    return readCookie(CSRF_COOKIE) || sessionStorage.getItem(CSRF_STORE) || "";
+  }
+  function rememberCsrf(body) {
+    if (body && typeof body.csrf_token === "string" && body.csrf_token) {
+      sessionStorage.setItem(CSRF_STORE, body.csrf_token);
+    }
+  }
+  function rememberSelectedCharacter(id) {
+    state.selectedCharacterId = id || "";
+    if (state.selectedCharacterId) sessionStorage.setItem(SELECTED_CHARACTER_STORE, state.selectedCharacterId);
+    else sessionStorage.removeItem(SELECTED_CHARACTER_STORE);
+  }
+
+  function api(path, opts) {
+    opts = opts || {};
+    var method = opts.method || "GET";
+    var headers = { Accept: "application/json" };
+    if (opts.body) headers["Content-Type"] = "application/json";
+    if (method !== "GET") {
+      var csrf = csrfToken();
+      if (csrf) headers["x-csrf-token"] = csrf;
+    }
+    return fetch(API_BASE + path, {
+      method: method,
+      credentials: "include",
+      headers: headers,
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    }).then(function (res) {
+      return res.text().then(function (text) {
+        var body = {};
+        try {
+          body = text ? JSON.parse(text) : {};
+        } catch (err) {
+          body = { ok: false, error: text || res.statusText };
+        }
+        rememberCsrf(body);
+        if (!res.ok) {
+          var message = body.message || body.error || res.statusText || "Request failed";
+          var e = new Error(message);
+          e.status = res.status;
+          e.body = body;
+          throw e;
+        }
+        return body;
+      });
+    });
+  }
+
+  function apiMessage(err) {
+    if (!err) return "Request failed.";
+    if (err.status === 404) return err.body && err.body.error ? err.body.error : "That record was not found.";
+    if (err.status === 401) return "Sign in first.";
+    if (err.status === 403 && err.body && err.body.error === "csrf_failed") return "Security token expired. Sign in again.";
+    return err.message || "Request failed.";
   }
 
   // ---- Tabs (index page only) ----------------------------------------------
-  // On index.html the primary nav switches between in-page panels. On other
-  // pages (e.g. shop.html) there are no .tab-panel elements, so this is inert
-  // and the nav links navigate normally.
   function syncNavActive(name) {
     $all(".tab-btn[data-nav]").forEach(function (link) {
       var active = link.getAttribute("data-nav") === name;
       link.classList.toggle("is-active", active);
-      if (active) {
-        link.setAttribute("aria-current", "page");
-      } else {
-        link.removeAttribute("aria-current");
-      }
+      if (active) link.setAttribute("aria-current", "page");
+      else link.removeAttribute("aria-current");
     });
   }
-
   function activateTab(name) {
     if (!name || !document.getElementById(name)) return;
     $all(".tab-panel").forEach(function (panel) {
@@ -158,20 +167,14 @@
       panel.hidden = !active;
     });
     syncNavActive(name);
-    if (window.location.hash !== "#" + name) {
-      history.replaceState(null, "", "#" + name);
-    }
+    if (window.location.hash !== "#" + name) history.replaceState(null, "", "#" + name);
     var main = $("#main");
     if (main) main.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
-
   function initTabs() {
     var panels = $all(".tab-panel");
-    if (!panels.length) return; // not the tabbed page (e.g. shop.html)
-
-    // Intercept nav targets that map to an in-page panel; leave the rest
-    // (e.g. the Shop link -> shop.html) as ordinary navigation.
+    if (!panels.length) return;
     $all("[data-nav]").forEach(function (el) {
       var name = el.getAttribute("data-nav");
       if (document.getElementById(name)) {
@@ -181,599 +184,644 @@
         });
       }
     });
-
     window.addEventListener("hashchange", function () {
-      var h = window.location.hash.replace("#", "");
-      if (document.getElementById(h)) activateTab(h);
+      activateTab(window.location.hash.replace("#", ""));
     });
-
     var initial = (window.location.hash || "").replace("#", "");
-    var valid = panels.map(function (p) {
-      return p.id;
-    });
+    var valid = panels.map(function (p) { return p.id; });
     activateTab(valid.indexOf(initial) !== -1 ? initial : "home");
   }
 
-  // ---- Cart state ----------------------------------------------------------
-  function loadCart() {
-    try {
-      var raw = localStorage.getItem(CART_KEY);
-      if (!raw) return {};
-      var parsed = JSON.parse(raw);
-      return parsed && typeof parsed === "object" ? parsed : {};
-    } catch (err) {
-      return {};
+  // ---- Portal state --------------------------------------------------------
+  function selectedCharacter() {
+    if (!state.characters.length) return null;
+    for (var i = 0; i < state.characters.length; i++) {
+      if (state.characters[i].character_id === state.selectedCharacterId) return state.characters[i];
     }
+    rememberSelectedCharacter(state.characters[0].character_id);
+    return state.characters[0];
   }
-  function saveCart(cart) {
-    try {
-      localStorage.setItem(CART_KEY, JSON.stringify(cart));
-    } catch (err) {
-      /* storage unavailable — cart stays in memory for the session */
+  function worldName(id) {
+    for (var i = 0; i < state.worlds.length; i++) {
+      if (state.worlds[i].world_id === id) return state.worlds[i].name;
     }
+    return id || "-";
+  }
+  function outfitName(id) {
+    for (var i = 0; i < state.outfits.length; i++) {
+      if (state.outfits[i].outfit_id === id) return state.outfits[i].name;
+    }
+    return id || "-";
   }
 
-  var cart = loadCart();
-  // Drop any stale ids no longer in the catalogue.
-  Object.keys(cart).forEach(function (id) {
-    if (!byId[id]) delete cart[id];
-  });
-
-  function cartTotals() {
-    var count = 0;
-    var coins = 0;
-    Object.keys(cart).forEach(function (id) {
-      var qty = cart[id];
-      count += qty;
-      coins += byId[id].coins * qty;
-    });
-    return { count: count, coins: coins };
+  function loadCatalogs() {
+    return Promise.all([
+      api("/v1/worlds").then(function (body) {
+        if (body.worlds && body.worlds.length) state.worlds = body.worlds;
+      }).catch(function () {}),
+      api("/v1/outfits").then(function (body) {
+        if (body.outfits && body.outfits.length) state.outfits = body.outfits;
+      }).catch(function () {}),
+      api("/v1/shop/catalog").then(function (body) {
+        if (body.items && body.items.length) {
+          state.shopItems = body.items.map(function (item) {
+            return {
+              id: item.shop_key,
+              name: item.name,
+              tag: item.tag,
+              desc: item.description,
+              gold: item.price_gold,
+            };
+          });
+        }
+      }).catch(function () {}),
+    ]);
   }
 
-  function addToCart(id) {
-    if (!byId[id]) return;
-    cart[id] = (cart[id] || 0) + 1;
-    saveCart(cart);
-    render();
-  }
-  function removeFromCart(id) {
-    if (!cart[id]) return;
-    cart[id] -= 1;
-    if (cart[id] <= 0) delete cart[id];
-    saveCart(cart);
-    render();
-  }
-  function clearCart() {
-    cart = {};
-    saveCart(cart);
-    render();
-  }
-
-  // ---- Rendering -----------------------------------------------------------
-  function renderShop() {
-    var grid = $("#shop-grid");
-    if (!grid || grid.dataset.built === "1") return;
-    CATALOG.forEach(function (item) {
-      var card = document.createElement("article");
-      card.className = "shop-card";
-      card.innerHTML =
-        '<div class="shop-card-art" aria-hidden="true">' +
-        item.art +
-        "</div>" +
-        '<div class="shop-card-body">' +
-        '<span class="shop-tag">' +
-        item.tag +
-        "</span>" +
-        '<h3 class="shop-card-name">' +
-        item.name +
-        "</h3>" +
-        '<p class="shop-card-desc">' +
-        item.desc +
-        "</p>" +
-        '<div class="shop-card-price">' +
-        fmt(item.coins) +
-        " coins" +
-        '<span class="usd">≈ $' +
-        item.usd.toFixed(2) +
-        "</span></div>" +
-        '<button class="btn btn-gold" data-add="' +
-        item.id +
-        '">Add to cart</button>' +
-        "</div>";
-      grid.appendChild(card);
-    });
-    grid.dataset.built = "1";
-    grid.addEventListener("click", function (e) {
-      var btn = e.target.closest("[data-add]");
-      if (btn) addToCart(btn.getAttribute("data-add"));
-    });
-  }
-
-  function renderCart() {
-    var totals = cartTotals();
-    var ids = Object.keys(cart);
-
-    var list = $("#cart-items");
-    if (list) {
-      list.innerHTML = "";
-      if (ids.length === 0) {
-        var empty = document.createElement("li");
-        empty.className = "cart-empty";
-        empty.textContent = "Your cart is empty.";
-        list.appendChild(empty);
-      } else {
-        ids.forEach(function (id) {
-          var item = byId[id];
-          var qty = cart[id];
-          var li = document.createElement("li");
-          li.className = "cart-item";
-          li.innerHTML =
-            "<span>" +
-            '<span class="cart-item-name">' +
-            item.name +
-            "</span> " +
-            '<span class="cart-qty">×' +
-            qty +
-            "</span></span>" +
-            '<span><span class="cart-item-price">' +
-            fmt(item.coins * qty) +
-            "</span> " +
-            '<button class="cart-remove" data-remove="' +
-            id +
-            '" aria-label="Remove one ' +
-            item.name +
-            '">✕</button></span>';
-          list.appendChild(li);
+  function loadAccountState() {
+    return api("/v1/accounts/me")
+      .then(function (body) {
+        state.apiOnline = true;
+        state.account = body.account || null;
+        return api("/v1/characters").then(function (chars) {
+          state.characters = chars.characters || [];
+          selectedCharacter();
         });
-      }
-    }
-
-    // Totals in several places.
-    [["#cart-count", totals.count], ["#cart-total", totals.coins], ["#cart-total-2", totals.coins]].forEach(
-      function (pair) {
-        var el = $(pair[0]);
-        if (el) el.textContent = fmt(pair[1]);
-      }
-    );
-
-    var checkout = $("#checkout-btn");
-    if (checkout) checkout.disabled = totals.count === 0;
-  }
-
-  function render() {
-    renderShop();
-    renderCart();
-  }
-
-  function initCart() {
-    var list = $("#cart-items");
-    if (list) {
-      list.addEventListener("click", function (e) {
-        var btn = e.target.closest("[data-remove]");
-        if (btn) removeFromCart(btn.getAttribute("data-remove"));
-      });
-    }
-    var clearBtn = $("#clear-cart-btn");
-    if (clearBtn) clearBtn.addEventListener("click", clearCart);
-    var checkout = $("#checkout-btn");
-    if (checkout) {
-      checkout.addEventListener("click", function () {
-        var totals = cartTotals();
-        var msg =
-          "Preview checkout — no payment is processed.\n\n" +
-          totals.count +
-          " item(s) · " +
-          fmt(totals.coins) +
-          " coins (≈ $" +
-          estimateUsd().toFixed(2) +
-          ").\n\nThis static preview is not connected to payment or entitlement systems.";
-        // Buying Premium Time marks the preview character as Premium. Preview
-        // only — no real entitlement is created. (Houses do not require
-        // Premium: standard plots are buyable by any character.)
-        if (cartHasPremium()) {
-          if (account) {
-            account.premium = true;
-            saveAccount(account);
-            renderHoldings();
-            msg += "\n\nPreview Premium activated.";
-          } else {
-            msg += "\n\nCreate a character to apply preview Premium.";
-          }
+      })
+      .catch(function (err) {
+        if (err && err.status === 401) {
+          state.apiOnline = true;
+          state.account = null;
+          state.characters = [];
+          state.goldBalance = null;
+          return;
         }
-        alert(msg);
+        state.apiOnline = false;
+        state.account = null;
+        state.characters = [];
+        state.goldBalance = null;
       });
-    }
   }
 
-  function cartHasPremium() {
-    return Object.keys(cart).some(function (id) {
-      return byId[id] && byId[id].tag === "Premium";
-    });
-  }
-
-  function estimateUsd() {
-    var usd = 0;
-    Object.keys(cart).forEach(function (id) {
-      usd += byId[id].usd * cart[id];
-    });
-    return usd;
-  }
-
-  function setText(sel, txt) {
-    var el = $(sel);
-    if (el) el.textContent = txt;
-  }
-  function setErr(id, msg) {
-    var el = document.getElementById(id);
-    if (el) el.textContent = msg;
-  }
-
-  // ---- Account (local preview character) -----------------------------------
-  // Stored locally only. INVARIANT: this is not a real account; no server
-  // identity, server transfer, or game data is created.
-  function loadAccount() {
-    try {
-      var raw = localStorage.getItem(ACCOUNT_KEY);
-      if (!raw) return null;
-      var parsed = JSON.parse(raw);
-      return parsed && typeof parsed === "object" && parsed.name ? parsed : null;
-    } catch (err) {
-      return null;
-    }
-  }
-  function saveAccount(acct) {
-    try {
-      localStorage.setItem(ACCOUNT_KEY, JSON.stringify(acct));
-    } catch (err) {
-      /* storage unavailable — character stays in memory for the session */
-    }
-  }
-  function clearAccount() {
-    try {
-      localStorage.removeItem(ACCOUNT_KEY);
-    } catch (err) {
-      /* ignore */
-    }
-  }
-
-  var account = loadAccount();
-
-  // ---- House preview ownership (fixed-price + resale) ----------------------
-  // ownership[id] = { status: 'owned' | 'listed', listPrice: number|null }.
-  // Absent id ⇒ unowned. Local preview only.
-  function loadHouses() {
-    try {
-      var raw = localStorage.getItem(HOUSES_KEY);
-      if (!raw) return {};
-      var parsed = JSON.parse(raw);
-      return parsed && typeof parsed === "object" ? parsed : {};
-    } catch (err) {
-      return {};
-    }
-  }
-  function saveHouses(h) {
-    try {
-      localStorage.setItem(HOUSES_KEY, JSON.stringify(h));
-    } catch (err) {
-      /* ignore */
-    }
-  }
-
-  var ownership = loadHouses();
-  // Drop entries for plots no longer present.
-  Object.keys(ownership).forEach(function (id) {
-    if (!houseById[id]) delete ownership[id];
-  });
-
-  function houseStatus(h) {
-    var o = ownership[h.id];
-    return o ? o.status : "unowned";
-  }
-
-  // ---- Account form (account.html) -----------------------------------------
-  function populateWorldSelect() {
-    var sel = $("#char-world");
-    if (!sel || sel.dataset.built === "1") return;
-    WORLDS.forEach(function (w) {
-      var opt = document.createElement("option");
-      opt.value = w.id;
-      opt.textContent = w.name + " — " + w.type + " · " + w.region + " · " + w.stage;
-      if (w.stage === "Planned") opt.disabled = true;
-      sel.appendChild(opt);
-    });
-    sel.dataset.built = "1";
-  }
-
-  function renderAccountView() {
-    var wrap = $("#account-form-wrap");
-    var summary = $("#account-summary");
-    if (account) {
-      if (wrap) wrap.hidden = true;
-      if (summary) {
-        summary.hidden = false;
-        var w = worldById[account.world];
-        setText("#summary-name", account.name);
-        setText("#summary-sex", account.sex === "female" ? "Female" : "Male");
-        setText("#summary-world", w ? w.name : account.world);
-        setText("#summary-gold", fmt(account.goldBalance));
-        setText("#summary-premium", account.premium ? "Active" : "Standard");
-      }
-    } else {
-      if (wrap) wrap.hidden = false;
-      if (summary) summary.hidden = true;
-    }
-  }
-
-  function onAccountSubmit(e) {
-    e.preventDefault();
-    var nameEl = $("#char-name");
-    var worldEl = $("#char-world");
-    var sexEl = document.querySelector('input[name="sex"]:checked');
-    var ok = true;
-
-    var name = nameEl ? nameEl.value.trim() : "";
-    if (!/^[A-Za-z][A-Za-z '\-]{1,19}$/.test(name)) {
-      setErr("err-name", "Use 2–20 letters (spaces, apostrophe and hyphen allowed).");
-      ok = false;
-    } else {
-      setErr("err-name", "");
-    }
-
-    if (!sexEl) {
-      setErr("err-sex", "Choose a sex.");
-      ok = false;
-    } else {
-      setErr("err-sex", "");
-    }
-
-    var worldId = worldEl ? worldEl.value : "";
-    if (!worldId || !worldById[worldId]) {
-      setErr("err-world", "Choose a world.");
-      ok = false;
-    } else if (worldById[worldId].stage === "Planned") {
-      setErr("err-world", "That world isn't open yet.");
-      ok = false;
-    } else {
-      setErr("err-world", "");
-    }
-
-    if (!ok) return;
-
-    account = {
-      name: name,
-      sex: sexEl.value,
-      world: worldId,
-      goldBalance: START_GOLD,
-      premium: false,
-      createdAt: new Date().toISOString(),
-    };
-    saveAccount(account);
-    renderAccountView();
-    renderHoldings();
-    applyAccountGates();
-    renderHouses();
-    alert(
-      "Preview character created — " +
-        name +
-        " on " +
-        worldById[worldId].name +
-        ".\n\nThis is a local preview only. No real account, server transfer, " +
-        "or game data is created."
-    );
-  }
-
-  function initAccount() {
-    var form = $("#account-form");
-    var summary = $("#account-summary");
-    if (!form && !summary) return; // not the account page
-    populateWorldSelect();
-    renderAccountView();
-    if (form) form.addEventListener("submit", onAccountSubmit);
-    var reset = $("#account-reset");
-    if (reset) {
-      reset.addEventListener("click", function () {
-        if (confirm("Start over? This clears your local preview character.")) {
-          clearAccount();
-          account = null;
-          renderAccountView();
-          renderHoldings();
-          applyAccountGates();
-        }
+  function loadWalletState() {
+    var character = selectedCharacter();
+    state.goldBalance = null;
+    if (!state.account || !character) return Promise.resolve();
+    return api("/v1/wallet?character_id=" + encodeURIComponent(character.character_id))
+      .then(function (body) {
+        state.goldBalance = typeof body.balance_gold === "number" ? body.balance_gold : null;
+      })
+      .catch(function () {
+        state.goldBalance = null;
       });
-    }
   }
 
-  // ---- Sidebar holdings (all pages) ----------------------------------------
+  function refreshPortal() {
+    return loadCatalogs()
+      .then(loadAccountState)
+      .then(loadWalletState)
+      .then(function () {
+        renderAll();
+      });
+  }
+
+  // ---- Shared chrome -------------------------------------------------------
   function renderHoldings() {
     var panel = $("#holdings-panel");
     if (!panel) return;
     var empty = $("#holdings-empty");
     var body = $("#holdings-body");
-    if (account) {
+    var character = selectedCharacter();
+    if (state.account && character) {
       if (empty) empty.hidden = true;
       if (body) body.hidden = false;
-      var w = worldById[account.world];
-      setText("#holdings-name", account.name);
-      setText("#holdings-world", w ? w.name : account.world);
-      setText("#holdings-gold", fmt(account.goldBalance));
-      setText("#holdings-premium", account.premium ? "Active" : "Standard");
+      setText("#holdings-name", character.name || character.character_id);
+      setText("#holdings-world", worldName(character.world_id));
+      setText("#holdings-gold", state.goldBalance == null ? "server" : fmt(state.goldBalance));
+      setText("#holdings-premium", "Not in V1");
     } else {
       if (empty) empty.hidden = false;
       if (body) body.hidden = true;
     }
   }
-
-  // ---- Account gating (Houses & Shop require a character) ------------------
-  // Preview only: a "logged-in character" is a local account in localStorage.
-  // Hides gated nav links and gated page content when no character exists.
   function applyAccountGates() {
-    var loggedIn = !!account;
+    var hasCharacter = !!(state.account && selectedCharacter());
     $all(".requires-account").forEach(function (el) {
-      el.hidden = !loggedIn;
+      el.hidden = !hasCharacter;
     });
     if (document.body && document.body.hasAttribute("data-requires-account")) {
       var gate = $("#account-required");
       var content = $("#gated-content");
-      if (gate) gate.hidden = loggedIn;
-      if (content) content.hidden = !loggedIn;
+      if (gate) gate.hidden = hasCharacter;
+      if (content) content.hidden = !hasCharacter;
+    }
+  }
+  function renderApiStatus(root) {
+    if (state.apiOnline === false) {
+      root.insertAdjacentHTML(
+        "afterbegin",
+        '<article class="parchment portal-message portal-message--warn"><p class="lede">API unavailable</p><p>The static site loaded, but it could not reach ' +
+          escapeHtml(API_BASE) +
+          ". Start the local server or use the production API.</p></article>"
+      );
     }
   }
 
-  // ---- House preview: fixed-price buy + resale (houses.html) ---------------
-  // Public-safe fixed-price preview. Auctions are not available here.
-  function houseCardHtml(h) {
-    var status = houseStatus(h);
-    var o = ownership[h.id];
-    var statusLabel =
-      status === "owned"
-        ? "Owned by you (preview)"
-        : status === "listed"
-        ? "Listed for resale (preview)"
-        : "Available";
-
-    var action;
-    if (status === "unowned") {
-      action =
-        '<button class="btn btn-gold btn-block" data-buy="' + h.id + '">Preview buy — ' +
-        fmt(h.priceGold) + " gold</button>" +
-        '<p class="field-error" id="house-error-' + h.id + '" aria-live="polite"></p>';
-    } else if (status === "owned") {
-      action =
-        '<form class="resale-row" data-list="' + h.id + '" novalidate>' +
-        '<label class="resale-label" for="price-' + h.id + '">Resale price (gold)</label>' +
-        '<div class="resale-controls">' +
-        '<input class="resale-input" type="number" id="price-' + h.id + '" name="price" min="1" inputmode="numeric" placeholder="e.g. ' +
-        h.priceGold + '" />' +
-        '<button class="btn btn-gold" type="submit">Preview list</button>' +
-        "</div>" +
-        '<p class="field-error" id="house-error-' + h.id + '" aria-live="polite"></p>' +
-        "</form>";
-    } else {
-      action =
-        '<p class="resale-note">Listed at <span class="gold">' + fmt(o.listPrice) +
-        "</span> gold. Another preview character could buy it at this price.</p>" +
-        '<button class="btn btn-ghost btn-block" data-unlist="' + h.id + '">Unlist (preview)</button>';
-    }
-
+  // ---- Account page --------------------------------------------------------
+  function accountMessageHtml() {
+    if (!state.message) return "";
+    return '<p class="portal-inline portal-inline--' + escapeHtml(state.messageKind) + '">' + escapeHtml(state.message) + "</p>";
+  }
+  function authFormsHtml() {
     return (
-      '<header class="house-head">' +
-      '<h3 class="house-name">' + h.name + "</h3>" +
-      '<span class="house-world">' + h.world + " · " + h.district + "</span>" +
-      "</header>" +
-      '<dl class="house-meta">' +
-      '<div><dt>Plot</dt><dd class="house-coords">' + h.coords + "</dd></div>" +
-      '<div><dt>Price</dt><dd><span class="gold">' + fmt(h.priceGold) + "</span> gold</dd></div>" +
-      "<div><dt>Status</dt><dd>" + statusLabel + "</dd></div>" +
-      "</dl>" +
-      '<div class="house-bid">' +
-      action +
+      '<div class="portal-grid">' +
+      '<article class="parchment"><p class="lede">Create account</p>' +
+      '<form class="account-form" id="register-form" novalidate>' +
+      '<div class="field"><label for="reg-email">Email</label><input type="email" id="reg-email" name="email" autocomplete="email" required /></div>' +
+      '<div class="field"><label for="reg-password">Password</label><input type="password" id="reg-password" name="password" autocomplete="new-password" minlength="8" required /></div>' +
+      '<button class="btn btn-gold btn-block" type="submit">Create account</button>' +
+      '<p class="muted small">A verification link is required before character creation.</p>' +
+      "</form></article>" +
+      '<article class="parchment"><p class="lede">Sign in</p>' +
+      '<form class="account-form" id="login-form" novalidate>' +
+      '<div class="field"><label for="login-email">Email</label><input type="email" id="login-email" name="email" autocomplete="email" required /></div>' +
+      '<div class="field"><label for="login-password">Password</label><input type="password" id="login-password" name="password" autocomplete="current-password" required /></div>' +
+      '<button class="btn btn-gold btn-block" type="submit">Sign in</button>' +
+      "</form></article>" +
+      '<article class="parchment"><p class="lede">Verify email</p>' +
+      '<form class="account-form" id="verify-form" novalidate>' +
+      '<div class="field"><label for="verify-token">Verification token</label><input type="text" id="verify-token" name="token" autocomplete="off" /></div>' +
+      '<button class="btn btn-ghost btn-block" type="submit">Verify</button>' +
+      "</form></article>" +
+      '<article class="parchment"><p class="lede">Reset password</p>' +
+      '<form class="account-form" id="reset-request-form" novalidate>' +
+      '<div class="field"><label for="reset-email">Email</label><input type="email" id="reset-email" name="email" autocomplete="email" required /></div>' +
+      '<button class="btn btn-ghost btn-block" type="submit">Send reset link</button>' +
+      "</form></article>" +
       "</div>"
     );
   }
-
-  function renderOneHouse(h) {
-    var grid = $("#houses-grid");
-    if (!grid) return;
-    var card = grid.querySelector('[data-house="' + h.id + '"]');
-    if (card) card.innerHTML = houseCardHtml(h);
+  function resetConfirmHtml(token) {
+    return (
+      '<article class="parchment"><p class="lede">Set a new password</p>' +
+      '<form class="account-form" id="reset-confirm-form" novalidate>' +
+      '<input type="hidden" name="token" value="' + escapeHtml(token) + '" />' +
+      '<div class="field"><label for="reset-new-password">New password</label><input type="password" id="reset-new-password" name="password" autocomplete="new-password" minlength="8" required /></div>' +
+      '<button class="btn btn-gold btn-block" type="submit">Update password</button>' +
+      "</form></article>"
+    );
   }
-
-  function buyHouse(id) {
-    var h = houseById[id];
-    if (!h) return;
-    var errId = "house-error-" + id;
-    if (!account) {
-      setErr(errId, "Create a character first.");
-      return;
+  function characterCardsHtml() {
+    if (!state.characters.length) {
+      return '<p class="muted">No characters yet.</p>';
     }
-    if (houseStatus(h) !== "unowned") return;
-    if (account.goldBalance < h.priceGold) {
-      setErr(errId, "Not enough preview gold (need " + fmt(h.priceGold) + ").");
-      return;
-    }
-    // Primary purchase is represented as a local preview gold sink.
-    account.goldBalance -= h.priceGold;
-    saveAccount(account);
-    ownership[id] = { status: "owned", listPrice: null };
-    saveHouses(ownership);
-    renderOneHouse(h);
-    renderHoldings();
+    return (
+      '<div class="character-list">' +
+      state.characters
+        .map(function (c) {
+          var selected = selectedCharacter() && selectedCharacter().character_id === c.character_id;
+          return (
+            '<article class="character-card' + (selected ? " is-selected" : "") + '">' +
+            '<h3 class="news-title">' + escapeHtml(c.name || c.character_id) + "</h3>" +
+            '<dl class="summary-list">' +
+            "<div><dt>World</dt><dd>" + escapeHtml(worldName(c.world_id)) + "</dd></div>" +
+            "<div><dt>Sex</dt><dd>" + escapeHtml(c.sex || "-") + "</dd></div>" +
+            "<div><dt>Outfit</dt><dd>" + escapeHtml(outfitName(c.outfit_id)) + "</dd></div>" +
+            "</dl>" +
+            '<button class="btn ' + (selected ? "btn-ghost" : "btn-gold") + ' btn-block" data-select-character="' + escapeHtml(c.character_id) + '">' +
+            (selected ? "Selected" : "Select character") +
+            "</button></article>"
+          );
+        })
+        .join("") +
+      "</div>"
+    );
   }
-
-  function listHouse(id, raw) {
-    var h = houseById[id];
-    if (!h) return;
-    var errId = "house-error-" + id;
-    if (houseStatus(h) !== "owned") return;
-    var price = parseInt(String(raw).trim(), 10);
-    if (!price || isNaN(price) || price < 1) {
-      setErr(errId, "Enter a resale price in gold.");
-      return;
-    }
-    if (price > 1000000) {
-      setErr(errId, "Max 1,000,000 gold.");
-      return;
-    }
-    ownership[id] = { status: "listed", listPrice: price };
-    saveHouses(ownership);
-    renderOneHouse(h);
+  function createCharacterHtml() {
+    if (!state.account || !state.account.email_verified) return "";
+    return (
+      '<article class="parchment"><p class="lede">Create character</p>' +
+      '<form class="account-form" id="character-form" novalidate>' +
+      '<div class="field"><label for="char-name">Character name</label><input type="text" id="char-name" name="name" maxlength="20" autocomplete="off" required /></div>' +
+      '<div class="field"><label for="char-world">World</label><select id="char-world" name="world_id">' +
+      state.worlds.map(function (w) { return '<option value="' + escapeHtml(w.world_id) + '">' + escapeHtml(w.name) + "</option>"; }).join("") +
+      "</select></div>" +
+      '<div class="field"><label for="char-sex">Sex</label><select id="char-sex" name="sex"><option value="male">Male</option><option value="female">Female</option></select></div>' +
+      '<div class="field"><label for="char-outfit">Outfit</label><select id="char-outfit" name="outfit_id"></select></div>' +
+      '<button class="btn btn-gold btn-block" type="submit">Create character</button>' +
+      '<p class="muted small">Female outfit sprites are still pending the art lane; the server catalog already reserves the IDs.</p>' +
+      "</form></article>"
+    );
   }
-
-  function unlistHouse(id) {
-    var h = houseById[id];
-    if (!h) return;
-    if (houseStatus(h) !== "listed") return;
-    ownership[id] = { status: "owned", listPrice: null };
-    saveHouses(ownership);
-    renderOneHouse(h);
+  function dashboardHtml() {
+    return (
+      '<article class="parchment portal-status"><p class="lede">Signed in</p>' +
+      '<dl class="summary-list">' +
+      "<div><dt>Account</dt><dd>" + escapeHtml(state.account.account_id) + "</dd></div>" +
+      "<div><dt>Email</dt><dd>" + (state.account.email_verified ? "Verified" : "Verification required") + "</dd></div>" +
+      "<div><dt>Status</dt><dd>" + escapeHtml(state.account.status || "active") + "</dd></div>" +
+      "</dl>" +
+      '<button class="btn btn-ghost" id="logout-btn" type="button">Sign out</button>' +
+      "</article>" +
+      (!state.account.email_verified
+        ? '<article class="parchment notice"><p>Verify your email before creating a character. Use the link from your email, or paste the token here.</p><form class="account-form" id="verify-form"><div class="field"><label for="verify-token">Verification token</label><input type="text" id="verify-token" name="token" /></div><button class="btn btn-gold btn-block" type="submit">Verify email</button></form></article>'
+        : "") +
+      '<article class="parchment"><p class="lede">Characters</p>' + characterCardsHtml() + "</article>" +
+      createCharacterHtml()
+    );
   }
-
-  function onHousesClick(e) {
-    var buy = e.target.closest ? e.target.closest("[data-buy]") : null;
-    if (buy) {
-      buyHouse(buy.getAttribute("data-buy"));
-      return;
-    }
-    var unlist = e.target.closest ? e.target.closest("[data-unlist]") : null;
-    if (unlist) {
-      unlistHouse(unlist.getAttribute("data-unlist"));
-    }
+  function renderAccountPortal() {
+    var root = $("#account-portal-root");
+    if (!root) return;
+    root.innerHTML =
+      accountMessageHtml() +
+      (state.resetToken ? resetConfirmHtml(state.resetToken) : state.account ? dashboardHtml() : authFormsHtml());
+    renderApiStatus(root);
+    wireAccountForms(root);
   }
-
-  function onHousesSubmit(e) {
-    var form = e.target.closest ? e.target.closest("[data-list]") : null;
-    if (!form) return;
-    e.preventDefault();
-    var id = form.getAttribute("data-list");
-    var input = form.querySelector('input[name="price"]');
-    listHouse(id, input ? input.value : "");
+  function outfitOptionsFor(sex) {
+    return state.outfits.filter(function (o) { return o.sex === sex; });
   }
+  function syncOutfitSelect() {
+    var sexEl = $("#char-sex");
+    var outfitEl = $("#char-outfit");
+    if (!sexEl || !outfitEl) return;
+    outfitEl.innerHTML = outfitOptionsFor(sexEl.value)
+      .map(function (o) {
+        return '<option value="' + escapeHtml(o.outfit_id) + '">' + escapeHtml(o.name) + (o.sprite_id ? "" : " (art pending)") + "</option>";
+      })
+      .join("");
+  }
+  function formData(form) {
+    var data = {};
+    Array.prototype.forEach.call(form.elements, function (el) {
+      if (el.name) data[el.name] = el.value;
+    });
+    return data;
+  }
+  function wireAccountForms(root) {
+    var register = $("#register-form", root);
+    if (register) register.addEventListener("submit", function (e) {
+      e.preventDefault();
+      api("/v1/accounts/register", { method: "POST", body: formData(register) })
+        .then(function (body) {
+          var msg = body.message || "If the account can be registered, a verification link has been sent.";
+          if (body.dev_verification_token) msg += " Dev token: " + body.dev_verification_token;
+          setMessage(msg, "ok");
+        })
+        .catch(function (err) { setMessage(apiMessage(err), "error"); });
+    });
 
-  function renderHouses() {
-    var grid = $("#houses-grid");
-    if (!grid) return;
-    if (grid.dataset.wired !== "1") {
-      grid.addEventListener("click", onHousesClick);
-      grid.addEventListener("submit", onHousesSubmit);
-      grid.dataset.wired = "1";
+    var login = $("#login-form", root);
+    if (login) login.addEventListener("submit", function (e) {
+      e.preventDefault();
+      api("/v1/accounts/login", { method: "POST", body: formData(login) })
+        .then(function () {
+          state.message = "Signed in.";
+          state.messageKind = "ok";
+          return refreshPortal();
+        })
+        .catch(function (err) { setMessage(apiMessage(err), "error"); });
+    });
+
+    var verify = $("#verify-form", root);
+    if (verify) verify.addEventListener("submit", function (e) {
+      e.preventDefault();
+      api("/v1/accounts/verify-email", { method: "POST", body: formData(verify) })
+        .then(function () {
+          state.message = "Email verified.";
+          state.messageKind = "ok";
+          return refreshPortal();
+        })
+        .catch(function (err) { setMessage(apiMessage(err), "error"); });
+    });
+
+    var resetReq = $("#reset-request-form", root);
+    if (resetReq) resetReq.addEventListener("submit", function (e) {
+      e.preventDefault();
+      api("/v1/accounts/password-reset/request", { method: "POST", body: formData(resetReq) })
+        .then(function (body) {
+          var msg = body.message || "If this email has an account, a reset link has been sent.";
+          if (body.dev_reset_token) msg += " Dev token: " + body.dev_reset_token;
+          setMessage(msg, "ok");
+        })
+        .catch(function (err) { setMessage(apiMessage(err), "error"); });
+    });
+
+    var resetConfirm = $("#reset-confirm-form", root);
+    if (resetConfirm) resetConfirm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      api("/v1/accounts/password-reset/confirm", { method: "POST", body: formData(resetConfirm) })
+        .then(function () {
+          state.resetToken = "";
+          setMessage("Password updated. Sign in with the new password.", "ok");
+        })
+        .catch(function (err) { setMessage(apiMessage(err), "error"); });
+    });
+
+    var logout = $("#logout-btn", root);
+    if (logout) logout.addEventListener("click", function () {
+      api("/v1/accounts/logout", { method: "POST", body: {} })
+        .then(function () {
+          sessionStorage.removeItem(CSRF_STORE);
+          rememberSelectedCharacter("");
+          state.account = null;
+          state.characters = [];
+          setMessage("Signed out.", "ok");
+          renderAll();
+        })
+        .catch(function (err) { setMessage(apiMessage(err), "error"); });
+    });
+
+    $all("[data-select-character]", root).forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-select-character");
+        api("/v1/characters/select", { method: "POST", body: { character_id: id } })
+          .then(function () {
+            rememberSelectedCharacter(id);
+            setMessage("Character selected.", "ok");
+            return loadWalletState().then(renderAll);
+          })
+          .catch(function (err) { setMessage(apiMessage(err), "error"); });
+      });
+    });
+
+    var sex = $("#char-sex", root);
+    if (sex) {
+      sex.addEventListener("change", syncOutfitSelect);
+      syncOutfitSelect();
     }
-    grid.innerHTML = "";
-    HOUSES.forEach(function (h) {
-      var card = document.createElement("article");
-      card.className = "house-card";
-      card.setAttribute("data-house", h.id);
-      card.innerHTML = houseCardHtml(h);
-      grid.appendChild(card);
+    var characterForm = $("#character-form", root);
+    if (characterForm) characterForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      api("/v1/characters", { method: "POST", body: formData(characterForm) })
+        .then(function (body) {
+          if (body.character && body.character.character_id) rememberSelectedCharacter(body.character.character_id);
+          state.message = "Character created.";
+          state.messageKind = "ok";
+          return refreshPortal();
+        })
+        .catch(function (err) { setMessage(apiMessage(err), "error"); });
     });
   }
 
-  function initHouses() {
+  function handleAccountQuery() {
+    var params = new URLSearchParams(location.search);
+    var verify = params.get("verify");
+    var reset = params.get("reset");
+    if (reset) state.resetToken = reset;
+    if (verify && pageName() === "account") {
+      api("/v1/accounts/verify-email", { method: "POST", body: { token: verify } })
+        .then(function () {
+          history.replaceState(null, "", "account.html");
+          state.message = "Email verified. Sign in to continue.";
+          state.messageKind = "ok";
+          return refreshPortal();
+        })
+        .catch(function (err) {
+          state.message = apiMessage(err);
+          state.messageKind = "error";
+          renderAccountPortal();
+        });
+    }
+  }
+
+  // ---- Shop page -----------------------------------------------------------
+  function renderShop() {
+    var grid = $("#shop-grid");
+    if (!grid) return;
+    grid.innerHTML = state.shopItems.map(function (item) {
+      return (
+        '<article class="shop-card">' +
+        '<div class="shop-card-art" aria-hidden="true">' + escapeHtml(item.tag.charAt(0)) + "</div>" +
+        '<div class="shop-card-body">' +
+        '<span class="shop-tag">' + escapeHtml(item.tag) + "</span>" +
+        '<h3 class="shop-card-name">' + escapeHtml(item.name) + "</h3>" +
+        '<p class="shop-card-desc">' + escapeHtml(item.desc) + "</p>" +
+        '<div class="shop-card-price">' + fmt(item.gold) + ' gold<span class="usd">In-game currency only</span></div>' +
+        '<button class="btn btn-gold" data-shop-buy="' + escapeHtml(item.id) + '"' + (selectedCharacter() ? "" : " disabled") + ">Buy with gold</button>" +
+        '<p class="field-error" id="shop-error-' + escapeHtml(item.id) + '" aria-live="polite"></p>' +
+        "</div></article>"
+      );
+    }).join("");
+    var list = $("#cart-items");
+    if (list) list.innerHTML = '<li class="cart-empty">Purchases are submitted directly to the server. No browser cart is authoritative.</li>';
+    setText("#cart-count", "0");
+    setText("#cart-total", "0");
+    setText("#cart-total-2", "0");
+    var checkout = $("#checkout-btn");
+    if (checkout) {
+      checkout.disabled = true;
+      checkout.textContent = "Checkout disabled";
+    }
+    var clear = $("#clear-cart-btn");
+    if (clear) clear.hidden = true;
+    if (grid.dataset.wired !== "1") {
+      grid.addEventListener("click", function (e) {
+        var btn = e.target.closest ? e.target.closest("[data-shop-buy]") : null;
+        if (!btn) return;
+        var itemId = btn.getAttribute("data-shop-buy");
+        var character = selectedCharacter();
+        var err = $("#shop-error-" + itemId);
+        if (err) err.textContent = "";
+        api("/v1/shop/purchase", { method: "POST", body: { character_id: character && character.character_id, shop_key: itemId } })
+          .then(function (body) {
+            if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;
+            if (err) err.textContent = "Purchase accepted by server.";
+            renderHoldings();
+          })
+          .catch(function (ex) {
+            if (err) err.textContent = apiMessage(ex);
+          });
+      });
+      grid.dataset.wired = "1";
+    }
+  }
+
+  // ---- Houses page ---------------------------------------------------------
+  function blankHouse(plot) {
+    return {
+      property_id: plot.property_id,
+      zone: plot.zone,
+      plot_id: plot.plot_id,
+      district: plot.district,
+      status: plot.status,
+      owner_name: plot.owner_name,
+      owned_by_character: false,
+      primary_price_gold: plot.primary_price_gold,
+      listed_price_gold: plot.listed_price_gold,
+      sale_count: plot.sale_count,
+    };
+  }
+  function mergeHouse(target, source) {
+    if (!source) return target;
+    ["property_id", "zone", "plot_id", "district", "status", "owner_name", "primary_price_gold", "listed_price_gold", "sale_count", "owned_by_character"].forEach(function (key) {
+      if (Object.prototype.hasOwnProperty.call(source, key) && source[key] != null) target[key] = source[key];
+    });
+    return target;
+  }
+  function loadHouseCards() {
+    var byId = {};
+    HOUSE_PLOTS.forEach(function (plot) {
+      byId[plot.property_id] = blankHouse(plot);
+    });
+
+    return api("/v1/property/market")
+      .then(function (body) {
+        (body.listings || []).forEach(function (listing) {
+          if (!byId[listing.property_id]) byId[listing.property_id] = blankHouse(listing);
+          mergeHouse(byId[listing.property_id], listing);
+        });
+      })
+      .catch(function () {})
+      .then(function () {
+        return Promise.all(HOUSE_PLOTS.map(function (plot) {
+          return api("/v1/property/ledger?property_id=" + encodeURIComponent(plot.property_id))
+            .then(function (ledger) {
+              var card = byId[plot.property_id];
+              if (!card) return;
+              card.owner_name = ledger.owner_name || null;
+              card.sale_count = typeof ledger.sale_count === "number" ? ledger.sale_count : card.sale_count;
+              card.district = ledger.district || card.district;
+              if (card.status === "unknown") card.status = ledger.owner_name ? "owned" : "unowned";
+            })
+            .catch(function () {});
+        }));
+      })
+      .then(function () {
+        return HOUSE_PLOTS.map(function (plot) { return byId[plot.property_id]; });
+      });
+  }
+  function houseIsMine(h) {
+    var character = selectedCharacter();
+    return !!(h.owned_by_character || (character && h.owner_name && h.owner_name === character.name));
+  }
+  function housePrice(h) {
+    return h.status === "listed" && h.listed_price_gold != null ? h.listed_price_gold : h.primary_price_gold;
+  }
+  function houseStatusLabel(h) {
+    if (houseIsMine(h) && h.status === "listed") return "Listed by you";
+    if (houseIsMine(h)) return "Owned by you";
+    if (h.status === "listed") return "Listed";
+    if (h.status === "unowned") return "Available";
+    if (h.owner_name) return "Owned";
+    return "Server status pending";
+  }
+  function houseActionsHtml(h) {
+    var character = selectedCharacter();
+    var mine = houseIsMine(h);
+    var price = housePrice(h);
+    if (!character) {
+      return '<button class="btn btn-gold btn-block" disabled>Choose a character</button>';
+    }
+    if ((h.status === "unowned" || h.status === "listed") && !mine) {
+      return '<button class="btn btn-gold btn-block" data-house-buy="' + attr(h.property_id) + '">Buy - ' + fmt(price) + " gold</button>";
+    }
+    if (mine && h.status === "listed") {
+      return '<button class="btn btn-ghost btn-block" data-house-unlist="' + attr(h.property_id) + '">Unlist</button>';
+    }
+    if (mine) {
+      return (
+        '<form class="resale-row" data-house-list="' + attr(h.property_id) + '" novalidate>' +
+        '<label class="resale-label" for="price-' + attr(h.plot_id || h.property_id) + '">Resale price (gold)</label>' +
+        '<div class="resale-controls">' +
+        '<input class="resale-input" type="number" id="price-' + attr(h.plot_id || h.property_id) + '" name="price" min="1" inputmode="numeric" placeholder="e.g. ' + fmt(h.primary_price_gold) + '" />' +
+        '<button class="btn btn-gold" type="submit">List</button>' +
+        "</div></form>"
+      );
+    }
+    return '<p class="resale-note">Owned' + (h.owner_name ? " by " + escapeHtml(h.owner_name) : "") + ".</p>";
+  }
+  function houseCardHtml(h) {
+    var price = housePrice(h);
+    return (
+      '<header class="house-head"><h3 class="house-name">' + escapeHtml(h.district || h.plot_id || h.property_id) + '</h3><span class="house-world">' +
+      escapeHtml(h.zone || "High City") + " · " + escapeHtml(h.property_id) + "</span></header>" +
+      '<dl class="house-meta">' +
+      "<div><dt>Plot</dt><dd>" + escapeHtml(h.plot_id || "-") + "</dd></div>" +
+      "<div><dt>Price</dt><dd><span class=\"gold\">" + fmt(price) + "</span> gold</dd></div>" +
+      "<div><dt>Status</dt><dd>" + escapeHtml(houseStatusLabel(h)) + "</dd></div>" +
+      "<div><dt>Sales</dt><dd>" + fmt(h.sale_count || 0) + "</dd></div>" +
+      "</dl>" +
+      '<div class="house-bid">' + houseActionsHtml(h) + '<p class="field-error" id="house-error-' + attr(h.property_id) + '" aria-live="polite"></p></div>'
+    );
+  }
+  function renderHouses() {
     var grid = $("#houses-grid");
-    if (!grid) return; // not the houses page
+    if (!grid) return;
+    grid.innerHTML = '<article class="parchment"><p class="muted">Loading house market...</p></article>';
+    loadHouseCards()
+      .then(function (houses) {
+        if (!houses.length) {
+          grid.innerHTML = '<article class="parchment"><p class="muted">No server property listings are available yet.</p></article>';
+          return;
+        }
+        grid.innerHTML = houses.map(function (h) {
+          return '<article class="house-card" data-house="' + attr(h.property_id) + '">' + houseCardHtml(h) + "</article>";
+        }).join("");
+      })
+      .catch(function () {
+        grid.innerHTML = '<article class="parchment"><p class="muted">Could not reach the server property market. No local ownership preview is used.</p></article>';
+      });
+    if (grid.dataset.wired !== "1") {
+      grid.addEventListener("click", function (e) {
+        var buy = e.target.closest ? e.target.closest("[data-house-buy]") : null;
+        var unlist = e.target.closest ? e.target.closest("[data-house-unlist]") : null;
+        var id = buy ? buy.getAttribute("data-house-buy") : unlist ? unlist.getAttribute("data-house-unlist") : "";
+        if (!id) return;
+        var err = $("#house-error-" + id);
+        if (err) err.textContent = "";
+        api(buy ? "/v1/property/buy" : "/v1/property/unlist", {
+          method: "POST",
+          body: { character_id: selectedCharacter() && selectedCharacter().character_id, property_id: id },
+        })
+          .then(function (body) {
+            if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;
+            if (err) err.textContent = buy ? "Purchase accepted by server." : "Unlisted by server.";
+            renderHoldings();
+            renderHouses();
+          })
+          .catch(function (ex) {
+            if (err) err.textContent = apiMessage(ex);
+          });
+      });
+      grid.addEventListener("submit", function (e) {
+        var form = e.target.closest ? e.target.closest("[data-house-list]") : null;
+        if (!form) return;
+        e.preventDefault();
+        var id = form.getAttribute("data-house-list");
+        var input = form.querySelector('input[name="price"]');
+        var price = input ? parseInt(input.value, 10) : NaN;
+        var err = $("#house-error-" + id);
+        if (err) err.textContent = "";
+        if (!Number.isInteger(price) || price < 1) {
+          if (err) err.textContent = "Enter a positive gold price.";
+          return;
+        }
+        api("/v1/property/list", {
+          method: "POST",
+          body: { character_id: selectedCharacter() && selectedCharacter().character_id, property_id: id, price_gold: price },
+        })
+          .then(function () {
+            if (err) err.textContent = "Listed by server.";
+            renderHouses();
+          })
+          .catch(function (ex) {
+            if (err) err.textContent = apiMessage(ex);
+          });
+      });
+      grid.dataset.wired = "1";
+    }
+  }
+
+  function renderAll() {
+    renderHoldings();
+    applyAccountGates();
+    renderAccountPortal();
+    renderShop();
     renderHouses();
   }
 
-  // ---- Year + boot ---------------------------------------------------------
   function initMisc() {
     var y = $("#year");
     if (y) y.textContent = new Date().getFullYear();
@@ -781,18 +829,11 @@
 
   function boot() {
     initTabs();
-    initCart();
-    initAccount();
-    initHouses();
-    renderHoldings();
-    applyAccountGates();
     initMisc();
-    render();
+    handleAccountQuery();
+    refreshPortal();
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", boot);
-  } else {
-    boot();
-  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
 })();

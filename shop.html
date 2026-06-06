@@ -6,7 +6,7 @@
     <title>Shop — Akalynth: The Coin Exchange</title>
     <meta
       name="description"
-      content="The Coin Exchange of High City — coin packs, premium time, and cosmetics. Coin buys color, never advantage. Preview storefront (pre-alpha); no real payments processed."
+      content="The Coin Exchange of High City — in-game-currency shop preview for server-backed Akalynth accounts. No real-money payments in V1."
     />
     <link
       rel="icon"
@@ -17,7 +17,7 @@
     <meta property="og:title" content="The Coin Exchange — Akalynth Shop" />
     <meta
       property="og:description"
-      content="The Coin Exchange of High City — coin, premium time, and cosmetics; looks only, never power. Preview storefront (pre-alpha) — no real payments processed."
+      content="The Coin Exchange of High City — in-game-currency shop surface for Akalynth accounts. No real-money payments in V1."
     />
     <meta property="og:image" content="assets/akalynth/visuals/og/03-forgehold.og-1200x630.webp" />
     <meta
@@ -30,8 +30,8 @@
   </head>
   <body data-page="shop" data-requires-account>
     <!--
-      Akalynth shop page. Shares chrome and the localStorage cart with index.html.
-      Preview storefront only — no real payments are processed (pre-alpha).
+      Akalynth shop page. Static frontend only: account and economy authority
+      live on the Akalynth API. No real-money payments in V1.
       Classic-MMO look recreated with original CSS and Akalynth branding.
     -->
     <a class="skip-link" href="#main">Skip to content</a>
@@ -96,7 +96,7 @@
               <p class="holdings-name"><strong id="holdings-name">—</strong></p>
               <p class="muted small">City: <span id="holdings-world">—</span></p>
               <p class="holdings-gold">
-                <span class="gold" id="holdings-gold">0</span> preview gold
+                <span class="gold" id="holdings-gold">-</span> gold
               </p>
               <p class="muted small">Premium: <strong id="holdings-premium">—</strong></p>
             </div>
@@ -104,11 +104,11 @@
         </section>
 
         <section class="panel">
-          <h2 class="panel-title">Your Pack</h2>
+          <h2 class="panel-title">Server Purchase</h2>
           <div class="panel-body">
             <p class="cart-summary">
-              <span id="cart-count">0</span> item(s) ·
-              <span id="cart-total">0</span> coins
+              <span id="cart-count">0</span> queued ·
+              <span id="cart-total">0</span> local total
             </p>
             <a class="btn btn-ghost btn-block" href="index.html#home">← Back to the Realm</a>
           </div>
@@ -128,8 +128,8 @@
         <h1 class="page-title">The Coin Exchange</h1>
         <article class="parchment">
           <p class="lede">
-            The Coin Exchange is where the static preview shows a little color:
-            comfort, cosmetics, and site-only preview coins for High City adventurers.
+            The Coin Exchange is where High City adventurers spend earned
+            in-game currency on non-power items and expression.
           </p>
           <p>
             Akalynth holds one line above the counter: coin buys color, never
@@ -140,12 +140,12 @@
         </article>
         <article class="parchment">
           <p class="lede">
-            Preview the Akalynth storefront and outfit your local preview character.
-            Cosmetic bundles show the intended fairness rule: looks only, never power.
+            Preview the Akalynth storefront shape for server-backed accounts.
+            The first live shop milestone is in-game currency only.
           </p>
           <p class="notice">
-            ⚠ Preview storefront. Akalynth is pre-alpha; <strong>no real payments are
-            processed</strong> and items are illustrative. The cart is a demonstration only.
+            ⚠ No Stripe, premium currency, or real-money payment is enabled in V1.
+            Purchases must be accepted by the server before they affect inventory.
           </p>
         </article>
 
@@ -153,16 +153,16 @@
           <!-- Cards injected by app.js -->
         </div>
 
-        <aside class="cart-panel parchment" aria-label="Cart">
-          <h2 class="section-title">Your Cart</h2>
+        <aside class="cart-panel parchment" aria-label="Server purchase status">
+          <h2 class="section-title">Purchase Status</h2>
           <ul class="cart-items" id="cart-items">
-            <li class="cart-empty">Your cart is empty.</li>
+            <li class="cart-empty">Purchases are sent directly to the server.</li>
           </ul>
           <div class="cart-foot">
-            <span class="cart-foot-label">Total</span>
-            <span class="cart-foot-total"><span id="cart-total-2">0</span> coins</span>
+            <span class="cart-foot-label">Browser cart</span>
+            <span class="cart-foot-total"><span id="cart-total-2">0</span></span>
           </div>
-          <button class="btn btn-gold btn-block" id="checkout-btn" disabled>Checkout (preview)</button>
+          <button class="btn btn-gold btn-block" id="checkout-btn" disabled>Checkout disabled</button>
           <button class="btn btn-ghost btn-block" id="clear-cart-btn">Clear cart</button>
         </aside>
         </div>

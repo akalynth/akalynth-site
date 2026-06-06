@@ -6,7 +6,7 @@
     <title>Houses — Akalynth: The House Plots</title>
     <meta
       name="description"
-      content="The House Plots of High City — marked plots below the Guild Hall, waiting for owners. Preview buying and reselling in in-game gold; auctions planned. Pre-alpha local preview, no real ownership."
+      content="The House Plots of High City — server-backed property market preview for Akalynth accounts. Fixed-price and resale first; auctions remain gated."
     />
     <link
       rel="icon"
@@ -17,7 +17,7 @@
     <meta property="og:title" content="Houses — Akalynth" />
     <meta
       property="og:description"
-      content="The House Plots of High City — plots below the Guild Hall, waiting for owners. Preview buy + resale in in-game gold; auctions planned. Pre-alpha, no real ownership."
+      content="The House Plots of High City — server-backed property market preview. Fixed-price and resale first; auctions remain gated."
     />
     <meta property="og:image" content="assets/akalynth/visuals/og/01-high-city-dawn.og-1200x630.webp" />
     <meta
@@ -31,10 +31,8 @@
   <body data-page="houses" data-requires-account>
     <!--
       Akalynth houses page. Shares chrome with index.html / shop.html.
-      Reflects the supported server model: fixed-price buy + resale, in-game gold
-      (distinct from the shop's preview coins). Auctions are PLANNED only and shown
-      non-interactively. Local preview: no real ownership, settlement, or game
-      state. Classic-MMO look recreated with original CSS and Akalynth branding.
+      Reflects the supported server model: fixed-price buy + resale, in-game gold.
+      Browser state is display-only; ownership and settlement live on the server.
     -->
     <a class="skip-link" href="#main">Skip to content</a>
 
@@ -89,7 +87,7 @@
               <p class="holdings-name"><strong id="holdings-name">—</strong></p>
               <p class="muted small">City: <span id="holdings-world">—</span></p>
               <p class="holdings-gold">
-                <span class="gold" id="holdings-gold">0</span> preview gold
+                <span class="gold" id="holdings-gold">-</span> gold
               </p>
               <p class="muted small">Premium: <strong id="holdings-premium">—</strong></p>
             </div>
@@ -122,21 +120,18 @@
         </article>
         <article class="parchment">
           <p class="lede">
-            Preview buying a plot in High City at a <strong>fixed price</strong>, paid in
-            <strong>in-game gold</strong> — separate from the shop's site-only
-            <strong>preview coins</strong>. Own one? You can resell it to other
-            players by listing it for gold.
+            View High City's property market at a <strong>fixed price</strong>, paid in
+            <strong>in-game gold</strong>. Ownership and resale are server-authoritative.
           </p>
           <p class="muted small">
             Housing is in <strong>High City</strong>. Rookguard — the
             training zone — has no houses.
           </p>
           <p class="notice">
-            ⚠ House purchases and resale are previewed here using in-game gold.
+            ⚠ House purchases and resale require server acceptance using in-game gold.
             <strong>Auctions are planned</strong> and will not become available
-            until the server-side receipt and verifier lane is implemented. This
-            page is a local preview: it does not prove ownership, spend real
-            currency, or affect live game state.
+            on this website until the receipt, escrow/refund, settlement, and
+            verifier lanes are publicly wired.
           </p>
         </article>
 

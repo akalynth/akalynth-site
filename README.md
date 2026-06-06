@@ -1,14 +1,14 @@
 # Akalynth Site
 
-This repository contains the public static Akalynth website preview.
+This repository contains the public static Akalynth website and portal frontend.
 
-It is a pre-alpha, client-side-only site for Akalynth's High City surface:
+It is a pre-alpha static site for Akalynth's High City surface:
 
 - `index.html` public landing, High City preview, and Android beta call to action
 - `beta.html` public Android beta download pointer
-- `shop.html` static preview storefront
-- `houses.html` local housing preview
-- `account.html` local character preview
+- `shop.html` in-game-currency shop portal for the Akalynth API
+- `houses.html` server property market portal for the Akalynth API
+- `account.html` static account portal shell for the Akalynth API
 - `forum.html` browser-local community boards preview
 - `codex.html` and `library.html` public-safe visual lore archive
 - `css/`, `js/`, and `screenshots/` assets used by the static site
@@ -20,9 +20,12 @@ authority, account authority, payment processing, runtime state, receipt
 authority, anti-cheat enforcement logic, operator tooling, hosting credentials,
 or private roadmap material.
 
-Shop, account, and housing interactions are browser-local previews unless they
-are explicitly connected to a named server receipt and verifier path in a
-future release.
+The account, shop, wallet, and housing pages are static frontends that call named
+Akalynth API endpoints when available. This repository still does not contain
+account authority, session authority, receipt signing, economy authority, or
+runtime state. Shop and housing pages do not use browser-local state as
+authority; purchases and property actions are settled only when the server emits
+the relevant receipts.
 
 ## Local Preview
 
