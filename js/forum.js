@@ -9,7 +9,9 @@
  *
  * Identity: posting requires a signed-in character. Each post is authored as the
  * account's character (the account IS the character) — name + world signature.
- * Reading is public; posting is gated.
+ * Reading is public; basic posting is character-gated. Authority-bearing forum
+ * actions can require a preview Identity Seal: a locally registered PGP public
+ * key fingerprint. This static site does not verify PGP signatures.
  *
  * Security: posts are free user text. ALL user/author strings reach the DOM via
  * textContent only — never innerHTML — so post content cannot inject markup.
@@ -21,32 +23,75 @@
 
   var FORUM_KEY = "akalynth.forum.v1";
   var ACCOUNT_KEY = "akalynth.account.v1";
+  var IDENTITY_KEY = "akalynth.identitySeal.v1";
   var root = null;
 
   var WORLD_NAMES = { azura: "High City", rookhold: "Rookguard", emberfell: "Emberfell" };
   function worldNameOf(id) { return WORLD_NAMES[id] || "the realm"; }
 
+  var PROJECT_KEY_FINGERPRINT = "AKALYNTH PROJECT KEY - F1A0 9C2E 8841 77D0 3B11 A72C 5D90 C0DE A11E 0001";
+
+  var IDENTITY_TIERS = {
+    unsigned: {
+      label: "Unsigned",
+      desc: "Normal forum post. No cryptographic authorship proof."
+    },
+    "key-bound": {
+      label: "Key-bound",
+      desc: "The account has registered a public key fingerprint."
+    },
+    signed: {
+      label: "Signed",
+      desc: "A live forum post would include a valid detached signature from the registered key."
+    },
+    project: {
+      label: "Project-signed",
+      desc: "Official announcements must be signed by the Akalynth project key."
+    }
+  };
+
   // ---- Boards (static, original Akalynth) ----------------------------------
   var BOARDS = [
-    { id: "azura-square", name: "The High City Square",
+    { id: "azura-square", name: "The High City Square", identityPolicy: "PGP not required",
       desc: "General talk for the realm — news, first impressions, and notices from the city." },
     { id: "world-azura", name: "High City Board",
+      identityPolicy: "PGP not required",
       desc: "Players gathering in High City: meetups, sightings, and stories from the open city." },
     { id: "plots-trade", name: "Plots & Trade",
+      identityPolicy: "Identity Seal required for posting",
+      requiresSeal: true,
       desc: "The House Plots below the Guild Hall, and trading in in-game gold between characters." },
     { id: "guild-hall", name: "The Guild Hall",
+      identityPolicy: "Key recommended; signed charters required in live forum",
       desc: "Forming guilds, finding members, and planning gatherings in the hall that waits for one." },
     { id: "wardens-help", name: "Wardens' Help Desk",
+      identityPolicy: "Optional for bug reports; required for authority actions",
       desc: "New to Rookguard? Ask the Wardens (and other players) how the realm works." },
     { id: "the-tavern", name: "The Tavern",
+      identityPolicy: "PGP not required",
       desc: "Off-topic and tales by the fire. Tem keeps the bots out; you keep it friendly." }
   ];
   var boardById = {};
   BOARDS.forEach(function (b) { boardById[b.id] = b; });
 
   // ---- Seed threads (read-only, locked, authored as lore figures) ----------
-  function seedPost(id, name, world, role, body, at) {
-    return { id: id, authorName: name, authorWorld: world, role: role, body: body, createdAt: at };
+  function seedPost(id, name, world, role, body, at, identity) {
+    return {
+      id: id,
+      authorName: name,
+      authorWorld: world,
+      role: role,
+      body: body,
+      createdAt: at,
+      identity: identity || { tier: "unsigned" }
+    };
+  }
+  function projectIdentity() {
+    return {
+      tier: "project",
+      fingerprint: PROJECT_KEY_FINGERPRINT,
+      status: "Policy preview: official posts require project-key signatures in the live forum."
+    };
   }
   var SEED_THREADS = [
     { id: "seed-1", boardId: "azura-square", title: "Welcome to the High City Square",
@@ -54,13 +99,13 @@
       createdAt: "2026-05-28T09:00:00.000Z",
       posts: [ seedPost("seed-1-1", "Chronicler Veyl", "azura", "Chronicler",
         "These boards are a quiet corner of the realm — a place to leave word for travellers who come after you. Read freely; when you carry a character, you may add your own voice.",
-        "2026-05-28T09:00:00.000Z") ] },
+        "2026-05-28T09:00:00.000Z", projectIdentity()) ] },
     { id: "seed-2", boardId: "azura-square", title: "Notices from the city",
       authorName: "Warden Ashpenny", authorWorld: "azura", isSeed: true, locked: true,
       createdAt: "2026-06-01T12:00:00.000Z",
       posts: [ seedPost("seed-2-1", "Warden Ashpenny", "azura", "Warden",
         "The gate to High City opens for any who clear the keep at Rookguard. If the road feels strange at first, the Wardens are watching — not judging.",
-        "2026-06-01T12:00:00.000Z") ] },
+        "2026-06-01T12:00:00.000Z", projectIdentity()) ] },
 
     { id: "seed-3", boardId: "world-azura", title: "Sightings on the open road",
       authorName: "Wanderer Pell", authorWorld: "azura", isSeed: true, locked: true,
@@ -84,20 +129,20 @@
       createdAt: "2026-05-27T10:00:00.000Z",
       posts: [ seedPost("seed-5-1", "Steward Calder", "azura", "Steward",
         "Three plots are marked along the residential row, still without owners. When trade opens between characters, this is where word will be left.",
-        "2026-05-27T10:00:00.000Z") ] },
+        "2026-05-27T10:00:00.000Z", projectIdentity()) ] },
     { id: "seed-6", boardId: "plots-trade", title: "On in-game gold",
       authorName: "Steward Calder", authorWorld: "azura", isSeed: true, locked: true,
       createdAt: "2026-05-29T14:00:00.000Z",
       posts: [ seedPost("seed-6-1", "Steward Calder", "azura", "Steward",
         "Gold earned in the world is the realm's coin. What changes hands here will be plots and goods — never advantage.",
-        "2026-05-29T14:00:00.000Z") ] },
+        "2026-05-29T14:00:00.000Z", projectIdentity()) ] },
 
     { id: "seed-7", boardId: "guild-hall", title: "A hall that waits for a guild",
       authorName: "Chronicler Veyl", authorWorld: "azura", isSeed: true, locked: true,
       createdAt: "2026-05-26T08:00:00.000Z",
       posts: [ seedPost("seed-7-1", "Chronicler Veyl", "azura", "Chronicler",
         "The Guild Hall stands with its doors shut, raised before there were guilds to fill it. Leave word here if you would gather others.",
-        "2026-05-26T08:00:00.000Z") ] },
+        "2026-05-26T08:00:00.000Z", projectIdentity()) ] },
     { id: "seed-8", boardId: "guild-hall", title: "Looking for fellow travellers",
       authorName: "Wanderer Pell", authorWorld: "azura", isSeed: true, locked: true,
       createdAt: "2026-06-03T16:00:00.000Z",
@@ -111,16 +156,16 @@
       posts: [
         seedPost("seed-9-1", "Warden Ashpenny", "azura", "Warden",
           "The keep teaches three things — to move, to speak, and to answer Tem. Pass them and the gate opens. Ask here if any step puzzles you.",
-          "2026-05-25T11:00:00.000Z"),
+          "2026-05-25T11:00:00.000Z", projectIdentity()),
         seedPost("seed-9-2", "Chronicler Veyl", "azura", "Chronicler",
           "And once you are through, the Legend Stone remembers what you do. No hurry — the realm keeps its hours.",
-          "2026-05-25T13:30:00.000Z") ] },
+          "2026-05-25T13:30:00.000Z", projectIdentity()) ] },
     { id: "seed-10", boardId: "wardens-help", title: "Who is Tem?",
       authorName: "Warden Ashpenny", authorWorld: "azura", isSeed: true, locked: true,
       createdAt: "2026-05-31T09:30:00.000Z",
       posts: [ seedPost("seed-10-1", "Warden Ashpenny", "azura", "Warden",
         "Tem is the realm's guardian against bots — a friendly challenge at the keep, no more. Humans, not machines, earn what High City offers.",
-        "2026-05-31T09:30:00.000Z") ] },
+        "2026-05-31T09:30:00.000Z", projectIdentity()) ] },
 
     { id: "seed-11", boardId: "the-tavern", title: "Tales by the fire",
       authorName: "Tavernkeep Moll", authorWorld: "azura", isSeed: true, locked: true,
@@ -165,6 +210,48 @@
       var p = JSON.parse(raw);
       return (p && typeof p === "object" && p.name) ? p : null;
     } catch (err) { return null; }
+  }
+
+  function loadIdentitySeal() {
+    try {
+      var raw = localStorage.getItem(IDENTITY_KEY);
+      if (!raw) return null;
+      var p = JSON.parse(raw);
+      return (p && typeof p === "object" && p.fingerprint) ? p : null;
+    } catch (err) { return null; }
+  }
+  function saveIdentitySeal(seal) {
+    try { localStorage.setItem(IDENTITY_KEY, JSON.stringify(seal)); }
+    catch (err) { /* storage unavailable — seal stays in memory for the session */ }
+  }
+  function clearIdentitySeal() {
+    try { localStorage.removeItem(IDENTITY_KEY); } catch (err) { /* ignore */ }
+  }
+  function normalizeFingerprint(value) {
+    return (value || "")
+      .toUpperCase()
+      .replace(/[^A-F0-9]/g, "")
+      .replace(/(.{4})/g, "$1 ")
+      .trim();
+  }
+  function isFingerprintLike(value) {
+    var compact = (value || "").replace(/\s/g, "");
+    return /^[A-F0-9]{16,40}$/.test(compact);
+  }
+  function hasIdentitySeal() {
+    return !!loadIdentitySeal();
+  }
+  function boardRequiresSeal(boardId) {
+    return !!(boardById[boardId] && boardById[boardId].requiresSeal);
+  }
+  function identityForAccount() {
+    var seal = loadIdentitySeal();
+    if (!seal) return { tier: "unsigned" };
+    return {
+      tier: "key-bound",
+      fingerprint: seal.fingerprint,
+      status: "Key-bound preview: fingerprint is registered locally; no detached signature is verified here."
+    };
   }
 
   // ---- Derived helpers ------------------------------------------------------
@@ -240,6 +327,149 @@
     wrap.appendChild(p);
     return wrap;
   }
+  function identityRequiredPrompt(board) {
+    var wrap = el("article", "parchment forum-signin");
+    wrap.appendChild(el("p", "lede", "Bind an Identity Seal to post here."));
+    wrap.appendChild(el("p", null,
+      board.name + " is an authority-bearing area. In this static preview, posting here requires a locally registered PGP public key fingerprint."));
+    wrap.appendChild(el("p", "muted small",
+      "This does not verify detached signatures or prove trust. It only previews the rule: PGP is not required to speak, but it is required to speak with authority."));
+    var a = el("a", "btn btn-gold", "Return to forum identity");
+    a.href = "forum.html#identity-seal";
+    wrap.appendChild(a);
+    return wrap;
+  }
+  function identityBadge(tier, extraClass) {
+    var info = IDENTITY_TIERS[tier] || IDENTITY_TIERS.unsigned;
+    var badge = el("span", "identity-badge identity-badge--" + tier + (extraClass ? " " + extraClass : ""), info.label);
+    badge.title = info.desc;
+    return badge;
+  }
+  function identityFooter(post) {
+    var identity = post.identity || { tier: "unsigned" };
+    var info = IDENTITY_TIERS[identity.tier] || IDENTITY_TIERS.unsigned;
+    var wrap = el("div", "post-identity");
+    wrap.appendChild(identityBadge(identity.tier));
+    var text = identity.status || info.desc;
+    if (identity.fingerprint) text += " Fingerprint: " + identity.fingerprint + ".";
+    wrap.appendChild(el("span", "post-identity__text", text));
+    return wrap;
+  }
+  function identityPolicyPanel() {
+    var wrap = el("section", "parchment identity-panel");
+    wrap.id = "identity-seal";
+    wrap.appendChild(el("h2", "section-title", "Forum Identity Seal"));
+    wrap.appendChild(el("p", "lede",
+      "PGP is not required to speak. PGP is required to speak with authority."));
+    wrap.appendChild(el("p", null,
+      "Akalynth uses the Identity Seal as a public-key continuity layer for authority-bearing forum posts. It proves key-controlled authorship continuity, not honesty, legal identity, gameplay state, or truth."));
+
+    var badges = el("div", "identity-badges");
+    ["unsigned", "key-bound", "signed", "project"].forEach(function (tier) {
+      var item = el("div", "identity-badge-card");
+      item.appendChild(identityBadge(tier));
+      item.appendChild(el("p", null, IDENTITY_TIERS[tier].desc));
+      badges.appendChild(item);
+    });
+    wrap.appendChild(badges);
+
+    var table = el("div", "identity-policy-grid");
+    [
+      ["Public news", "No", "Easy access"],
+      ["General chat", "No", "Do not block onboarding"],
+      ["Bug reports", "Optional", "Evidence matters more than identity"],
+      ["Guild recruitment", "Recommended", "Continuity is useful"],
+      ["Marketplace / trades", "Yes", "Dispute evidence"],
+      ["Moderator actions", "Yes", "Authority boundary"],
+      ["Official announcements", "Yes", "Project authenticity"],
+      ["Governance proposals", "Yes", "Resists throwaway manipulation"],
+      ["Lore canon submissions", "Optional signed", "Authorship lineage"]
+    ].forEach(function (row) {
+      var r = el("div", "identity-policy-row");
+      r.appendChild(el("strong", null, row[0]));
+      r.appendChild(el("span", null, row[1]));
+      r.appendChild(el("span", null, row[2]));
+      table.appendChild(r);
+    });
+    wrap.appendChild(table);
+
+    var note = el("p", "muted small",
+      "Static preview boundary: this page stores only a local fingerprint and never verifies real signatures, uploads keys, creates accounts, or writes server state.");
+    wrap.appendChild(note);
+    return wrap;
+  }
+  function identitySealCard() {
+    var acct = forumAccount();
+    var seal = loadIdentitySeal();
+    var wrap = el("article", "parchment identity-seal-card");
+    wrap.appendChild(el("h2", "section-title", "Your Identity Seal"));
+    if (!acct) {
+      wrap.appendChild(el("p", "lede", "Create a character before binding a preview key."));
+      var a = el("a", "btn btn-gold", "Create character");
+      a.href = "account.html";
+      wrap.appendChild(a);
+      return wrap;
+    }
+    if (seal) {
+      wrap.appendChild(el("p", "lede", "Identity Seal: Active"));
+      var details = el("dl", "summary-list identity-summary");
+      [
+        ["Character", acct.name],
+        ["Key fingerprint", seal.fingerprint],
+        ["Signed posts", "0 - detached signature verification is not implemented in this static preview"],
+        ["Last key rotation", seal.boundAt ? new Date(seal.boundAt).toISOString().slice(0, 10) : "Preview only"]
+      ].forEach(function (row) {
+        var div = el("div");
+        div.appendChild(el("dt", null, row[0]));
+        div.appendChild(el("dd", null, row[1]));
+        details.appendChild(div);
+      });
+      wrap.appendChild(details);
+      var clearBtn = el("button", "btn btn-ghost", "Clear preview key");
+      clearBtn.type = "button";
+      clearBtn.addEventListener("click", function () {
+        clearIdentitySeal();
+        renderBoardIndex();
+      });
+      wrap.appendChild(clearBtn);
+      return wrap;
+    }
+
+    wrap.appendChild(el("p", "lede", "Bind a public key fingerprint."));
+    wrap.appendChild(el("p", "muted small",
+      "Local preview only. Registering a fingerprint here does not upload a key or verify a signature."));
+    var form = el("form", "account-form identity-form");
+    var field = el("div", "field");
+    var label = el("label", null, "PGP public key fingerprint");
+    label.setAttribute("for", "identity-fingerprint");
+    field.appendChild(label);
+    var input = document.createElement("input");
+    input.type = "text";
+    input.id = "identity-fingerprint";
+    input.maxLength = 80;
+    input.setAttribute("placeholder", "ABCD 1234 EF56 7890");
+    field.appendChild(input);
+    form.appendChild(field);
+    var err = el("p", "field-error");
+    err.setAttribute("aria-live", "polite");
+    form.appendChild(err);
+    var btn = el("button", "btn btn-gold btn-block", "Bind preview key");
+    btn.type = "submit";
+    form.appendChild(btn);
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var fp = normalizeFingerprint(input.value);
+      if (!isFingerprintLike(fp)) {
+        err.textContent = "Use 16-40 hexadecimal fingerprint characters.";
+        return;
+      }
+      saveIdentitySeal({ fingerprint: fp, boundAt: new Date().toISOString(), accountName: acct.name });
+      renderBoardIndex();
+      location.hash = "identity-seal";
+    });
+    wrap.appendChild(form);
+    return wrap;
+  }
   function boardHref(id) { return "forum.html?board=" + encodeURIComponent(id); }
   function threadHref(boardId, threadId) {
     return "forum.html?board=" + encodeURIComponent(boardId) + "&thread=" + encodeURIComponent(threadId);
@@ -250,6 +480,9 @@
     var acct = forumAccount();
     if (!acct) return "Create a character to post.";
     if (!boardById[boardId]) return "Unknown board.";
+    if (boardRequiresSeal(boardId) && !hasIdentitySeal()) {
+      return "This board requires an Identity Seal before posting authority-bearing trade claims.";
+    }
     title = (title || "").trim();
     body = (body || "").trim();
     if (title.length < 3 || title.length > 80) return "Title must be 3–80 characters.";
@@ -261,7 +494,14 @@
     state.threads.push({
       id: tid, boardId: boardId, title: title,
       authorName: acct.name, authorWorld: acct.world, createdAt: now,
-      posts: [{ id: pid, authorName: acct.name, authorWorld: acct.world, body: body, createdAt: now }]
+      posts: [{
+        id: pid,
+        authorName: acct.name,
+        authorWorld: acct.world,
+        body: body,
+        createdAt: now,
+        identity: identityForAccount()
+      }]
     });
     saveForum(state);
     location.href = threadHref(boardId, tid);
@@ -270,6 +510,9 @@
   function addReply(boardId, threadId, body) {
     var acct = forumAccount();
     if (!acct) return "Create a character to post.";
+    if (boardRequiresSeal(boardId) && !hasIdentitySeal()) {
+      return "This board requires an Identity Seal before posting authority-bearing trade claims.";
+    }
     body = (body || "").trim();
     if (body.length < 1 || body.length > 2000) return "Reply must be 1–2000 characters.";
     var state = loadForum();
@@ -280,7 +523,11 @@
     if (!t) return "This thread can't take replies."; // seed threads aren't user content
     t.posts.push({
       id: "p-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
-      authorName: acct.name, authorWorld: acct.world, body: body, createdAt: new Date().toISOString()
+      authorName: acct.name,
+      authorWorld: acct.world,
+      body: body,
+      createdAt: new Date().toISOString(),
+      identity: identityForAccount()
     });
     saveForum(state);
     return null;
@@ -295,6 +542,7 @@
     wrap.appendChild(sig);
     wrap.appendChild(el("div", "post-time", relativeTime(post.createdAt)));
     wrap.appendChild(el("div", "post-body", post.body));
+    wrap.appendChild(identityFooter(post));
     return wrap;
   }
 
@@ -306,6 +554,8 @@
     intro.appendChild(el("p", "lede",
       "Boards for High City and the wider Akalynth preview. Read freely; sign in with a character to start a thread or reply."));
     root.appendChild(intro);
+    root.appendChild(identityPolicyPanel());
+    root.appendChild(identitySealCard());
 
     var list = el("div", "forum-board-list");
     BOARDS.forEach(function (b) {
@@ -314,6 +564,9 @@
       var nameA = el("a", "forum-board-name", b.name); nameA.href = boardHref(b.id);
       main.appendChild(nameA);
       main.appendChild(el("p", "forum-board-desc", b.desc));
+      var policy = el("p", "forum-board-policy", b.identityPolicy);
+      if (b.requiresSeal) policy.appendChild(identityBadge("key-bound", "identity-badge--inline"));
+      main.appendChild(policy);
       row.appendChild(main);
 
       var meta = el("div", "forum-board-meta");
@@ -359,6 +612,7 @@
 
     var head = el("article", "parchment");
     head.appendChild(el("p", "lede", board.desc));
+    head.appendChild(el("p", "muted small", "Identity policy: " + board.identityPolicy + "."));
     var actions = el("div", "forum-actions");
     var nt = el("a", "btn btn-gold", "Start a new thread");
     nt.href = boardHref(boardId) + "&new=1";
@@ -379,6 +633,11 @@
       if (t.isSeed) {
         pills.appendChild(el("span", "forum-pill pill-pinned", "Pinned"));
         pills.appendChild(el("span", "forum-pill pill-locked", "Locked"));
+      }
+      if (t.posts[0] && t.posts[0].identity && t.posts[0].identity.tier === "project") {
+        pills.appendChild(identityBadge("project", "identity-badge--inline"));
+      } else if (t.posts[0] && t.posts[0].identity && t.posts[0].identity.tier === "key-bound") {
+        pills.appendChild(identityBadge("key-bound", "identity-badge--inline"));
       }
       if (t.posts.length >= 5) pills.appendChild(el("span", "forum-pill pill-hot", "Hot"));
       if (pills.childNodes.length) main.appendChild(pills);
@@ -425,12 +684,20 @@
     }
     var acct = forumAccount();
     if (!acct) { root.appendChild(signInPrompt("Create a character to reply.")); return; }
+    if (boardRequiresSeal(boardId) && !hasIdentitySeal()) {
+      root.appendChild(identityRequiredPrompt(board));
+      return;
+    }
     root.appendChild(replyComposer(boardId, threadId, acct));
   }
 
   function replyComposer(boardId, threadId, acct) {
     var wrap = el("article", "parchment forum-composer");
     wrap.appendChild(el("h2", "section-title", "Reply"));
+    if (boardRequiresSeal(boardId)) {
+      wrap.appendChild(el("p", "muted small",
+        "This authority-bearing board requires your preview Identity Seal. The post will be key-bound, not cryptographically signed in this static preview."));
+    }
     var form = el("form", "account-form");
     var field = el("div", "field");
     var label = el("label", null, "Reply as " + acct.name); label.setAttribute("for", "reply-body");
@@ -468,8 +735,16 @@
 
     var acct = forumAccount();
     if (!acct) { root.appendChild(signInPrompt("Create a character to start a thread.")); return; }
+    if (boardRequiresSeal(boardId) && !hasIdentitySeal()) {
+      root.appendChild(identityRequiredPrompt(board));
+      return;
+    }
 
     var wrap = el("article", "parchment forum-composer");
+    if (boardRequiresSeal(boardId)) {
+      wrap.appendChild(el("p", "muted small",
+        "This authority-bearing board requires your preview Identity Seal. The post will be key-bound, not cryptographically signed in this static preview."));
+    }
     var form = el("form", "account-form");
 
     var f1 = el("div", "field");

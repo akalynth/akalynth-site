@@ -1,0 +1,56 @@
+{
+  "lane_id": "AKALYNTH_FORUM_PGP_IDENTITY_SEAL_V1",
+  "generated_at": "2026-06-06T19:33:16Z",
+  "target": "forum_identity_signing_layer_for_authority_bearing_posts_without_blocking_basic_chat",
+  "repository": "akalynth/akalynth-site",
+  "branch": "codex/forum-pgp-identity-seal-v1",
+  "base_branch": "main",
+  "base_sha": "b2a624fca628b7c5d1594a154e155918ebe792a5",
+  "pre_receipt_tree_sha": "1f418fa83a19ec9ee588dc2d708ac81e0e650abf",
+  "policy": {
+    "public_read_requires_account": false,
+    "basic_chat_requires_character": true,
+    "authority_trade_board_requires_preview_identity_seal": true,
+    "official_seed_posts_marked_project_signed_policy": true,
+    "badges": [
+      "Unsigned",
+      "Key-bound",
+      "Signed",
+      "Project-signed"
+    ],
+    "claim": "PGP proves key-controlled authorship continuity for forum posts, not trust."
+  },
+  "static_boundary": {
+    "live_pgp_verification": false,
+    "backend_added": false,
+    "api_calls_added": false,
+    "network_calls_added": false,
+    "account_session_authority_added": false,
+    "private_keys_added": false,
+    "detached_signature_parser_or_verifier_added": false,
+    "server_side_moderation_marketplace_governance_or_guild_authority_added": false,
+    "browser_local_fingerprint_preview_only": true
+  },
+  "changed_files": [
+    "forum.html",
+    "js/forum.js",
+    "css/style.css",
+    "PUBLIC_BOUNDARY.md",
+    "PRE_ALPHA_NOTICE.md",
+    "docs/receipts/AKALYNTH_FORUM_PGP_IDENTITY_SEAL_V1.md",
+    "docs/receipts/AKALYNTH_FORUM_PGP_IDENTITY_SEAL_V1.json",
+    "docs/receipts/AKALYNTH_FORUM_PGP_IDENTITY_SEAL_V1.MANIFEST.sha256"
+  ],
+  "validation": {
+    "node_check_js_forum": "passed",
+    "scripts/check-static-site.sh": "passed",
+    "scripts/check-public-boundary.sh": "passed",
+    "git_diff_check": "passed",
+    "npm_test": "not_present_no_package_json",
+    "npm_run_build": "not_present_no_package_json",
+    "npm_run_lint": "not_present_no_package_json",
+    "npm_run_health": "not_present_no_package_json"
+  },
+  "no_deploy": true,
+  "no_merge": true
+}

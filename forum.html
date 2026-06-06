@@ -6,7 +6,7 @@
     <title>Forum — Akalynth: The Community Boards</title>
     <meta
       name="description"
-      content="The Akalynth community boards for the Akalynth preview — read the boards freely, sign in with a character to post. Browser-local preview-only forum; posts are not connected to any server."
+      content="The Akalynth community boards for the Akalynth preview — public read, character-based chat, and a preview PGP Identity Seal policy for authority-bearing posts."
     />
     <link
       rel="icon"
@@ -34,7 +34,9 @@
       BROWSER-LOCAL PREVIEW: boards and seed threads are read by everyone;
       posting requires a signed-in character and is stored only in this browser
       (localStorage "akalynth.forum.v1"). No server, no real accounts, no shared
-      or cross-user persistence. Classic-MMO look recreated with original CSS and
+      or cross-user persistence. PGP Identity Seal state is a browser-local
+      fingerprint preview only; no cryptographic signature verification happens
+      on this static page. Classic-MMO look recreated with original CSS and
       Akalynth branding. Forum logic lives in js/forum.js.
     -->
     <a class="skip-link" href="#main">Skip to content</a>
@@ -96,6 +98,17 @@
             </div>
           </div>
         </section>
+
+        <section class="panel">
+          <h2 class="panel-title">Identity Seal</h2>
+          <div class="panel-body">
+            <p class="muted small">
+              Public read stays open. Basic chat uses your character. Authority
+              posts require a preview public-key fingerprint.
+            </p>
+            <a class="btn btn-ghost btn-block" href="forum.html#identity-seal">View seal rules</a>
+          </div>
+        </section>
       </aside>
 
       <!-- Parchment content column -->
@@ -104,7 +117,8 @@
           ⚠ Community preview. This forum is <strong>preview-only</strong> and lives
           entirely in this browser; posts are <strong>not connected</strong> to any
           server, are visible only to you, and <strong>do not persist</strong> beyond
-          this device. No real account is involved.
+          this device. No real account is involved. The Identity Seal preview stores
+          a local PGP public-key fingerprint only; it does not verify signatures.
         </p>
 
         <div id="forum-root">
