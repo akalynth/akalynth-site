@@ -22,6 +22,8 @@
   --green: #6fae5a;
   --amber: #d9a23a;
   --blue: #6f9fd8;
+  --cyan: #7ed7d1;
+  --rose: #b86b7d;
   --shadow: rgba(0, 0, 0, 0.45);
   --font-display: "Trebuchet MS", "Palatino Linotype", Palatino, Georgia, serif;
   --font-body: Georgia, "Times New Roman", serif;
@@ -356,8 +358,8 @@ a {
   border-radius: var(--radius);
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(20, 17, 13, 0.88), rgba(20, 17, 13, 0.62) 48%, rgba(20, 17, 13, 0.12)),
-    url("../assets/codex/high-city-cross-section.png") center right / cover no-repeat;
+    linear-gradient(90deg, rgba(12, 11, 14, 0.9), rgba(20, 17, 13, 0.68) 46%, rgba(20, 17, 13, 0.12)),
+    url("../assets/akalynth/visuals/hero/01-high-city-dawn.hero-cover-1920x1080.webp") center right / cover no-repeat;
   box-shadow: 0 4px 14px var(--shadow);
 }
 .marketing-hero__shade {
@@ -374,7 +376,7 @@ a {
   font-size: 12px;
   letter-spacing: 1.4px;
   text-transform: uppercase;
-  color: var(--blue);
+  color: var(--cyan);
   font-weight: 700;
 }
 .marketing-hero__title {
@@ -452,6 +454,202 @@ a {
 .asset-gallery a:focus-visible span {
   color: var(--gold-deep);
   text-decoration: underline;
+}
+
+/* ---------- Visual archive cards ---------- */
+.visual-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 16px;
+  margin: 0 0 24px;
+}
+.visual-card {
+  min-width: 0;
+  border: 2px solid var(--gold-deep);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--brown-0);
+  box-shadow: 0 4px 14px var(--shadow);
+}
+.visual-card a {
+  position: relative;
+  display: block;
+  min-height: 100%;
+  color: var(--parchment-0);
+  text-decoration: none;
+}
+.visual-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+}
+.visual-card__shade,
+.lore-banner__shade,
+.archive-hero__shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.04), rgba(0, 0, 0, 0.78)),
+    radial-gradient(circle at 25% 15%, rgba(126, 215, 209, 0.2), transparent 42%);
+  pointer-events: none;
+}
+.visual-card__body {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 13px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+.visual-card__body strong {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--gold-1);
+}
+.visual-card__body span {
+  font-size: 13px;
+  line-height: 1.35;
+}
+.visual-card a:hover img,
+.visual-card a:focus-visible img {
+  transform: scale(1.035);
+}
+
+/* ---------- Lore banners and archive hero ---------- */
+.lore-banner-stack {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 28px;
+}
+.lore-banner {
+  position: relative;
+  display: block;
+  min-height: 210px;
+  border: 2px solid var(--gold-deep);
+  border-radius: var(--radius);
+  overflow: hidden;
+  color: var(--parchment-0);
+  text-decoration: none;
+  background: var(--brown-0);
+  box-shadow: 0 4px 14px var(--shadow);
+}
+.lore-banner img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 210px;
+  object-fit: cover;
+}
+.lore-banner__shade {
+  background:
+    linear-gradient(90deg, rgba(12, 11, 14, 0.86), rgba(12, 11, 14, 0.5) 48%, rgba(12, 11, 14, 0.1)),
+    radial-gradient(circle at 18% 20%, rgba(184, 107, 125, 0.28), transparent 44%);
+}
+.lore-banner__body {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-width: 620px;
+  padding: 22px 24px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.78);
+}
+.lore-banner__body strong {
+  font-family: var(--font-display);
+  font-size: 25px;
+  color: var(--gold-1);
+}
+.lore-banner__body span {
+  line-height: 1.45;
+}
+.archive-hero {
+  position: relative;
+  min-height: 380px;
+  margin: 0 0 18px;
+  border: 2px solid var(--gold-deep);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--brown-0);
+  box-shadow: 0 4px 14px var(--shadow);
+}
+.archive-hero img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
+  object-fit: cover;
+}
+.archive-hero__shade {
+  background:
+    linear-gradient(90deg, rgba(12, 11, 14, 0.9), rgba(20, 17, 13, 0.56) 52%, rgba(20, 17, 13, 0.12)),
+    radial-gradient(circle at 20% 18%, rgba(126, 215, 209, 0.24), transparent 42%);
+}
+.archive-hero__body {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  max-width: 680px;
+  padding: 32px 34px;
+}
+.archive-hero__body p {
+  max-width: 620px;
+  margin: 0;
+  color: var(--parchment-0);
+  font-size: 17px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.78);
+}
+.archive-hero__body .page-title {
+  margin-bottom: 10px;
+}
+
+/* ---------- Wallpaper archive ---------- */
+.wallpaper-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.wallpaper-card {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--gold-deep);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--brown-1), var(--brown-0));
+  box-shadow: 0 4px 14px var(--shadow);
+}
+.wallpaper-card__image {
+  display: block;
+  line-height: 0;
+  background: var(--stone-1);
+}
+.wallpaper-card__image img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+.wallpaper-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px 14px;
+}
+.wallpaper-card__body h2 {
+  flex: 1;
+  margin: 0;
+  color: var(--gold-1);
+  font-family: var(--font-display);
+  font-size: 18px;
+  line-height: 1.2;
 }
 
 /* ---------- Shop ---------- */
@@ -895,9 +1093,21 @@ select:focus-visible {
   .asset-gallery {
     grid-template-columns: 1fr;
   }
+  .visual-card-grid,
+  .wallpaper-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .marketing-hero,
   .marketing-hero__shade {
     min-height: 390px;
+  }
+  .archive-hero,
+  .archive-hero img {
+    min-height: 340px;
+  }
+  .lore-banner,
+  .lore-banner img {
+    min-height: 190px;
   }
 }
 @media (max-width: 540px) {
@@ -919,6 +1129,31 @@ select:focus-visible {
   }
   .marketing-hero__lede {
     font-size: 17px;
+  }
+  .visual-card-grid,
+  .wallpaper-grid {
+    gap: 12px;
+  }
+  .visual-card__body {
+    padding: 10px;
+  }
+  .visual-card__body strong,
+  .wallpaper-card__body h2 {
+    font-size: 16px;
+  }
+  .visual-card__body span {
+    font-size: 12px;
+  }
+  .archive-hero__body,
+  .lore-banner__body {
+    padding: 20px;
+  }
+  .archive-hero__body p,
+  .lore-banner__body span {
+    font-size: 14px;
+  }
+  .lore-banner__body strong {
+    font-size: 21px;
   }
   .resale-controls {
     flex-direction: column;
