@@ -38,7 +38,7 @@
       id: "world-foundation",
       title: "World Foundation",
       blurb:
-        "The shape of Azura itself — the charters and atlases that map where civilization stands and how deep its archives run.",
+        "The shape of High City itself — the charters and atlases that map where civilization stands and how deep its archives run.",
       assets: [
         {
           id: "high-city-charter",
@@ -153,7 +153,7 @@
       id: "civilization-codices",
       title: "Civilization Codices",
       blurb:
-        "Heroes change history. Villains corrupt it. Artifacts preserve it. Factions move it. These collected volumes record the peoples and powers of Azura.",
+        "Heroes change history. Villains corrupt it. Artifacts preserve it. Factions move it. These collected volumes record the peoples and powers of Akalynth.",
       assets: [
         {
           id: "heroes-codex",
@@ -196,7 +196,7 @@
           image: "assets/codex/factions-codex.png",
           alt: "Factions Codex collection poster, Volume I: Powers That Shape the World.",
           description:
-            "Volume I of the powers that shape the world — the Codexborn keepers of truth, the Flamebound, and the orders that move Azura.",
+            "Volume I of the powers that shape the world — the Codexborn keepers of truth, the Flamebound, and the orders that move Akalynth.",
           status: "created",
         },
       ],

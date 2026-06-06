@@ -2,12 +2,15 @@
 
 This repository contains the public static Akalynth website preview.
 
-It is a pre-alpha, client-side-only site for the World of Azura surface:
+It is a pre-alpha, client-side-only site for Akalynth's High City surface:
 
-- `index.html` public landing and world preview
+- `index.html` public landing, High City preview, and Android beta call to action
+- `beta.html` public Android beta download pointer
 - `shop.html` static preview storefront
 - `houses.html` local housing preview
 - `account.html` local character preview
+- `forum.html` browser-local community boards preview
+- `codex.html` and `library.html` public-safe visual lore archive
 - `css/`, `js/`, and `screenshots/` assets used by the static site
 
 ## Boundary

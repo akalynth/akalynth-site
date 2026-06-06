@@ -9,14 +9,14 @@
   "use strict";
 
   // ---- Catalogue -----------------------------------------------------------
-  // Preview prices use Azura coins; USD is an illustrative reference only.
+  // Preview prices use site-only preview coins; USD is an illustrative reference only.
   var CATALOG = [
     {
       id: "coins-small",
       name: "Pouch of Coins",
       tag: "Coin Pack",
       art: "🪙",
-      desc: "250 preview Azura coins for this static storefront.",
+      desc: "250 preview coins for this static storefront.",
       coins: 250,
       usd: 4.99,
     },
@@ -25,7 +25,7 @@
       name: "Chest of Coins",
       tag: "Coin Pack",
       art: "💰",
-      desc: "750 preview Azura coins, plus an illustrative bonus.",
+      desc: "750 preview coins, plus an illustrative bonus.",
       coins: 750,
       usd: 12.99,
     },
@@ -34,7 +34,7 @@
       name: "Dragon's Hoard",
       tag: "Coin Pack",
       art: "🐉",
-      desc: "2,000 preview Azura coins, plus an illustrative bonus.",
+      desc: "2,000 preview coins, plus an illustrative bonus.",
       coins: 2000,
       usd: 29.99,
     },
@@ -92,11 +92,12 @@
   });
 
   // ---- Game worlds ---------------------------------------------------------
-  // Preview game worlds (separate servers). Flavor only while pre-alpha.
+  // Preview entry lanes. The legacy localStorage id stays stable; the visible
+  // name follows current public copy.
   var WORLDS = [
-    { id: "azura", name: "Azura", type: "Open", region: "EU", stage: "Pre-alpha" },
-    { id: "rookhold", name: "Rookhold", type: "Open", region: "NA", stage: "Pre-alpha" },
-    { id: "emberfell", name: "Emberfell", type: "Hardcore", region: "EU", stage: "Planned" },
+    { id: "azura", name: "High City", type: "First city", region: "EU", stage: "Pre-alpha" },
+    { id: "rookhold", name: "Rookguard", type: "Onboarding", region: "NA", stage: "Pre-alpha" },
+    { id: "emberfell", name: "Emberfell", type: "Future lane", region: "EU", stage: "Planned" },
   ];
   var worldById = {};
   WORLDS.forEach(function (w) {
@@ -113,9 +114,9 @@
   var START_GOLD = 50000; // preview starting balance for a new character
 
   var HOUSES = [
-    { id: "H1", name: "Harbor Edge Plot", world: "Azura", district: "Harbor Edge", coords: "(10, 32)", priceGold: 500 },
-    { id: "H2", name: "Market Quarter Plot", world: "Azura", district: "Market Quarter", coords: "(14, 32)", priceGold: 1000 },
-    { id: "H3", name: "South Gate Plot", world: "Azura", district: "South Gate", coords: "(18, 32)", priceGold: 2000 },
+    { id: "H1", name: "Harbor Edge Plot", world: "High City", district: "Harbor Edge", coords: "(10, 32)", priceGold: 500 },
+    { id: "H2", name: "Market Quarter Plot", world: "High City", district: "Market Quarter", coords: "(14, 32)", priceGold: 1000 },
+    { id: "H3", name: "South Gate Plot", world: "High City", district: "South Gate", coords: "(18, 32)", priceGold: 2000 },
   ];
   var houseById = {};
   HOUSES.forEach(function (h) {
@@ -409,7 +410,7 @@
 
   // ---- Account (local preview character) -----------------------------------
   // Stored locally only. INVARIANT: this is not a real account; no server
-  // identity, world transfer, or game data is created.
+  // identity, server transfer, or game data is created.
   function loadAccount() {
     try {
       var raw = localStorage.getItem(ACCOUNT_KEY);
@@ -556,7 +557,7 @@
         name +
         " on " +
         worldById[worldId].name +
-        ".\n\nThis is a local preview only. No real account, world transfer, " +
+        ".\n\nThis is a local preview only. No real account, server transfer, " +
         "or game data is created."
     );
   }

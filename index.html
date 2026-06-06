@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Akalynth — The World of Azura</title>
+    <title>Akalynth — High City Awaits</title>
     <meta
       name="description"
-      content="Akalynth is a server-authoritative, anti-bot-first MMO in the world of Azura — wake in the keep of Rookguard, cross to the city, and explore its plaza, halls, and landmarks. Pre-alpha static preview."
+      content="Akalynth is a server-authoritative, anti-bot-first MMO world where every journey begins in Rookguard and opens into High City. Pre-alpha static preview."
     />
     <link
       rel="icon"
@@ -14,10 +14,10 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Akalynth" />
-    <meta property="og:title" content="Akalynth — The World of Azura" />
+    <meta property="og:title" content="Akalynth — High City Awaits" />
     <meta
       property="og:description"
-      content="Step into Azura — a top-down, server-authoritative, anti-bot-first MMO. From the keep of Rookguard to the city's plaza, halls, and landmarks. Pre-alpha static preview."
+      content="Step into Akalynth — a top-down, server-authoritative MMO with Rookguard, High City, receipt-backed actions, and an Android beta lane."
     />
     <meta name="twitter:card" content="summary" />
     <link rel="stylesheet" href="css/style.css" />
@@ -37,13 +37,13 @@
           <span class="brand-mark" aria-hidden="true">⚔</span>
           <span class="brand-text">
             <span class="brand-name">Akalynth</span>
-            <span class="brand-tag">The World of Azura</span>
+            <span class="brand-tag">High City awaits</span>
           </span>
         </a>
         <nav class="top-nav" aria-label="Primary">
           <ul>
             <li><a class="tab-btn is-active" href="index.html#home" data-nav="home" aria-current="page">Home</a></li>
-            <li><a class="tab-btn" href="index.html#world" data-nav="world">World</a></li>
+            <li><a class="tab-btn" href="index.html#world" data-nav="world">High City</a></li>
             <li><a class="tab-btn" href="codex.html" data-nav="codex">Codex</a></li>
             <li><a class="tab-btn" href="library.html" data-nav="library">Library</a></li>
             <li class="requires-account"><a class="tab-btn" href="houses.html" data-nav="houses">Houses</a></li>
@@ -63,7 +63,7 @@
           <div class="panel-body">
             <ul class="status-list">
               <li><span class="dot dot-amber"></span> Stage: <strong>Pre-alpha</strong></li>
-              <li><span class="dot dot-green"></span> World: <strong>Azura</strong></li>
+              <li><span class="dot dot-green"></span> City: <strong>High City</strong></li>
               <li><span class="dot dot-green"></span> Authority model: <strong>Server-side</strong></li>
               <li><span class="dot dot-blue"></span> Guardian: <strong>Tem (anti-bot)</strong></li>
             </ul>
@@ -88,7 +88,7 @@
             </div>
             <div id="holdings-body" hidden>
               <p class="holdings-name"><strong id="holdings-name">—</strong></p>
-              <p class="muted small">World: <span id="holdings-world">—</span></p>
+              <p class="muted small">City: <span id="holdings-world">—</span></p>
               <p class="holdings-gold">
                 <span class="gold" id="holdings-gold">0</span> preview gold
               </p>
@@ -113,41 +113,59 @@
       <main class="content" id="main" role="main" tabindex="-1">
         <!-- HOME -->
         <section class="tab-panel is-active" id="home" role="tabpanel">
-          <h1 class="page-title">Welcome to Akalynth</h1>
-          <article class="parchment">
-            <p class="lede">
-              A classic-feel MMO with a server-authoritative heart and an
-              anti-bot-first soul. Step into <strong>Azura</strong> — a living,
-              top-down realm where server-backed actions are designed to be witnessed
-              and receipt-backed.
-            </p>
-            <p>
-              Akalynth is built around a simple promise: the world should be fair because
-              the server is the single source of truth. No client-side trickery, no silent
-              economy drift. Our guardian <strong>Tem</strong> is designed to keep the
-              realm honest so human adventurers — not bots — earn the spoils.
-            </p>
+          <section class="marketing-hero" aria-labelledby="home-title">
+            <div class="marketing-hero__shade">
+              <p class="hero-kicker">Pre-alpha Android beta</p>
+              <h1 class="page-title marketing-hero__title" id="home-title">Akalynth</h1>
+              <p class="marketing-hero__lede">
+                Wake in Rookguard, pass Tem's human check, and step into
+                <strong>High City</strong> — a server-authoritative MMO world
+                where meaningful actions are designed to be witnessed and
+                receipt-backed.
+              </p>
+              <div class="hero-actions" aria-label="Primary actions">
+                <a class="btn btn-gold" href="beta.html">Get Android beta</a>
+                <a class="btn btn-ghost" href="index.html#world" data-nav="world">Explore High City</a>
+              </div>
+              <p class="hero-note">Static public preview. No live account, payment, or entitlement is created here.</p>
+            </div>
+          </section>
+
+          <article class="parchment proof-strip">
+            <div>
+              <h2 class="news-title">Server Authority</h2>
+              <p>The server resolves movement, actions, and world state. The client is never the source of truth.</p>
+            </div>
+            <div>
+              <h2 class="news-title">Receipt Trail</h2>
+              <p>Meaningful server actions are designed to land in a verifiable chronicle instead of disappearing into a black box.</p>
+            </div>
+            <div>
+              <h2 class="news-title">Tem Watches</h2>
+              <p>The anti-bot design keeps the realm for human players without exposing enforcement internals on the public site.</p>
+            </div>
           </article>
 
           <h2 class="section-title">Latest Tidings</h2>
           <article class="parchment news">
-            <h3 class="news-title">The Chroniclers Map the Realm</h3>
+            <h3 class="news-title">High City Becomes the First City</h3>
             <p class="news-meta">Posted by the Chroniclers · World notes</p>
             <p>
-              The Chroniclers have set down a fuller account of Azura — its
-              central plaza and gathering grounds, the Runestone Table and the
-              Legend Stone, the hall that waits for a guild, and the keep of
-              Rookguard where every journey begins. Read it in
-              <a href="index.html#world" data-nav="world">The World of Azura</a>.
+              Akalynth is the world. High City is the first major civic place
+              beyond the Rookguard gate: Sky Spires above, Archive Vaults below,
+              a Market District at street level, and a Ley Core deep beneath the
+              stones. Read the public preview in
+              <a href="index.html#world" data-nav="world">High City</a>.
             </p>
           </article>
           <article class="parchment news">
-            <h3 class="news-title">The Gates of Azura</h3>
+            <h3 class="news-title">The Android Beta Lane</h3>
             <p class="news-meta">Posted by the Chroniclers · Pre-alpha dispatch</p>
             <p>
-              The private server lane has a working vertical slice: connect over
-              WebSocket, claim an identity, move through the world, and watch steps land
-              in the chronicle. This public repository contains only the static preview.
+              The public beta page points Android players to the current APK
+              download lane. This website stays static and public-safe; it does
+              not create accounts, process payments, or expose private runtime
+              state.
             </p>
           </article>
           <article class="parchment news">
@@ -162,17 +180,38 @@
 
         <!-- WORLD -->
         <section class="tab-panel" id="world" role="tabpanel" hidden>
-          <h1 class="page-title">The World of Azura</h1>
+          <h1 class="page-title">High City</h1>
           <article class="parchment">
             <p class="lede">
-              Azura is a top-down realm of stone halls, lantern-lit roads, and
-              quiet chill-zones between the danger. Every journey begins at the
-              keep of Rookguard and opens into the city beyond its gate — explore
-              at your own pace.
+              High City is the canonical first city of Akalynth: the first major
+              civic place after the Rookguard onboarding gate. It is built as a
+              readable top-down city with quiet gathering places, service lanes,
+              deep archives, and room for players to leave a mark.
             </p>
           </article>
 
-          <h2 class="section-title">The Realms</h2>
+          <div class="media-pair" aria-label="High City concept plates">
+            <figure class="codex-plate">
+              <a href="assets/codex/high-city-cross-section.png" target="_blank" rel="noopener">
+                <img
+                  src="assets/codex/high-city-cross-section.png"
+                  alt="High City cross-section from Sky Spires to the Ley Core."
+                />
+              </a>
+              <figcaption>High City Cross-Section</figcaption>
+            </figure>
+            <figure class="codex-plate">
+              <a href="assets/codex/witness-moth.png" target="_blank" rel="noopener">
+                <img
+                  src="assets/codex/witness-moth.png"
+                  alt="Witness Moth archive creature with luminous memory wings."
+                />
+              </a>
+              <figcaption>Witness Moth</figcaption>
+            </figure>
+          </div>
+
+          <h2 class="section-title">The Route</h2>
           <article class="parchment">
             <h3 class="news-title">Rookguard — the Threshold</h3>
             <p>
@@ -183,43 +222,47 @@
               Beside the corridor stand two old stones — the
               <strong>Runestone Table</strong> and the
               <strong>Legend Stone</strong>. When a traveller has shown a living
-              hand is at the keyboard, the <strong>Gate to Azura</strong> opens.
+              hand is at the keyboard, the gate to <strong>High City</strong> opens.
             </p>
           </article>
           <article class="parchment">
-            <h3 class="news-title">Azura — the First City</h3>
+            <h3 class="news-title">High City — the First City</h3>
             <p>
               Beyond the gate, the world widens. After the closed quiet of the
               keep, walls give way to open ground and the city receives newcomers
-              at its center. Azura is intentionally unfinished — its empty plots
+              at its center. High City is intentionally unfinished — its empty plots
               and silent hall are not gaps to apologize for, but room left for
               players to become the reason a hall has a guild and a plot has a
               name.
             </p>
           </article>
 
-          <h2 class="section-title">Landmarks of Azura</h2>
+          <h2 class="section-title">Districts and Landmarks</h2>
           <article class="parchment">
             <div class="feature-grid">
               <div class="feature">
-                <h3>Central Plaza</h3>
-                <p>The heart of the city and its gathering ground — built for standing still: chat, meeting, and waiting.</p>
+                <h3>Trinity Nexus</h3>
+                <p>The civic center where the city's orders meet and players gather between danger and errands.</p>
               </div>
               <div class="feature">
-                <h3>Guild Hall</h3>
-                <p>A hall raised before there were guilds to fill it. The doors do not open yet.</p>
+                <h3>Market District</h3>
+                <p>The service lane for trade, stalls, house plots, and player-facing city life.</p>
               </div>
               <div class="feature">
-                <h3>House Plots</h3>
-                <p>Marked plots just below the Guild Hall, waiting for owners to give them names.</p>
+                <h3>Archive Vaults</h3>
+                <p>The lower record halls where law, memory, oath, and chronicle work gather.</p>
               </div>
               <div class="feature">
-                <h3>Runestone Table</h3>
-                <p>Step beside it and the stone exhales one element — Fire, Water, Earth, Air, Light, or Shadow. There is no winning face; the roll is the realm's, witnessed by everyone nearby.</p>
+                <h3>Sky Spires</h3>
+                <p>High towers and upper routes that give the city its first visible silhouette.</p>
               </div>
               <div class="feature">
-                <h3>Legend Stone</h3>
-                <p>A weathered marker for the deeds the keep remembers — the first hint of each adventurer's sealed Origin Act.</p>
+                <h3>Dream Sanctums</h3>
+                <p>A quiet quarter for memory, dream, echo, and sigil traditions.</p>
+              </div>
+              <div class="feature">
+                <h3>Ley Core</h3>
+                <p>The deep power and memory heart beneath the city; lore only until promoted by a later lane.</p>
               </div>
             </div>
           </article>
@@ -251,9 +294,25 @@
               </div>
               <div class="feature">
                 <h3>Linux &amp; Android</h3>
-                <p>A lean server and a native Android companion. No bloat.</p>
+                <p>A lean server lane and a native Android beta client. The public site only points to the download lane.</p>
               </div>
             </div>
+          </article>
+
+          <h2 class="section-title">Media</h2>
+          <article class="parchment asset-gallery">
+            <a href="assets/codex/high-city-charter.png">
+              <img src="assets/codex/high-city-charter.png" alt="High City charter plate." />
+              <span>High City Charter</span>
+            </a>
+            <a href="assets/codex/chronicle-of-ages.png">
+              <img src="assets/codex/chronicle-of-ages.png" alt="Chronicle of Ages codex plate." />
+              <span>Chronicle of Ages</span>
+            </a>
+            <a href="screenshots/v-home.png">
+              <img src="screenshots/v-home.png" alt="Akalynth static site home preview screenshot." />
+              <span>Site Preview</span>
+            </a>
           </article>
         </section>
 
@@ -262,7 +321,7 @@
 
     <footer class="site-footer" role="contentinfo">
       <div class="footer-inner">
-        <p>© <span id="year"></span> Akalynth · The World of Azura — a pre-alpha, proof-native MMO.</p>
+        <p>© <span id="year"></span> Akalynth · High City — a pre-alpha, proof-native MMO.</p>
         <p class="small muted">
           Linux server + Android client. Classic-MMO aesthetic recreated with original art and copy.
         </p>

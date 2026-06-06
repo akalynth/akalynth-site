@@ -23,15 +23,15 @@
   var ACCOUNT_KEY = "akalynth.account.v1";
   var root = null;
 
-  var WORLD_NAMES = { azura: "Azura", rookhold: "Rookhold", emberfell: "Emberfell" };
+  var WORLD_NAMES = { azura: "High City", rookhold: "Rookguard", emberfell: "Emberfell" };
   function worldNameOf(id) { return WORLD_NAMES[id] || "the realm"; }
 
   // ---- Boards (static, original Akalynth) ----------------------------------
   var BOARDS = [
-    { id: "azura-square", name: "The Azura Square",
+    { id: "azura-square", name: "The High City Square",
       desc: "General talk for the realm — news, first impressions, and notices from the city." },
-    { id: "world-azura", name: "Azura — World Board",
-      desc: "Players of the Azura world: meetups, sightings, and stories from the open city." },
+    { id: "world-azura", name: "High City Board",
+      desc: "Players gathering in High City: meetups, sightings, and stories from the open city." },
     { id: "plots-trade", name: "Plots & Trade",
       desc: "The House Plots below the Guild Hall, and trading in in-game gold between characters." },
     { id: "guild-hall", name: "The Guild Hall",
@@ -49,7 +49,7 @@
     return { id: id, authorName: name, authorWorld: world, role: role, body: body, createdAt: at };
   }
   var SEED_THREADS = [
-    { id: "seed-1", boardId: "azura-square", title: "Welcome to the Azura Square",
+    { id: "seed-1", boardId: "azura-square", title: "Welcome to the High City Square",
       authorName: "Chronicler Veyl", authorWorld: "azura", isSeed: true, locked: true,
       createdAt: "2026-05-28T09:00:00.000Z",
       posts: [ seedPost("seed-1-1", "Chronicler Veyl", "azura", "Chronicler",
@@ -59,14 +59,14 @@
       authorName: "Warden Ashpenny", authorWorld: "azura", isSeed: true, locked: true,
       createdAt: "2026-06-01T12:00:00.000Z",
       posts: [ seedPost("seed-2-1", "Warden Ashpenny", "azura", "Warden",
-        "The gate to Azura opens for any who clear the keep at Rookguard. If the road feels strange at first, the Wardens are watching — not judging.",
+        "The gate to High City opens for any who clear the keep at Rookguard. If the road feels strange at first, the Wardens are watching — not judging.",
         "2026-06-01T12:00:00.000Z") ] },
 
     { id: "seed-3", boardId: "world-azura", title: "Sightings on the open road",
       authorName: "Wanderer Pell", authorWorld: "azura", isSeed: true, locked: true,
       createdAt: "2026-05-30T18:30:00.000Z",
       posts: [ seedPost("seed-3-1", "Wanderer Pell", "azura", "Wayfarer",
-        "Saw a lantern burning at the plaza past dusk and no one tending it. Azura keeps its small mysteries.",
+        "Saw a lantern burning at the plaza past dusk and no one tending it. High City keeps its small mysteries.",
         "2026-05-30T18:30:00.000Z") ] },
     { id: "seed-4", boardId: "world-azura", title: "Meet at the fountain",
       authorName: "Tavernkeep Moll", authorWorld: "azura", isSeed: true, locked: true,
@@ -119,7 +119,7 @@
       authorName: "Warden Ashpenny", authorWorld: "azura", isSeed: true, locked: true,
       createdAt: "2026-05-31T09:30:00.000Z",
       posts: [ seedPost("seed-10-1", "Warden Ashpenny", "azura", "Warden",
-        "Tem is the realm's guardian against bots — a friendly challenge at the keep, no more. Humans, not machines, earn what Azura offers.",
+        "Tem is the realm's guardian against bots — a friendly challenge at the keep, no more. Humans, not machines, earn what High City offers.",
         "2026-05-31T09:30:00.000Z") ] },
 
     { id: "seed-11", boardId: "the-tavern", title: "Tales by the fire",
@@ -128,7 +128,7 @@
       posts: [ seedPost("seed-11-1", "Tavernkeep Moll", "azura", "Tavernkeep",
         "Pull up a chair. The Tavern is for the off-topic and the unhurried — stories, jokes, and quiet company. Keep it kind.",
         "2026-05-24T19:00:00.000Z") ] },
-    { id: "seed-12", boardId: "the-tavern", title: "What brought you to Azura?",
+    { id: "seed-12", boardId: "the-tavern", title: "What brought you to High City?",
       authorName: "Tavernkeep Moll", authorWorld: "azura", isSeed: true, locked: true,
       createdAt: "2026-06-02T22:00:00.000Z",
       posts: [ seedPost("seed-12-1", "Tavernkeep Moll", "azura", "Tavernkeep",
@@ -304,7 +304,7 @@
     root.appendChild(el("h1", "page-title", "The Community Boards"));
     var intro = el("article", "parchment");
     intro.appendChild(el("p", "lede",
-      "Boards for the realm of Azura. Read freely; sign in with a character to start a thread or reply."));
+      "Boards for High City and the wider Akalynth preview. Read freely; sign in with a character to start a thread or reply."));
     root.appendChild(intro);
 
     var list = el("div", "forum-board-list");
