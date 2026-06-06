@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
-required_pages=(index.html beta.html codex.html library.html shop.html houses.html account.html forum.html)
+required_pages=(index.html beta.html codex.html library.html wallpapers.html shop.html houses.html account.html forum.html)
 
 for page in "${required_pages[@]}"; do
   if [[ ! -f "$page" ]]; then
@@ -63,9 +63,16 @@ class LinkParser(HTMLParser):
         self.refs = []
 
     def handle_starttag(self, tag, attrs):
+        attr_map = dict(attrs)
         for name, value in attrs:
             if name in {"href", "src"} and value:
                 self.refs.append(value)
+        if tag == "meta":
+            content = attr_map.get("content")
+            property_name = attr_map.get("property")
+            name = attr_map.get("name")
+            if content and (property_name in {"og:image", "og:image:secure_url"} or name == "twitter:image"):
+                self.refs.append(content)
 
 
 def should_skip(ref):

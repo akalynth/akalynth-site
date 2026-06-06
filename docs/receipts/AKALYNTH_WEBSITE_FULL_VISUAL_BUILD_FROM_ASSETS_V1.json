@@ -1,0 +1,109 @@
+{
+  "lane_id": "AKALYNTH_WEBSITE_FULL_VISUAL_BUILD_FROM_ASSETS_V1",
+  "generated_at": "2026-06-06T19:18:24Z",
+  "repository": "akalynth/akalynth-site",
+  "branch": "codex/website-full-visual-build-from-assets-v1",
+  "base_branch": "main",
+  "base_sha": "0752862f155da89d7730fdd24809484e2509dcd2",
+  "pre_commit_tree_sha_before_receipt": "c445b503199df74590fbd648574737da80f38648",
+  "head_sha_note": "Final commit SHA is recorded in the draft PR and final status after commit creation; a committed receipt cannot self-record the hash of the commit that contains it without changing that hash.",
+  "pr_15": {
+    "url": "https://github.com/akalynth/akalynth-site/pull/15",
+    "number": 15,
+    "title": "[codex] launch High City marketing lane",
+    "state": "MERGED",
+    "base_ref": "main",
+    "head_ref": "codex/high-city-marketing-lane",
+    "merged_at": "2026-06-06T03:50:53Z",
+    "merge_commit": "17346304ecea3c03bcc6a200427e95be9fc9bade",
+    "review_decision": "",
+    "assessment": "partial_overlap_high_city_marketing_lane_only"
+  },
+  "input_manifest_hashes": {
+    "AKALYNTH_WEBSITE_VISUAL_ASSET_PACK_V1": "32076b3244f74aa5a98a0465dea4ae06fa606411bc741199aebb78aeb8309855",
+    "AKALYNTH_WEBSITE_HOME_WORLD_LORE_ASSET_PATCH_V1": "43d927d119e875a9c65a422f720e32eb18c9a21abfc13f85a24378bda566f477",
+    "AKALYNTH_WEBSITE_REPO_BRANCH_APPLY_V1": "c4515ade59523e9a871cfbe8e7496ebd3e786eb5ce7c9d4bd38686af10bb4e25",
+    "AKALYNTH_WEBSITE_VISUAL_BRANCH_PR_V1": "112435f6775a87ba7dd266ecc1c555562f98a3f6c7ac9c3b7b44b85c9cbfb652"
+  },
+  "copied_assets": {
+    "root": "assets/akalynth/visuals",
+    "counts": {
+      "banners": 10,
+      "cards": 10,
+      "thumbs": 10,
+      "wallpapers": 10,
+      "og": 10,
+      "hero": 3,
+      "icons": 3,
+      "total": 56
+    },
+    "excluded": [
+      "zip_files",
+      "source_images",
+      ".DS_Store",
+      "receipts",
+      "prompts",
+      "raw_originals",
+      "previews",
+      "snippets",
+      "registries",
+      "implementation_notes"
+    ]
+  },
+  "changed_surface": [
+    "assets/akalynth/visuals/",
+    "wallpapers.html",
+    "index.html",
+    "codex.html",
+    "library.html",
+    "beta.html",
+    "shop.html",
+    "houses.html",
+    "account.html",
+    "forum.html",
+    "css/style.css",
+    "scripts/check-static-site.sh",
+    "docs/receipts/AKALYNTH_WEBSITE_FULL_VISUAL_BUILD_FROM_ASSETS_V1.md",
+    "docs/receipts/AKALYNTH_WEBSITE_FULL_VISUAL_BUILD_FROM_ASSETS_V1.json",
+    "docs/receipts/AKALYNTH_WEBSITE_FULL_VISUAL_BUILD_FROM_ASSETS_V1.MANIFEST.sha256"
+  ],
+  "validation": {
+    "input_manifest_checks": "passed",
+    "scripts/check-static-site.sh": "passed",
+    "git_diff_check": "passed",
+    "scripts/check-public-boundary.sh": "passed_final_staged_run",
+    "npm_test": "not_present_no_package_json",
+    "npm_run_build": "not_present_no_package_json",
+    "npm_run_lint": "not_present_no_package_json",
+    "npm_run_health": "not_present_no_package_json",
+    "local_preview": {
+      "host": "127.0.0.1",
+      "port": 8099,
+      "pages": [
+        "index.html",
+        "wallpapers.html",
+        "codex.html",
+        "library.html",
+        "beta.html",
+        "shop.html",
+        "houses.html",
+        "account.html",
+        "forum.html"
+      ],
+      "result": "passed"
+    }
+  },
+  "boundary": {
+    "deploy_performed": false,
+    "merge_performed": false,
+    "pages_dns_cdn_changed": false,
+    "backend_runtime_account_payment_entitlement_api_work": false,
+    "js_app_static": true,
+    "analytics_added": false,
+    "network_calls_added": false,
+    "payment_integration_added": false,
+    "account_session_integration_added": false,
+    "service_calls_added": false
+  },
+  "final_status_default": "closed_draft_pr_opened_ci_pending_no_deploy"
+}
