@@ -63,6 +63,17 @@ a {
   color: var(--gold-1);
 }
 
+.parchment a {
+  color: #6f4b15;
+  font-weight: 700;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.parchment a:hover {
+  color: #3f2a0b;
+}
+
 .skip-link {
   position: absolute;
   left: -999px;
@@ -632,6 +643,16 @@ a {
   opacity: 1;
 }
 .small {
+  font-size: 12px;
+}
+.verify-command {
+  display: block;
+  padding: 10px 12px;
+  overflow-wrap: anywhere;
+  color: var(--parchment-0);
+  background: rgba(32, 23, 11, 0.82);
+  border: 1px solid var(--brown-1);
+  border-radius: var(--radius);
   font-size: 12px;
 }
 
