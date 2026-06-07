@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Account — Akalynth: Create Your Character</title>
+    <title>Account — Akalynth Portal</title>
     <meta
       name="description"
-      content="The Adventurer's Ledger — name your character and begin in the keep of Rookguard, the threshold to High City. Pre-alpha preview only; saved locally, no real account is created."
+      content="The Akalynth account portal — create an email-verified account, sign in, create a character, choose a world, sex, and outfit, then enter the Android beta."
     />
     <link
       rel="icon"
@@ -14,10 +14,10 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Akalynth" />
-    <meta property="og:title" content="Create Your Character — Akalynth" />
+    <meta property="og:title" content="Account Portal — Akalynth" />
     <meta
       property="og:description"
-      content="The Adventurer's Ledger — name your character and begin in Rookguard, the threshold to High City. Pre-alpha preview, saved locally; no real account."
+      content="Create an email-verified Akalynth account, choose a character, and prepare for the Android beta."
     />
     <meta property="og:image" content="assets/akalynth/visuals/og/02-rookguard-gate.og-1200x630.webp" />
     <meta
@@ -30,9 +30,8 @@
   </head>
   <body data-page="account">
     <!--
-      Akalynth account / character-creation page. Shares chrome with the rest
-      of the site. Preview only: the character is stored in localStorage; no
-      real account, server identity, server transfer, or game data is created.
+      Akalynth account portal. Static frontend only: account authority,
+      sessions, character creation, and receipts live on the Akalynth API.
     -->
     <a class="skip-link" href="#main">Skip to content</a>
 
@@ -86,7 +85,7 @@
               <p class="holdings-name"><strong id="holdings-name">—</strong></p>
               <p class="muted small">City: <span id="holdings-world">—</span></p>
               <p class="holdings-gold">
-                <span class="gold" id="holdings-gold">0</span> preview gold
+                <span class="gold" id="holdings-gold">-</span> gold
               </p>
               <p class="muted small">Premium: <strong id="holdings-premium">—</strong></p>
             </div>
@@ -96,7 +95,7 @@
 
       <!-- Parchment content column -->
       <main class="content" id="main" role="main" tabindex="-1">
-        <h1 class="page-title">Adventurer's Ledger</h1>
+        <h1 class="page-title">Account Portal</h1>
 
         <article class="parchment">
           <p class="lede">
@@ -104,82 +103,16 @@
             keep of Rookguard, with a name the world has yet to learn.
           </p>
           <p>
-            Choose that name here. Beyond the keep's gate lies High City, where the
+            Create your account and choose that name here. Beyond the keep's gate lies High City, where the
             Legend Stone keeps the deeds it chooses to remember; what it one day
             records under your name is yours to earn. Your vocation — and your
             place in the realm — is shaped in-game, not on this page.
           </p>
         </article>
 
-        <!-- Existing character summary -->
-        <article class="parchment" id="account-summary" hidden>
-          <p class="lede">Your preview character</p>
-          <dl class="summary-list">
-            <div><dt>Name</dt><dd id="summary-name">—</dd></div>
-            <div><dt>Sex</dt><dd id="summary-sex">—</dd></div>
-            <div><dt>City</dt><dd id="summary-world">—</dd></div>
-            <div><dt>Preview gold</dt><dd><span class="gold" id="summary-gold">0</span></dd></div>
-            <div><dt>Premium</dt><dd id="summary-premium">Standard</dd></div>
-          </dl>
-          <p class="muted small">
-            Local preview only — no real account or game data exists. Your
-            <strong>vocation is chosen in-game</strong>, not here. You can now buy
-            and resell plots on the <a href="houses.html">House Plots</a> with
-            in-game gold.
-          </p>
-          <button class="btn btn-ghost" id="account-reset" type="button">Start over</button>
-        </article>
-
-        <!-- Creation form -->
-        <div id="account-form-wrap">
+        <div id="account-portal-root">
           <article class="parchment">
-            <p class="lede">Create your character.</p>
-            <p class="notice">
-              ⚠ Preview only. Your character is saved in this browser; no real
-              account, server identity, or server transfer is created.
-            </p>
-            <p class="muted small">
-              Choose your name, sex, and starting lane here. Your <strong>vocation is
-              chosen in-game</strong>, not on the site.
-            </p>
-
-            <form class="account-form" id="account-form" novalidate>
-              <div class="field">
-                <label for="char-name">Character name</label>
-                <input
-                  type="text"
-                  id="char-name"
-                  name="name"
-                  maxlength="20"
-                  autocomplete="off"
-                  aria-describedby="err-name"
-                  placeholder="e.g. Brannic"
-                />
-                <p class="field-error" id="err-name" aria-live="polite"></p>
-              </div>
-
-              <fieldset class="field radio-group" aria-describedby="err-sex">
-                <legend>Sex</legend>
-                <label class="radio">
-                  <input type="radio" name="sex" value="male" /> Male
-                </label>
-                <label class="radio">
-                  <input type="radio" name="sex" value="female" /> Female
-                </label>
-                <p class="field-error" id="err-sex" aria-live="polite"></p>
-              </fieldset>
-
-              <div class="field">
-                <label for="char-world">Starting lane</label>
-                <select id="char-world" name="world" aria-describedby="err-world">
-                  <option value="">Choose a starting lane…</option>
-                  <!-- options injected by app.js -->
-                </select>
-                <p class="field-error" id="err-world" aria-live="polite"></p>
-              </div>
-
-              <button class="btn btn-gold btn-block" type="submit">Create character (preview)</button>
-            </form>
+            <p class="muted">Loading account portal...</p>
           </article>
         </div>
       </main>
