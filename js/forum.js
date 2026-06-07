@@ -7,9 +7,10 @@
  * persists beyond this device. The seed boards/threads below are read-only
  * in-world flavour authored as lore figures.
  *
- * Identity: posting requires a signed-in character. Each post is authored as the
- * account's character (the account IS the character) — name + world signature.
- * Reading is public; posting is gated.
+ * Identity: posting requires a local preview character. Each post is authored as
+ * the browser-local preview character — name + world signature. This is not
+ * authentication, account authority, or server identity. Reading is public;
+ * posting is gated.
  *
  * Security: posts are free user text. ALL user/author strings reach the DOM via
  * textContent only — never innerHTML — so post content cannot inject markup.

@@ -9,5 +9,8 @@ settle house ownership, run auctions, or write game-state receipts.
 The website uses browser-local storage for preview character, cart, premium,
 and housing state. Clearing browser storage removes that preview state.
 
+A preview character is a browser-local object. It is not authentication, account
+authority, entitlement authority, or server identity.
+
 Any future live feature must be backed by the appropriate server authority,
 receipt, verifier, and release proof before public copy may describe it as live.

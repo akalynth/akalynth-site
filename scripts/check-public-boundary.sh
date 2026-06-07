@@ -83,6 +83,11 @@ grep_regex_forbidden \
   '-----BEGIN ([A-Z0-9 ]+ )?PRIVATE KEY-----|github_pat_[A-Za-z0-9_]+|gh[pousr]_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{20,}|xox[baprs]-[A-Za-z0-9-]+'
 
 for pattern in \
+  "logged-in ""character" \
+  "logged in ""character" \
+  "signed-in ""character" \
+  "signed in ""character" \
+  "latest ""client" \
   "Real purchases ""open" \
   "payment processed ""successfully" \
   "payment will be ""processed" \

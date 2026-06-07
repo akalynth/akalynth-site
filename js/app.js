@@ -603,9 +603,10 @@
     }
   }
 
-  // ---- Account gating (Houses & Shop require a character) ------------------
-  // Preview only: a "logged-in character" is a local account in localStorage.
-  // Hides gated nav links and gated page content when no character exists.
+  // ---- Account gating (Houses & Shop require a local preview character) ----
+  // Preview only: this checks for a browser-local account object in localStorage.
+  // It is not authentication, account authority, or server identity. It hides
+  // gated nav links and gated page content when no preview character exists.
   function applyAccountGates() {
     var loggedIn = !!account;
     $all(".requires-account").forEach(function (el) {
