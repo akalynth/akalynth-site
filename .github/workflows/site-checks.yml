@@ -21,8 +21,5 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Check public boundary
-        run: scripts/check-public-boundary.sh
-
-      - name: Smoke test static site
-        run: scripts/check-static-site.sh
+      - name: Verify account-character site surface
+        run: scripts/verify-account-character-site.sh
