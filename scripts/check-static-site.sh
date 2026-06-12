@@ -88,6 +88,8 @@ done
 
 require_literal "js/app.js" 'data-shop-buy="' "Direct server shop action hook"
 require_literal "shop.html" 'id="purchase-authority"' "Direct server shop status hook"
+require_literal "js/app.js" 'function clearAccountScopedUiState()' "Account-scoped UI clear helper"
+require_literal "js/app.js" 'clearAccountScopedUiState();' "Account-scoped UI clear call"
 
 python3 - "$repo_root" "${required_pages[@]}" <<'PY'
 import re
