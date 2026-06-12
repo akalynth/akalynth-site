@@ -174,9 +174,9 @@ if errors:
     sys.exit(1)
 PY
 
-if grep -RInE 'no .*account session integration|no .*service calls|localStorage-only|browser-preview script|does not create accounts|Real account creation' docs README.md PUBLIC_BOUNDARY.md *.html js >/dev/null; then
+if grep -RInE 'no .*account session integration|no .*service calls|localStorage-only|browser-preview script|does not create accounts|Real account creation' docs README.md SECURITY.md PUBLIC_BOUNDARY.md *.html js >/dev/null; then
   printf '::error::Stale account/API boundary wording found; the static site now integrates account and character APIs.\n' >&2
-  grep -RInE 'no .*account session integration|no .*service calls|localStorage-only|browser-preview script|does not create accounts|Real account creation' docs README.md PUBLIC_BOUNDARY.md *.html js >&2
+  grep -RInE 'no .*account session integration|no .*service calls|localStorage-only|browser-preview script|does not create accounts|Real account creation' docs README.md SECURITY.md PUBLIC_BOUNDARY.md *.html js >&2
   exit 1
 fi
 
