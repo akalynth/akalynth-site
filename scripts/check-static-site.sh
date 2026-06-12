@@ -125,16 +125,25 @@ require_literal "js/app.js" 'function clearLocalSessionUi(message, kind)' "Local
 require_literal "js/app.js" 'Signed out locally. Server logout could not be confirmed:' "Failed logout local clear message"
 require_literal "js/app.js" 'function csrfReady()' "CSRF readiness helper"
 require_literal "js/app.js" 'function accountActionBlockedMessage()' "Account action guard helper"
+require_literal "js/app.js" 'function accountCharacterActionBlockedMessage()' "Account character action guard helper"
 require_literal "js/app.js" 'credentials: "include"' "Account API cookie/session transport"
 require_literal "js/app.js" 'headers["x-csrf-token"] = csrf;' "Account API CSRF header transport"
 require_literal "js/app.js" 'Security token missing. Sign in again before account character or gameplay actions.' "CSRF missing inline action message"
+require_literal "js/app.js" 'Sign in with an account session before creating or selecting a character.' "Account-character session required message"
+require_literal "js/app.js" 'Security token missing. Sign in again before creating or selecting a character.' "Account-character CSRF required message"
 require_literal "js/app.js" 'This character is not available on the signed-in account. Sign in again or select an account-owned character.' "Account-owned character error message"
 require_literal "js/app.js" 'Only the account-owned character that owns this property can change it.' "Property owner error message"
 require_literal "js/app.js" 'var blocked = accountActionBlockedMessage();' "Account action guard call"
 
 guard_call_count="$(grep -F 'var blocked = accountActionBlockedMessage();' js/app.js | wc -l | tr -d '[:space:]')"
-if [[ "$guard_call_count" -lt 6 ]]; then
-  printf '::error::Expected account action guard before each account-owned mutation; found %s guard calls.\n' "$guard_call_count" >&2
+if [[ "$guard_call_count" -lt 5 ]]; then
+  printf '::error::Expected account action guard before each gameplay mutation; found %s guard calls.\n' "$guard_call_count" >&2
+  exit 1
+fi
+
+character_guard_call_count="$(grep -F 'var blocked = accountCharacterActionBlockedMessage();' js/app.js | wc -l | tr -d '[:space:]')"
+if [[ "$character_guard_call_count" -lt 2 ]]; then
+  printf '::error::Expected account-character guard before create/select mutations; found %s guard calls.\n' "$character_guard_call_count" >&2
   exit 1
 fi
 
@@ -146,8 +155,8 @@ path = Path(sys.argv[1])
 lines = path.read_text(encoding="utf-8").splitlines()
 
 checks = [
-    ("character select", 'api("/v1/characters/select", { method: "POST"', 10, "accountActionBlockedMessage"),
-    ("character create", 'api("/v1/characters", { method: "POST"', 10, "accountActionBlockedMessage"),
+    ("character select", 'api("/v1/characters/select", { method: "POST"', 10, "accountCharacterActionBlockedMessage"),
+    ("character create", 'api("/v1/characters", { method: "POST"', 10, "accountCharacterActionBlockedMessage"),
     ("shop purchase", 'api("/v1/shop/purchase", { method: "POST"', 12, "accountActionBlockedMessage"),
     ("work start", 'api("/v1/work/start", { method: "POST"', 12, "accountActionBlockedMessage"),
     ("work tick", 'api("/v1/work/tick", { method: "POST"', 16, "accountActionBlockedMessage"),

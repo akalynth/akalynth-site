@@ -214,6 +214,11 @@
     if (!csrfReady()) return "Security token missing. Sign in again before account character or gameplay actions.";
     return "";
   }
+  function accountCharacterActionBlockedMessage() {
+    if (!state.account) return "Sign in with an account session before creating or selecting a character.";
+    if (!csrfReady()) return "Security token missing. Sign in again before creating or selecting a character.";
+    return "";
+  }
 
   // ---- Tabs (index page only) ----------------------------------------------
   function syncNavActive(name) {
@@ -717,7 +722,7 @@
     $all("[data-select-character]", root).forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-select-character");
-        var blocked = accountActionBlockedMessage();
+        var blocked = accountCharacterActionBlockedMessage();
         if (blocked) {
           setMessage(blocked, "error");
           return;
@@ -748,7 +753,7 @@
         setMessage("Select a valid world, sex, and outfit from the server catalog.", "error");
         return;
       }
-      var blocked = accountActionBlockedMessage();
+      var blocked = accountCharacterActionBlockedMessage();
       if (blocked) {
         setMessage(blocked, "error");
         return;
