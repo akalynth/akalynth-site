@@ -80,6 +80,8 @@ for literal in \
 done
 
 require_literal "account.html" 'id="account-portal-root"' "Account character portal hook"
+require_literal "README.md" 'The four Codex surfaces are Public, Builder, Operator, Agent' "Site four-surface taxonomy"
+require_literal "README.md" 'is the Public Codex surface' "Public Codex surface authority"
 
 for route_page in codex/builder/index.html codex/operator/index.html codex/agent/index.html; do
   require_literal "$route_page" 'Create account character' "Codex surface account-character CTA"
