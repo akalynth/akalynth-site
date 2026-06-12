@@ -6,7 +6,7 @@
     <title>Forum — Akalynth: The Community Boards</title>
     <meta
       name="description"
-      content="The Akalynth community boards for the Akalynth preview — read the boards freely, sign in with a character to post. Browser-local preview-only forum; posts are not connected to any server."
+      content="The Akalynth community boards for the Akalynth preview — read the boards freely. Posting is disabled until a server-backed account-character forum exists."
     />
     <link
       rel="icon"
@@ -17,7 +17,7 @@
     <meta property="og:title" content="The Community Boards — Akalynth" />
     <meta
       property="og:description"
-      content="Akalynth community boards for High City — read freely, post as your character. Browser-local preview; not connected to any server."
+      content="Akalynth community boards for High City — read freely. Server-backed posting is not live yet."
     />
     <meta property="og:image" content="assets/akalynth/visuals/og/05-witness-moth.og-1200x630.webp" />
     <meta
@@ -31,11 +31,9 @@
   <body data-page="forum">
     <!--
       Akalynth community forum. Shares chrome with index.html / houses.html.
-      BROWSER-LOCAL PREVIEW: boards and seed threads are read by everyone;
-      posting requires a signed-in character and is stored only in this browser
-      (localStorage "akalynth.forum.v1"). No server, no real accounts, no shared
-      or cross-user persistence. Classic-MMO look recreated with original CSS and
-      Akalynth branding. Forum logic lives in js/forum.js.
+      READ-ONLY PREVIEW: boards and seed threads are read by everyone.
+      Posting is disabled until a server-backed account-character forum API
+      exists. No browser-local forum authority is used.
     -->
     <a class="skip-link" href="#main">Skip to content</a>
 
@@ -105,10 +103,9 @@
       <!-- Parchment content column -->
       <main class="content" id="main" role="main" tabindex="-1">
         <p class="notice">
-          ⚠ Community preview. This forum is <strong>preview-only</strong> and lives
-          entirely in this browser; posts are <strong>not connected</strong> to any
-          server, are visible only to you, and <strong>do not persist</strong> beyond
-          this device. No real account is involved.
+          ⚠ Community preview. This forum is <strong>read-only</strong> until a
+          server-backed account-character posting API exists. No browser-local
+          posts, ownership, or forum authority are created here.
         </p>
 
         <div id="forum-root">
