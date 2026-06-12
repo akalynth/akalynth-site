@@ -69,6 +69,7 @@ for literal in \
   'api("/v1/characters").then' \
   'api("/v1/characters/select", { method: "POST"' \
   'api("/v1/characters", { method: "POST"' \
+  'api("/v1/wallet?character_id="' \
   'api("/v1/shop/purchase", { method: "POST"' \
   'api("/v1/work/start", { method: "POST"' \
   'api("/v1/work/tick", { method: "POST"' \
@@ -116,6 +117,8 @@ done
 
 require_literal "js/app.js" 'data-shop-buy="' "Direct server shop action hook"
 require_literal "shop.html" 'id="purchase-authority"' "Direct server shop status hook"
+require_literal "js/app.js" 'state.goldBalance = typeof body.balance_gold === "number" ? body.balance_gold : null;' "Server-backed wallet balance load"
+require_literal "js/app.js" 'setText("#holdings-gold", state.goldBalance == null ? "server" : fmt(state.goldBalance));' "Server-backed wallet balance render"
 require_literal "js/app.js" 'function clearAccountScopedUiState()' "Account-scoped UI clear helper"
 require_literal "js/app.js" 'clearAccountScopedUiState();' "Account-scoped UI clear call"
 require_literal "js/app.js" 'function clearLocalSessionUi(message, kind)' "Local session UI clear helper"
