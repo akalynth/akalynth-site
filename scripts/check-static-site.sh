@@ -122,6 +122,58 @@ if [[ "$guard_call_count" -lt 6 ]]; then
   exit 1
 fi
 
+python3 - "$repo_root/js/app.js" <<'PY'
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+lines = path.read_text(encoding="utf-8").splitlines()
+
+checks = [
+    ("character select", 'api("/v1/characters/select", { method: "POST"', 10, "accountActionBlockedMessage"),
+    ("character create", 'api("/v1/characters", { method: "POST"', 10, "accountActionBlockedMessage"),
+    ("shop purchase", 'api("/v1/shop/purchase", { method: "POST"', 12, "accountActionBlockedMessage"),
+    ("work start", 'api("/v1/work/start", { method: "POST"', 12, "accountActionBlockedMessage"),
+    ("work tick", 'api("/v1/work/tick", { method: "POST"', 16, "accountActionBlockedMessage"),
+    ("property buy/unlist", 'api(buy ? "/v1/property/buy" : "/v1/property/unlist"', 12, "accountActionBlockedMessage"),
+    ("property list", 'api("/v1/property/list"', 14, "accountActionBlockedMessage"),
+]
+
+errors = []
+for label, marker, window, guard in checks:
+    matches = [idx for idx, line in enumerate(lines) if marker in line]
+    if not matches:
+        errors.append(f"{label}: missing route marker {marker}")
+        continue
+    for idx in matches:
+        start = max(0, idx - window)
+        context = "\n".join(lines[start:idx])
+        if guard not in context:
+            errors.append(f"{label}: missing nearby {guard} guard before line {idx + 1}")
+
+selected_character_checks = [
+    ("shop purchase", 'api("/v1/shop/purchase", { method: "POST"', 12),
+    ("work start", 'api("/v1/work/start", { method: "POST"', 12),
+    ("work tick", 'api("/v1/work/tick", { method: "POST"', 16),
+    ("property buy/unlist", 'api(buy ? "/v1/property/buy" : "/v1/property/unlist"', 12),
+    ("property list", 'api("/v1/property/list"', 14),
+]
+
+for label, marker, window in selected_character_checks:
+    for idx, line in enumerate(lines):
+        if marker not in line:
+            continue
+        start = max(0, idx - window)
+        context = "\n".join(lines[start:idx])
+        if "selectedCharacter" not in context and "character" not in context:
+            errors.append(f"{label}: missing nearby selected-character guard before line {idx + 1}")
+
+if errors:
+    for error in errors:
+        print(f"::error::{error}", file=sys.stderr)
+    sys.exit(1)
+PY
+
 if grep -RInE 'no .*account session integration|no .*service calls|localStorage-only|browser-preview script|does not create accounts|Real account creation' docs README.md PUBLIC_BOUNDARY.md *.html js >/dev/null; then
   printf '::error::Stale account/API boundary wording found; the static site now integrates account and character APIs.\n' >&2
   grep -RInE 'no .*account session integration|no .*service calls|localStorage-only|browser-preview script|does not create accounts|Real account creation' docs README.md PUBLIC_BOUNDARY.md *.html js >&2
