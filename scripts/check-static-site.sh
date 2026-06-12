@@ -134,6 +134,11 @@ if grep -RInE '"network_calls_added": false|"account_session_integration_added":
   exit 1
 fi
 
+for manifest in docs/receipts/*.MANIFEST.sha256; do
+  [[ -f "$manifest" ]] || continue
+  sha256sum -c "$manifest" >/dev/null
+done
+
 python3 - "$repo_root" "${required_pages[@]}" <<'PY'
 import re
 import sys
