@@ -206,9 +206,17 @@
     if (err.status === 403 && err.body && err.body.error === "csrf_failed") return "Security token expired. Sign in again.";
     if (err.status === 403 && err.body && err.body.error === "email_unverified") return "Verify your email before creating a character.";
     if (err.status === 403 && err.body && err.body.error === "not_owner") return "Only the account-owned character that owns this property can change it.";
+    if (err.status === 400 && err.body && err.body.error === "unknown_shop_item") return "That shop item is not available.";
+    if (err.status === 400 && err.body && err.body.error === "invalid_price") return "Enter a positive gold price.";
+    if (err.status === 404 && err.body && err.body.error === "unknown_plot") return "That property plot was not found.";
     if (err.status === 409 && err.body && err.body.error === "already_listed") return "This property is already listed. Unlist it before listing again.";
     if (err.status === 409 && err.body && err.body.error === "not_listed") return "This property is not currently listed.";
     if (err.status === 409 && err.body && err.body.error === "not_for_sale") return "This property is not currently for sale.";
+    if (err.status === 409 && err.body && err.body.error === "cannot_buy_own") return "You already own this property.";
+    if (err.status === 409 && err.body && err.body.error === "already_active") return "Finish the current work contract before starting another.";
+    if (err.status === 409 && err.body && err.body.error === "on_cooldown") return "Work is cooling down. Try again later.";
+    if (err.status === 409 && err.body && err.body.error === "invalid_contract") return "Start work again. This contract is no longer active.";
+    if (err.status === 409 && err.body && err.body.error === "insufficient_presence") return "Stay present in the world before ticking work again.";
     if (err.status === 402 && err.body && err.body.error === "insufficient_gold") return "Not enough earned gold for this action.";
     if (err.status === 404) return "That server record was not found.";
     return err.message || "Request failed.";
