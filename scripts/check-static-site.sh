@@ -130,6 +130,8 @@ require_literal "shop.html" 'id="purchase-authority"' "Direct server shop status
 require_literal "js/app.js" 'state.goldBalance = typeof body.balance_gold === "number" ? body.balance_gold : null;' "Server-backed wallet balance load"
 require_literal "js/app.js" 'setText("#holdings-gold", state.goldBalance == null ? "server" : fmt(state.goldBalance));' "Server-backed wallet balance render"
 require_literal "js/app.js" 'if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;' "Server-backed mutation balance refresh"
+require_literal "js/app.js" 'body: { character_id: character.character_id, property_id: id }' "Property buy/unlist uses captured account-owned character"
+require_literal "js/app.js" 'body: { character_id: character.character_id, property_id: id, price_gold: price }' "Property list uses captured account-owned character"
 require_literal "js/app.js" 'Purchase accepted by server.' "Server-backed purchase success message"
 require_literal "js/app.js" 'Work complete: +' "Server-backed work completion message"
 require_literal "js/app.js" 'rememberHouseOverride(body.property);' "Server-backed property mutation mirror"

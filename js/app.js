@@ -996,14 +996,15 @@
         if (!id) return;
         var err = $("#house-error-" + id);
         if (err) err.textContent = "";
+        var character = selectedCharacter();
         var blocked = accountActionBlockedMessage();
-        if (blocked || !selectedCharacter()) {
+        if (blocked || !character) {
           if (err) err.textContent = blocked || "Select a character before changing property.";
           return;
         }
         api(buy ? "/v1/property/buy" : "/v1/property/unlist", {
           method: "POST",
-          body: { character_id: selectedCharacter() && selectedCharacter().character_id, property_id: id },
+          body: { character_id: character.character_id, property_id: id },
         })
           .then(function (body) {
             if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;
@@ -1029,14 +1030,15 @@
           if (err) err.textContent = "Enter a positive gold price.";
           return;
         }
+        var character = selectedCharacter();
         var blocked = accountActionBlockedMessage();
-        if (blocked || !selectedCharacter()) {
+        if (blocked || !character) {
           if (err) err.textContent = blocked || "Select a character before listing property.";
           return;
         }
         api("/v1/property/list", {
           method: "POST",
-          body: { character_id: selectedCharacter() && selectedCharacter().character_id, property_id: id, price_gold: price },
+          body: { character_id: character.character_id, property_id: id, price_gold: price },
         })
           .then(function (body) {
             rememberHouseOverride(body && body.property);
