@@ -117,6 +117,8 @@ require_literal "js/app.js" 'function clearLocalSessionUi(message, kind)' "Local
 require_literal "js/app.js" 'Signed out locally. Server logout could not be confirmed:' "Failed logout local clear message"
 require_literal "js/app.js" 'function csrfReady()' "CSRF readiness helper"
 require_literal "js/app.js" 'function accountActionBlockedMessage()' "Account action guard helper"
+require_literal "js/app.js" 'credentials: "include"' "Account API cookie/session transport"
+require_literal "js/app.js" 'headers["x-csrf-token"] = csrf;' "Account API CSRF header transport"
 require_literal "js/app.js" 'Security token missing. Sign in again before account character or gameplay actions.' "CSRF missing inline action message"
 require_literal "js/app.js" 'var blocked = accountActionBlockedMessage();' "Account action guard call"
 
