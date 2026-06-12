@@ -45,6 +45,50 @@ for page in "${required_pages[@]}"; do
   curl -fsSI "http://127.0.0.1:${port}/${page}" >/dev/null
 done
 
+require_literal() {
+  local file="$1"
+  local literal="$2"
+  local label="$3"
+  if ! grep -Fq -- "$literal" "$file"; then
+    printf '::error::%s missing in %s: %s\n' "$label" "$file" "$literal" >&2
+    exit 1
+  fi
+}
+
+for literal in \
+  'api("/v1/accounts/me")' \
+  'api("/v1/accounts/register", { method: "POST"' \
+  'api("/v1/accounts/login", { method: "POST"' \
+  'api("/v1/accounts/verify-email", { method: "POST"' \
+  'api("/v1/characters").then' \
+  'api("/v1/characters/select", { method: "POST"' \
+  'api("/v1/characters", { method: "POST"' \
+  'api("/v1/shop/purchase", { method: "POST"' \
+  'api("/v1/work/start", { method: "POST"' \
+  'api("/v1/work/tick", { method: "POST"' \
+  '"/v1/property/buy"' \
+  'api("/v1/property/list"' \
+  '"/v1/property/unlist"'; do
+  require_literal "js/app.js" "$literal" "Server-backed account/economy route"
+done
+
+require_literal "account.html" 'id="account-portal-root"' "Account character portal hook"
+
+for literal in \
+  'name="world_id"' \
+  'name="outfit_id"'; do
+  require_literal "js/app.js" "$literal" "Account character portal field"
+done
+
+for literal in \
+  'id="beta-account-status"' \
+  '<script src="js/app.js" defer></script>'; do
+  require_literal "beta.html" "$literal" "Beta account-character readiness hook"
+done
+
+require_literal "js/app.js" 'data-shop-buy="' "Direct server shop action hook"
+require_literal "shop.html" 'id="purchase-authority"' "Direct server shop status hook"
+
 python3 - "$repo_root" "${required_pages[@]}" <<'PY'
 import re
 import sys
