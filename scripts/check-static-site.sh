@@ -85,7 +85,11 @@ require_literal "README.md" 'is the Public Codex surface' "Public Codex surface 
 require_literal "codex.html" 'Codex Surface / Public / Layer 1' "Public Codex surface label"
 require_literal "codex/builder/index.html" 'Codex Surface / Builder / Layer 2' "Builder Codex surface label"
 require_literal "codex/operator/index.html" 'Codex Surface / Operator / Layer 3' "Operator Codex surface label"
-require_literal "codex/agent/index.html" 'Codex Surface / Agent' "Agent Codex surface label"
+require_literal "codex/agent/index.html" 'Codex Surface / Agent / Layer 4' "Agent Codex surface label"
+require_literal "codex.html" 'Identity: gold.' "Public Codex identity"
+require_literal "codex/builder/index.html" 'Identity: blue.' "Builder Codex identity"
+require_literal "codex/operator/index.html" 'Identity: gold/red.' "Operator Codex identity"
+require_literal "codex/agent/index.html" 'Identity: green.' "Agent Codex identity"
 
 for route_page in codex/builder/index.html codex/operator/index.html codex/agent/index.html; do
   require_literal "$route_page" 'Create account character' "Codex surface account-character CTA"
