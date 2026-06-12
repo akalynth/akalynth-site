@@ -97,6 +97,11 @@ done
 for literal in \
   'function validWorld(entry)' \
   'function validOutfit(entry)' \
+  'function validCharacter(entry)' \
+  'state.characters = (chars.characters || []).filter(validCharacter);' \
+  'worldName(c.world_id)' \
+  'c.sex || "-"' \
+  'outfitName(c.outfit_id)' \
   'name="world_id"' \
   'name="sex"' \
   'name="outfit_id"'; do
