@@ -827,8 +827,25 @@
     if (y) y.textContent = new Date().getFullYear();
   }
 
+  // Mobile nav: close the hamburger menu after a selection or Escape.
+  // No-ops where the toggle is absent (re-added after the PR #19 app.js rewrite).
+  function initNav() {
+    var toggle = document.getElementById("nav-toggle");
+    if (!toggle) return;
+    var nav = document.querySelector(".top-nav");
+    if (nav) {
+      nav.addEventListener("click", function (e) {
+        if (e.target.closest && e.target.closest("a")) toggle.checked = false;
+      });
+    }
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") toggle.checked = false;
+    });
+  }
+
   function boot() {
     initTabs();
+    initNav();
     initMisc();
     handleAccountQuery();
     refreshPortal();

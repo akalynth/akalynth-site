@@ -1153,9 +1153,14 @@ select:focus-visible {
   }
 }
 @media (max-width: 540px) {
+  /* Header stays a single row: brand left, burger right (was column,
+     a leftover from the pre-hamburger wrapped nav). */
   .header-inner {
-    flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+  }
+  /* Short gated pages no longer leave a tall void above the status bar. */
+  .content {
+    min-height: 0;
   }
   .page-title {
     font-size: 26px;
@@ -1621,5 +1626,147 @@ select:focus-visible {
   .codex-plate-row,
   .charter-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Mobile hamburger nav ---------- */
+.nav-burger,
+.nav-toggle {
+  display: none;
+}
+
+@media (max-width: 820px) {
+  /* Focusable-but-hidden checkbox drives the menu (works without JS). */
+  .nav-toggle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    display: block;
+  }
+  /* Burger button, gold-on-brown to match the tab buttons. */
+  .nav-burger {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 46px;
+    height: 40px;
+    padding: 0 11px;
+    background: linear-gradient(180deg, var(--brown-1), var(--brown-0));
+    border: 1px solid var(--gold-deep);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 6px var(--shadow);
+    cursor: pointer;
+  }
+  .nav-burger span {
+    display: block;
+    height: 2px;
+    width: 100%;
+    background: var(--gold-1);
+    border-radius: 2px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .nav-toggle:focus-visible + .nav-burger {
+    outline: 2px solid var(--gold-1);
+    outline-offset: 2px;
+  }
+  /* Menu wraps to its own full-width row, collapsed by default. */
+  .top-nav {
+    order: 3;
+    flex-basis: 100%;
+  }
+  .top-nav ul {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .top-nav li {
+    width: 100%;
+  }
+  .top-nav .tab-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+  .nav-toggle:checked ~ .top-nav ul {
+    display: flex;
+  }
+  /* Burger morphs into an X when open. */
+  .nav-toggle:checked + .nav-burger span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .nav-toggle:checked + .nav-burger span:nth-child(2) {
+    opacity: 0;
+  }
+  .nav-toggle:checked + .nav-burger span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+}
+
+/* ---------- Mobile collapsible sidebar ---------- */
+.aside-toggle,
+.aside-bar {
+  display: none;
+}
+
+@media (max-width: 820px) {
+  .aside-toggle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    display: block;
+  }
+  /* Toggle bar, styled like a panel header (gold-on-brown). */
+  .aside-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    order: 1;
+    margin: 4px 0 0;
+    padding: 10px 14px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: linear-gradient(180deg, var(--gold-1), var(--gold-0));
+    border: 2px solid var(--gold-deep);
+    border-radius: var(--radius);
+    box-shadow: 0 2px 6px var(--shadow);
+    cursor: pointer;
+  }
+  .aside-bar__chev {
+    font-size: 12px;
+    transition: transform 0.2s ease;
+  }
+  .aside-toggle:focus-visible + .aside-bar {
+    outline: 2px solid var(--gold-deep);
+    outline-offset: 2px;
+  }
+  /* Panels collapsed by default; revealed when toggled. */
+  .sidebar {
+    order: 2;
+    display: none;
+    margin-top: 10px;
+  }
+  .aside-toggle:checked ~ .sidebar {
+    display: flex;
+  }
+  .aside-toggle:checked + .aside-bar .aside-bar__chev {
+    transform: rotate(180deg);
   }
 }

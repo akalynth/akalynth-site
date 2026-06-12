@@ -3,38 +3,35 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Codex — Akalynth: Creatures &amp; City Charters</title>
+    <title>Codex — Akalynth: World Encyclopedia</title>
     <meta
       name="description"
-      content="The Akalynth Codex — illustrated lore for the archive creatures, High City, and the city charters of Akalynth. Pre-alpha static preview; lore only, not connected to any live service."
+      content="The Akalynth Codex — a living encyclopedia of cities, creatures, factions, and history. A public projection of the Akalynth world model; accepted lore only, not a live service."
     />
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231f1a13'/%3E%3Cpath d='M16 5l7 11-7 11-7-11z' fill='%23d9b25a'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23050910'/%3E%3Cpath d='M16 5l7 11-7 11-7-11z' fill='%23e5b75c'/%3E%3C/svg%3E"
     />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Akalynth" />
     <meta property="og:title" content="The Akalynth Codex" />
     <meta
       property="og:description"
-      content="Illustrated lore for Akalynth's archive creatures, High City, and city charters. Pre-alpha static preview — lore only, not a live service."
+      content="A living encyclopedia of Akalynth's cities, creatures, factions, and history. A public projection of the world model — accepted lore only."
     />
     <meta property="og:image" content="assets/akalynth/visuals/og/05-witness-moth.og-1200x630.webp" />
-    <meta
-      property="og:image:alt"
-      content="Witness Moth key art for Akalynth, a luminous observer form above ancient ruins."
-    />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="assets/akalynth/visuals/og/05-witness-moth.og-1200x630.webp" />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/codex-fonts.css" />
+    <link rel="stylesheet" href="css/codex.css" />
   </head>
-  <body data-page="codex">
+  <body class="codex-os" data-page="codex">
     <!--
-      Akalynth Codex page. Shares chrome with index.html / houses.html / shop.html.
-      Presents original Akalynth world art (creature codex plates + city charters)
-      with in-world lore. This is a static lore preview: no live service, no
-      account, economy, or runtime state is connected here. Classic-MMO look
-      recreated with original CSS and Akalynth branding.
+      Akalynth Codex — public surface (Layer 1). Dark operator-console theme.
+      The entry data is the PUBLIC PROJECTION of the Akalynth world model
+      (js/codex-data.js, generated from akalynth-ops/codex). Display-only: no
+      account, economy, or runtime state; no entry creation. Self-hosted fonts.
     -->
     <a class="skip-link" href="#main">Skip to content</a>
 
@@ -47,6 +44,8 @@
             <span class="brand-tag">High City awaits</span>
           </span>
         </a>
+        <input class="nav-toggle" type="checkbox" id="nav-toggle" aria-label="Toggle navigation menu" />
+        <label class="nav-burger" for="nav-toggle" aria-hidden="true"><span></span><span></span><span></span></label>
         <nav class="top-nav" aria-label="Primary">
           <ul>
             <li><a class="tab-btn" href="index.html#home" data-nav="home">Home</a></li>
@@ -63,960 +62,98 @@
       </div>
     </header>
 
-    <div class="codex-layout">
-      <main class="content" id="main" role="main" tabindex="-1">
-        <h1 class="page-title">The Akalynth Codex</h1>
-        <article class="parchment">
-          <p class="lede">
-            The Codex is the living archive of Akalynth — the creatures that shape
-            the world, the cities that hold it together, the relics that preserve
-            its memory, and the factions that move it. These pages collect the
-            Chroniclers' first entries: the <strong>Creature Codex</strong>, the
-            <strong>City Charter Collection</strong>, the
-            <strong>Artifacts Codex</strong>, and the
-            <strong>Factions Codex</strong> — all bound together by the
-            <strong>Chronicle of Ages</strong>.
-          </p>
-          <p class="muted">
-            Lore preview only. Nothing here is connected to a live service,
-            account, or economy — these are the world's stories, not its runtime.
-          </p>
-        </article>
-
-        <section class="lore-banner-stack" aria-label="Chronicle visual headers">
-          <a class="lore-banner" href="assets/akalynth/visuals/banners/05-witness-moth.banner-1600x700.webp">
-            <img src="assets/akalynth/visuals/banners/05-witness-moth.banner-1600x700.webp" alt="Witness Moth lore banner for Akalynth." loading="lazy" decoding="async" width="1600" height="700" />
-            <span class="lore-banner__shade"></span>
-            <span class="lore-banner__body">
-              <strong>The First Binding</strong>
-              <span>Public-safe Chronicle header art for memory, evidence, omen, and sacred continuity.</span>
-            </span>
-          </a>
-          <a class="lore-banner" href="assets/akalynth/visuals/banners/06-trinity-convergence.banner-1600x700.webp">
-            <img src="assets/akalynth/visuals/banners/06-trinity-convergence.banner-1600x700.webp" alt="Trinity Convergence lore banner for Akalynth." loading="lazy" decoding="async" width="1600" height="700" />
-            <span class="lore-banner__shade"></span>
-            <span class="lore-banner__body">
-              <strong>The Great Accord</strong>
-              <span>Static pre-alpha preview art. This is lore presentation, not a runtime quest or unlocked chapter.</span>
-            </span>
-          </a>
+    <main class="content" id="main" role="main" tabindex="-1">
+      <div class="wrap">
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">Knowledge / World / Memory</p>
+            <h1>Codex</h1>
+            <p class="lede">
+              A living encyclopedia of Akalynth — cities, creatures, factions, and history.
+              Each entry is a window into the world model: accepted, sourced, and connected.
+            </p>
+            <div class="search-wrap">
+              <span aria-hidden="true">⌕</span>
+              <input id="codexSearch" type="search" placeholder="Search the Codex…" autocomplete="off" aria-label="Search the Codex" />
+              <kbd>/</kbd>
+            </div>
+          </div>
+          <div class="sigil-card" aria-hidden="true">
+            <div class="orbit orbit-1"></div>
+            <div class="orbit orbit-2"></div>
+            <div class="orbit orbit-3"></div>
+            <div class="sigil">
+              <div class="triangle"></div>
+              <div class="ring"></div>
+              <div class="core"></div>
+              <span class="node n1"></span><span class="node n2"></span>
+              <span class="node n3"></span><span class="node n4"></span>
+            </div>
+          </div>
         </section>
 
-        <!-- ============ CREATURE CODEX ============ -->
-        <h2 class="section-title">The Creature Codex</h2>
-        <article class="parchment">
-          <p>
-            Older than any city, the archive entities exist to remember. Some
-            record truth, some unspool it, some carry it across ages, and some
-            return it to silence. They do not answer to the orders of any city —
-            they answer to the world itself.
-          </p>
-        </article>
+        <section class="stats" id="codexStats"></section>
 
-        <!-- Witness Moth -->
-        <article class="codex-entry">
-          <figure class="codex-plate">
-            <a href="assets/codex/witness-moth.png" target="_blank" rel="noopener">
-              <img
-                src="assets/codex/witness-moth.png"
-                alt="Codex plate: The Witness Moth, a luminous archive moth with crystalline memory-facet wings."
-                loading="lazy"
-                decoding="async"
-                width="1024"
-                height="1536"
-              />
-            </a>
-            <figcaption>Creature Codex · Entry 058 — open full plate ↗</figcaption>
-          </figure>
-          <div class="parchment codex-lore">
-            <h3 class="news-title">The Witness Moth</h3>
-            <p class="codex-sub">Keeper of Seen Truths · Recorder of All That Is · Threat: High</p>
-            <p>
-              The Witness Moth is among the oldest archive entities known to
-              exist in Akalynth. Created during the earliest experiments in
-              memory preservation, these luminous beings were originally designed
-              to record history without bias. Over centuries they evolved beyond
-              their purpose and became living repositories of truth.
-            </p>
-            <p>A Witness Moth does not judge, interfere, or choose sides. It simply observes.</p>
-            <p>
-              Its crystalline wings contain thousands of memory facets capable of
-              recording sound, light, emotion, and intent. Wherever history
-              unfolds, Witness Moths often appear silently above the event,
-              preserving it within their scales.
-            </p>
-            <p>
-              Most are harmless. The danger comes when a Witness Moth accumulates
-              too much memory. Ancient specimens become saturated with centuries
-              of recorded events and begin replaying fragments of the past.
-              Entire battlefields, lost conversations, and forgotten catastrophes
-              can manifest around them as living echoes.
-            </p>
-            <p>
-              To the Codexborn, a Witness Moth is sacred. To tyrants, it is
-              terrifying — for it remembers what others wish forgotten.
-            </p>
+        <section class="content-grid">
+          <div>
+            <div class="section-head">
+              <h2>Entries</h2>
+              <button class="link-btn" id="codexClear">View all ›</button>
+            </div>
+            <div id="codexList" class="entry-list">
+      <article class="entry-row" data-id="artifacts-codex"><div class="entry-icon">▤</div><div><div class="entry-title">Artifacts Codex</div><div class="entry-summary">Relics of Power.</div></div><div class="pill"><span class="dot Codices"></span>Codices</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="chronicle-of-ages"><div class="entry-icon">▤</div><div><div class="entry-title">Chronicle of Ages</div><div class="entry-summary">Events That Changed The World.</div></div><div class="pill"><span class="dot Codices"></span>Codices</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="chronoshell-turtle"><div class="entry-icon">✦</div><div><div class="entry-title">The Chronoshell Turtle</div><div class="entry-summary">Keeper of Ages · Shell of Millennia · Threat: Unknown</div></div><div class="pill"><span class="dot Creatures"></span>Creatures</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="cindervale"><div class="entry-icon">◇</div><div><div class="entry-title">Cindervale</div><div class="entry-summary">Frontier of Ash — a harsh stronghold at the edge of the Emberwilds.</div></div><div class="pill"><span class="dot Cities"></span>Cities</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="dreamweaver"><div class="entry-icon">✦</div><div><div class="entry-title">The Dreamweaver</div><div class="entry-summary">Architect of Dreams · Weaver of Possibilities · Threat: High (Indirect)</div></div><div class="pill"><span class="dot Creatures"></span>Creatures</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="dungeon-codex"><div class="entry-icon">▤</div><div><div class="entry-title">Dungeon Codex</div><div class="entry-summary">Places Where History Still Breathes.</div></div><div class="pill"><span class="dot Codices"></span>Codices</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="echo-stalker"><div class="entry-icon">✦</div><div><div class="entry-title">The Echo Stalker</div><div class="entry-summary">Shadow Hunter of Forgotten Sounds · Threat: Extreme</div></div><div class="pill"><span class="dot Creatures"></span>Creatures</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="ember-road"><div class="entry-icon">◇</div><div><div class="entry-title">The Ember Road</div><div class="entry-summary">High City to the Forgehold Outer Gate.</div></div><div class="pill"><span class="dot Places"></span>Places</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="emberwilds-atlas"><div class="entry-icon">▤</div><div><div class="entry-title">Emberwilds Atlas</div><div class="entry-summary">The volcanic frontier, mapped.</div></div><div class="pill"><span class="dot Codices"></span>Codices</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="emberwilds"><div class="entry-icon">◇</div><div><div class="entry-title">The Emberwilds</div><div class="entry-summary">The living-volcano frontier.</div></div><div class="pill"><span class="dot Places"></span>Places</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="factions-codex"><div class="entry-icon">▤</div><div><div class="entry-title">Factions Codex</div><div class="entry-summary">Powers That Shape the World.</div></div><div class="pill"><span class="dot Codices"></span>Codices</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="flamebound"><div class="entry-icon">◈</div><div><div class="entry-title">The Flamebound</div><div class="entry-summary">Forge-sworn of the Emberwilds.</div></div><div class="pill"><span class="dot Factions"></span>Factions</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="forgehold"><div class="entry-icon">◇</div><div><div class="entry-title">Forgehold Citadel</div><div class="entry-summary">Heart of the Emberwilds - an industrial fortress carved into a living volcano.</div></div><div class="pill"><span class="dot Cities"></span>Cities</div><div class="time">has-route-slice</div></article>
+      <article class="entry-row" data-id="heartforge"><div class="entry-icon">◇</div><div><div class="entry-title">The Heartforge</div><div class="entry-summary">The great forge at the heart of Forgehold.</div></div><div class="pill"><span class="dot Places"></span>Places</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="heroes-codex"><div class="entry-icon">▤</div><div><div class="entry-title">Heroes Codex</div><div class="entry-summary">The First Legends.</div></div><div class="pill"><span class="dot Codices"></span>Codices</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="high-city"><div class="entry-icon">◇</div><div><div class="entry-title">High City</div><div class="entry-summary">Crown of Convergence — capital of Akalynth and birthplace of the Great Accord.</div></div><div class="pill"><span class="dot Cities"></span>Cities</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="memory-serpent"><div class="entry-icon">✦</div><div><div class="entry-title">The Memory Serpent</div><div class="entry-summary">Guardian of Forgotten Truths · Warden of the Deep Mind · Threat: Extreme</div></div><div class="pill"><span class="dot Creatures"></span>Creatures</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="moonspire"><div class="entry-icon">◇</div><div><div class="entry-title">Moonspire</div><div class="entry-summary">City of Dreams — spiritual capital built around a great Dream Sanctum.</div></div><div class="pill"><span class="dot Cities"></span>Cities</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="soulsteel"><div class="entry-icon">◆</div><div><div class="entry-title">Soulsteel</div><div class="entry-summary">The signature alloy of Forgehold.</div></div><div class="pill"><span class="dot Materials"></span>Materials</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="veridium-port"><div class="entry-icon">◇</div><div><div class="entry-title">Veridium Port</div><div class="entry-summary">Gateway of the Western Sea — the largest harbor in Akalynth.</div></div><div class="pill"><span class="dot Cities"></span>Cities</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="void-whale"><div class="entry-icon">✦</div><div><div class="entry-title">The Void Whale</div><div class="entry-summary">Skybound Leviathan · Herald of the Gap · Threat: Catastrophic</div></div><div class="pill"><span class="dot Creatures"></span>Creatures</div><div class="time">accepted</div></article>
+      <article class="entry-row" data-id="witness-moth"><div class="entry-icon">✦</div><div><div class="entry-title">The Witness Moth</div><div class="entry-summary">Keeper of Seen Truths · Recorder of All That Is · Threat: High</div></div><div class="pill"><span class="dot Creatures"></span>Creatures</div><div class="time">accepted</div></article>
+            </div>
           </div>
-        </article>
+          <aside class="detail-panel" id="codexDetail">
+        <p class="panel-kicker">Selected Entry</p>
+        <h3>Forgehold Citadel</h3><img class="detail-art" src="assets/akalynth/visuals/cards/03-forgehold.card-800x1000.webp" alt="Forgehold Citadel" loading="lazy" />
+        <p>Forgehold Citadel is carved into a living volcano at the heart of the Emberwilds. Home of the Flamebound, it is where Soulsteel is forged and the Heartforge burns. Its civic virtue is Strength.</p>
+        <dl class="meta">
+          <div><dt>Object ID</dt><dd class="mono">forgehold</dd></div>
+          <div><dt>Status</dt><dd>has-route-slice</dd></div>
+          <div><dt>Source</dt><dd class="mono">AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1</dd></div>
+          <div><dt>Evidence</dt><dd class="mono hash" title="4d9eed25b50dba215da5061a72ddd5aec778ae917d588202289adebe6fd3c823">4d9eed25…d3c823 <span class="badge">receipt</span></dd></div>
+          <div><dt>Authority</dt><dd>Akalynth</dd></div>
+          <div class="rel"><dt>Related</dt><dd><a data-go="high-city">High City</a>, <a data-go="ember-road">The Ember Road</a>, <a data-go="emberwilds">The Emberwilds</a>, <a data-go="flamebound">The Flamebound</a>, <a data-go="soulsteel">Soulsteel</a>, <a data-go="heartforge">The Heartforge</a></dd></div>
+        </dl>
+          </aside>
+        </section>
 
-        <!-- Void Whale -->
-        <article class="codex-entry is-flipped">
-          <figure class="codex-plate">
-            <a href="assets/codex/void-whale.png" target="_blank" rel="noopener">
-              <img
-                src="assets/codex/void-whale.png"
-                alt="Codex plate: The Void Whale, a vast leviathan drifting through the dark spaces between realities."
-                loading="lazy"
-                decoding="async"
-                width="1024"
-                height="1536"
-              />
-            </a>
-            <figcaption>Creature Codex · Entry 074 — open full plate ↗</figcaption>
-          </figure>
-          <div class="parchment codex-lore">
-            <h3 class="news-title">The Void Whale</h3>
-            <p class="codex-sub">Skybound Leviathan · Herald of the Gap · Threat: Catastrophic</p>
-            <p>The Void Whale is not a creature of the stars. It is a creature of absence.</p>
-            <p>
-              Legend claims that every forgotten thing eventually drifts into the
-              great silent spaces between realities. The Void Whale swims through
-              those spaces, feeding upon abandoned memories, erased histories, and
-              civilizations lost to time.
-            </p>
-            <p>
-              Its body appears different to every observer. Some see a
-              mountain-sized whale. Others see an entire moving horizon. No
-              reliable measurement has ever been recorded.
-            </p>
-            <p>
-              Where the Whale passes, silence follows. Songs lose their meaning.
-              Monuments remain standing but nobody remembers who built them.
-              Entire chapters of history fade from collective memory.
-            </p>
-            <p>
-              The Whale is not malicious. It does not hate. It does not hunt
-              individuals — its attention operates on the scale of empires. Many
-              scholars believe it serves a cosmic purpose, ensuring reality does
-              not become burdened by infinite accumulated memory. Others fear it
-              represents the inevitable end of all civilizations.
-            </p>
-            <p>
-              The Witness Moth records history. The Void Whale reminds the world
-              that history can disappear.
-            </p>
-          </div>
-        </article>
+        <section class="categories">
+          <div class="section-head"><h2>Explore Categories</h2></div>
+          <div id="codexCats" class="category-grid"></div>
+        </section>
 
-        <!-- Chronoshell Turtle (text-only) -->
-        <article class="codex-entry codex-entry--text">
-          <div class="parchment codex-lore">
-            <h3 class="news-title">The Chronoshell Turtle</h3>
-            <p class="codex-sub">Keeper of Ages · Shell of Millennia · Threat: Unknown · Illustration in progress</p>
-            <p>
-              Among the rarest entities ever documented, the Chronoshell Turtle
-              wanders the tides of time itself.
-            </p>
-            <p>
-              Its colossal shell carries entire ecosystems upon its back. Rivers
-              flow across ancient stone. Forests grow and wither. Ruins of
-              forgotten civilizations rise and collapse. To walk upon the shell of
-              a Chronoshell Turtle is to travel through a living archive of ages.
-            </p>
-            <p>
-              The creature moves so slowly that entire generations may pass
-              between two visible steps. Yet despite its pace, it appears wherever
-              time itself becomes unstable — when great paradoxes emerge, when
-              forbidden magic fractures chronology, or when lost eras threaten to
-              return. Its presence stabilizes reality.
-            </p>
-            <p>
-              Ancient records claim that the Great Accord itself was signed in the
-              shadow of a sleeping Chronoshell Turtle. Some believe the creature
-              remembers every age that has ever existed, including those erased
-              from history. The Turtle neither guides nor judges. It simply
-              carries time forward.
-            </p>
-          </div>
-        </article>
-
-        <!-- Dreamweaver -->
-        <article class="codex-entry">
-          <figure class="codex-plate">
-            <a href="assets/codex/dreamweaver.png" target="_blank" rel="noopener">
-              <img
-                src="assets/codex/dreamweaver.png"
-                alt="Codex plate: The Dreamweaver, a colossal arachnid woven from living starlight and thought."
-                loading="lazy"
-                decoding="async"
-                width="1024"
-                height="1536"
-              />
-            </a>
-            <figcaption>Creature Codex · Entry 075 — open full plate ↗</figcaption>
-          </figure>
-          <div class="parchment codex-lore">
-            <h3 class="news-title">The Dreamweaver</h3>
-            <p class="codex-sub">Architect of Dreams · Weaver of Possibilities · Threat: High (Indirect)</p>
-            <p>
-              The Dreamweaver exists within the Liminal Web, the vast realm
-              between waking thought and sleeping imagination.
-            </p>
-            <p>
-              Neither beast nor god, it appears as a colossal arachnid woven from
-              living starlight and thought. Every strand of its web connects minds
-              across Akalynth. Dreams are its language. Through dreams it teaches.
-              Through dreams it warns. Through dreams it tests.
-            </p>
-            <p>
-              The Dreamweaver does not create destiny. Instead, it reveals
-              possibilities. Heroes have received visions from it before great
-              journeys. Entire civilizations have been guided by dreams woven
-              through generations.
-            </p>
-            <p>
-              Yet the Dreamweaver is not always benevolent. Those who become
-              trapped in its deeper webs may lose the ability to distinguish
-              possibility from reality. Some never awaken.
-            </p>
-            <p>
-              Among the Dream Sanctums it is revered as a guardian of wisdom.
-              Among skeptics it is feared as a manipulator of fate. The truth
-              remains uncertain — perhaps that uncertainty is exactly what the
-              Dreamweaver intends.
-            </p>
-          </div>
-        </article>
-
-        <!-- Memory Serpent -->
-        <article class="codex-entry is-flipped">
-          <figure class="codex-plate">
-            <a href="assets/codex/memory-serpent.png" target="_blank" rel="noopener">
-              <img
-                src="assets/codex/memory-serpent.png"
-                alt="Codex plate: The Memory Serpent, an ancient leviathan coiled in the deep memory seas."
-                loading="lazy"
-                decoding="async"
-                width="1024"
-                height="1536"
-              />
-            </a>
-            <figcaption>Creature Codex · Entry 017 — open full plate ↗</figcaption>
-          </figure>
-          <div class="parchment codex-lore">
-            <h3 class="news-title">The Memory Serpent</h3>
-            <p class="codex-sub">Guardian of Forgotten Truths · Warden of the Deep Mind · Threat: Extreme</p>
-            <p>
-              The Memory Serpent dwells in the deep memory seas, where submerged
-              archives and sunken vaults sink into eternal twilight. Born from the
-              first binding of thought into crystal by the Vault, it is a
-              colossal serpent of living memory.
-            </p>
-            <p>
-              It does not hoard truth for itself — it guards it. Those who seek to
-              erase, rewrite, or weaponize the past must first pass the Serpent's
-              coils, and few do. It can be roused by those who would bury history,
-              and only the worthy are permitted to wake what it keeps.
-            </p>
-            <p>
-              To know the creatures is to survive Akalynth. To understand them is
-              to endure.
-            </p>
-          </div>
-        </article>
-
-        <!-- Echo Stalker -->
-        <article class="codex-entry">
-          <figure class="codex-plate">
-            <a href="assets/codex/echo-stalker.png" target="_blank" rel="noopener">
-              <img
-                src="assets/codex/echo-stalker.png"
-                alt="Codex plate: The Echo Stalker, a shadow hunter that hunts forgotten sounds in ruined places."
-                loading="lazy"
-                decoding="async"
-                width="1024"
-                height="1536"
-              />
-            </a>
-            <figcaption>Creature Codex · Entry 042 — open full plate ↗</figcaption>
-          </figure>
-          <div class="parchment codex-lore">
-            <h3 class="news-title">The Echo Stalker</h3>
-            <p class="codex-sub">Shadow Hunter of Forgotten Sounds · Threat: Extreme</p>
-            <p>
-              Born from the silence between memories, the Echo Stalker is drawn to
-              places where voices once were. It feeds on lingering echoes — names,
-              songs, screams, promises — devouring the last sound a thing ever
-              made before it is forgotten forever.
-            </p>
-            <p>
-              It moves between echoes, becoming intangible for short bursts, and
-              steps through the spaces a sound leaves behind. Where memory
-              weakens, it grows bold. Some believe it was once mortal, condemned
-              to repeat so deep it unraveled into the emptiness between thoughts.
-            </p>
-            <p>It hunts the echo. To meet it is to hear your own name fade first.</p>
-          </div>
-        </article>
-
-        <!-- Codex Relationship table -->
-        <h2 class="section-title">The Codex Relationship</h2>
-        <article class="parchment">
-          <p>
-            The cardinal archive entities form a mythic structure across Akalynth.
-            Four of them embody the fundamental forces that shape the world; the
-            Codex holds many more entries between and beneath them.
-          </p>
-          <table class="codex-table">
-            <thead>
-              <tr><th scope="col">Creature</th><th scope="col">Domain / Force</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Witness Moth</td><td>Truth</td></tr>
-              <tr><td>Dreamweaver</td><td>Possibility</td></tr>
-              <tr><td>Chronoshell Turtle</td><td>Time</td></tr>
-              <tr><td>Void Whale</td><td>Oblivion</td></tr>
-            </tbody>
-          </table>
-          <p class="muted small">
-            Every civilization rises somewhere between Truth, Possibility, Time,
-            and Oblivion — and every civilization eventually encounters them.
-          </p>
-        </article>
-
-        <!-- ============ CITY CHARTER COLLECTION ============ -->
-        <h2 class="section-title">The City Charter Collection</h2>
-        <article class="parchment">
-          <p>
-            If the creatures are the Codex, the cities are the Charter. Five great
-            cities define civilization in Akalynth — the first civilization ring
-            of the world.
-          </p>
-        </article>
-
-        <!-- High City (two illustrated plates) -->
-        <article class="parchment codex-lore codex-lore--wide">
-          <h3 class="news-title">High City</h3>
-          <p class="codex-sub">Crown of Convergence · Role: Capital of Akalynth</p>
-          <p>
-            The oldest surviving city in the world and the birthplace of the Great
-            Accord. Built atop converging ley currents, High City serves as the
-            political, cultural, and intellectual center of civilization. Its
-            immense vertical structure rises from the Trinity Nexus and extends
-            into the Sky Spires above.
-          </p>
-          <p>
-            High City is governed by the Conclave and protected by the Oathbound.
-            It is where laws are written, treaties are signed, and history is
-            preserved.
-          </p>
-          <p class="charter-known">
-            <strong>Known for:</strong> Trinity Nexus · Great Archive Vaults ·
-            Sky Spires · Accord Chambers · Conclave Citadel
-          </p>
-          <p class="charter-motto">“Unity of Ley. Memory. Will.”</p>
-        </article>
-        <div class="codex-plate-row">
-          <figure class="codex-plate">
-            <a href="assets/codex/high-city-cross-section.png" target="_blank" rel="noopener">
-              <img
-                src="assets/codex/high-city-cross-section.png"
-                alt="Charter plate: High City cross-section, a vertical city rising from the Ley Core to the Sky Spires."
-                loading="lazy"
-                decoding="async"
-                width="1024"
-                height="1536"
-              />
-            </a>
-            <figcaption>High City — Cross-Section ↗</figcaption>
-          </figure>
-          <figure class="codex-plate">
-            <a href="assets/codex/high-city-charter.png" target="_blank" rel="noopener">
-              <img
-                src="assets/codex/high-city-charter.png"
-                alt="Charter plate: High City Charter, the founding charter of the capital of Akalynth."
-                loading="lazy"
-                decoding="async"
-                width="1024"
-                height="1536"
-              />
-            </a>
-            <figcaption>High City — Charter ↗</figcaption>
-          </figure>
-        </div>
-
-        <!-- Other four cities (text charters) -->
-        <div class="charter-grid">
-          <article class="parchment charter-card">
-            <h3 class="news-title">Forgehold Citadel</h3>
-            <p class="codex-sub">Heart of the Emberwilds · Industrial Capital</p>
-            <p>
-              Forgehold was carved directly into a living volcano. Home of the
-              Flamebound, the city exists in permanent partnership with fire.
-              Massive foundries, forge monasteries, and magma channels power the
-              city. Every weapon, relic, and great machine eventually passes
-              through Forgehold.
-            </p>
-            <p class="charter-known">
-              <strong>Known for:</strong> The Heartforge · Flame Monasteries ·
-              Magma Railways · Soulsteel Production · Titan Forges
-            </p>
-            <p class="charter-motto">“From Flame We Rise.”</p>
-          </article>
-
-          <article class="parchment charter-card">
-            <h3 class="news-title">Veridium Port</h3>
-            <p class="codex-sub">Gateway of the Western Sea · Trade Capital</p>
-            <p>
-              The largest harbor in Akalynth. Built along the Veridium Sea, the
-              city connects every major civilization through commerce and
-              exploration. Merchant fleets depart daily for distant islands and
-              forgotten ruins. Information flows through Veridium almost as quickly
-              as goods.
-            </p>
-            <p class="charter-known">
-              <strong>Known for:</strong> Grand Harbor · Merchant Guilds · Sea
-              Archives · Explorer Houses · Crystal Lighthouse
-            </p>
-            <p class="charter-motto">“Every Tide Brings Opportunity.”</p>
-          </article>
-
-          <article class="parchment charter-card">
-            <h3 class="news-title">Moonspire</h3>
-            <p class="codex-sub">City of Dreams · Spiritual Capital</p>
-            <p>
-              Built around a massive Dream Sanctum, Moonspire serves as the center
-              of dream study, meditation, and memory exploration. The city is
-              illuminated by pale crystal towers that never extinguish. Many
-              pilgrims travel here seeking visions. Many never leave.
-            </p>
-            <p class="charter-known">
-              <strong>Known for:</strong> Dream Sanctums · Reflection Pools ·
-              Memory Gardens · Moon Archives · The Silent Observatory
-            </p>
-            <p class="charter-motto">“Through Dreams We Remember.”</p>
-          </article>
-
-          <article class="parchment charter-card">
-            <h3 class="news-title">Cindervale</h3>
-            <p class="codex-sub">Frontier of Ash · Frontier Stronghold</p>
-            <p>
-              Located at the edge of the Emberwilds, Cindervale exists where
-              civilization meets danger. It protects trade routes, explores
-              volcanic territories, and serves as the first line of defense
-              against creatures emerging from the wastes. Life here is harsh. Its
-              people are harder.
-            </p>
-            <p class="charter-known">
-              <strong>Known for:</strong> Watch Bastions · Frontier Markets ·
-              Ashwardens · Expedition Guilds · Ember Gates
-            </p>
-            <p class="charter-motto">“Endure.”</p>
-          </article>
-        </div>
-
-        <!-- Five Great Cities table -->
-        <h2 class="section-title">The Five Great Cities</h2>
-        <article class="parchment">
-          <p>
-            Together the five cities mirror the world themes emerging from the
-            Creature Codex — each holds a purpose, and each carries a domain.
-          </p>
-          <table class="codex-table">
-            <thead>
-              <tr>
-                <th scope="col">City</th>
-                <th scope="col">Purpose</th>
-                <th scope="col">Domain</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr><td>High City</td><td>Governance</td><td>Order</td></tr>
-              <tr><td>Forgehold Citadel</td><td>Industry</td><td>Strength</td></tr>
-              <tr><td>Veridium Port</td><td>Trade</td><td>Prosperity</td></tr>
-              <tr><td>Moonspire</td><td>Spirituality</td><td>Wisdom</td></tr>
-              <tr><td>Cindervale</td><td>Frontier Defense</td><td>Survival</td></tr>
-            </tbody>
-          </table>
-          <p class="muted small">
-            Five cities, five domains — the first civilization ring of Akalynth.
-          </p>
-        </article>
-
-        <!-- ============ ARTIFACTS CODEX ============ -->
-        <h2 class="section-title">The Artifacts Codex — Volume I: Relics of Power</h2>
-        <article class="parchment">
-          <p class="lede">
-            Heroes change history. Villains corrupt history. Artifacts preserve
-            history. These eight relics are the remnants of choices that shaped
-            the world.
-          </p>
-        </article>
-
-        <figure class="codex-plate codex-poster">
-          <a href="assets/codex/artifacts-codex.png" target="_blank" rel="noopener">
-            <img
-              src="assets/codex/artifacts-codex.png"
-              alt="Artifacts Codex poster: the eight Relics of Power of Akalynth, Volume I."
-              loading="lazy"
-              decoding="async"
-              width="1024"
-              height="1536"
-            />
-          </a>
-          <figcaption>Artifacts Codex · Volume I — open full poster ↗</figcaption>
-        </figure>
-
-        <div class="charter-grid">
-          <article class="parchment relic-card">
-            <h3 class="news-title">01 · The First Codex</h3>
-            <p class="codex-sub">Book of Recorded Civilization</p>
-            <p class="relic-quote">“Before the First Codex, truth survived only in memory.”</p>
-            <p>
-              The oldest known written record in Akalynth, compiled by the First
-              Archivist during the formation of the Great Accord. Legends claim
-              the book updates itself whenever a world-shaping event occurs. No
-              known copy is complete.
-            </p>
-            <ul class="relic-powers">
-              <li>Records major historical events.</li>
-              <li>Reveals contradictions in testimony.</li>
-              <li>Cannot be destroyed by ordinary means.</li>
-              <li>Resistant to memory alteration.</li>
-            </ul>
-            <p class="relic-status"><strong>Status:</strong> Lost — last confirmed during the Memory Fracture.</p>
-          </article>
-
-          <article class="parchment relic-card">
-            <h3 class="news-title">02 · The Heartforge Hammer</h3>
-            <p class="codex-sub">Flame of Creation</p>
-            <p class="relic-quote">“The forge obeys purpose.”</p>
-            <p>
-              The legendary tool wielded by the Flame Saint, used to forge the
-              first Soulsteel, the Accord Blades, and the Ember Seals. Many have
-              attempted to lift it. Few have survived.
-            </p>
-            <ul class="relic-powers">
-              <li>Enhances crafted artifacts.</li>
-              <li>Purifies corrupted metals.</li>
-              <li>Ignites dormant ley currents.</li>
-              <li>Reveals flaws in forged items.</li>
-            </ul>
-            <p class="relic-status"><strong>Status:</strong> Resting within Forgehold. Sealed.</p>
-          </article>
-
-          <article class="parchment relic-card">
-            <h3 class="news-title">03 · The Star Chart of the Silent Navigator</h3>
-            <p class="codex-sub">Map of Unseen Paths</p>
-            <p>
-              The original chart used to discover Veridium and the Western Sea.
-              Unlike normal maps, this artifact records possibilities — routes
-              appear and disappear based on changing conditions.
-            </p>
-            <ul class="relic-powers">
-              <li>Reveals hidden routes.</li>
-              <li>Identifies safe passages.</li>
-              <li>Predicts storm convergence.</li>
-              <li>Detects moving islands.</li>
-            </ul>
-            <p class="relic-status"><strong>Status:</strong> Missing — believed aboard a lost expedition.</p>
-          </article>
-
-          <article class="parchment relic-card">
-            <h3 class="news-title">04 · The Crown of Moonspire</h3>
-            <p class="codex-sub">Circlet of Dream Communion</p>
-            <p>
-              Worn by the Dream Queen and constructed from dream crystal and moon
-              silver, the Crown allows communication with Dream Sanctums across
-              vast distances.
-            </p>
-            <ul class="relic-powers">
-              <li>Shared dreaming.</li>
-              <li>Dream interpretation.</li>
-              <li>Emotional resonance.</li>
-              <li>Nightmare resistance.</li>
-            </ul>
-            <p class="relic-status"><strong>Status:</strong> Preserved within Moonspire. Used only during sacred rites.</p>
-          </article>
-
-          <article class="parchment relic-card">
-            <h3 class="news-title">05 · The Ashwarden Shield</h3>
-            <p class="codex-sub">Wall Against the Storm</p>
-            <p>
-              The shield carried by the Last Warden during the Ashfall Siege,
-              become a symbol of endurance. The original bears thousands of battle
-              scars — none have ever penetrated its core.
-            </p>
-            <ul class="relic-powers">
-              <li>Exceptional durability.</li>
-              <li>Protection against flame.</li>
-              <li>Strengthens nearby defenders.</li>
-              <li>Records battlefield oaths.</li>
-            </ul>
-            <p class="relic-status"><strong>Status:</strong> Displayed in Cindervale.</p>
-          </article>
-
-          <article class="parchment relic-card">
-            <h3 class="news-title">06 · The Memory Lantern</h3>
-            <p class="codex-sub">Light of Forgotten Roads</p>
-            <p>
-              A relic created from Witness Moth scales. When lit, it illuminates
-              memories instead of darkness — travelers use it to recover forgotten
-              paths and hidden histories.
-            </p>
-            <ul class="relic-powers">
-              <li>Reveals concealed memories.</li>
-              <li>Exposes illusions.</li>
-              <li>Illuminates lost routes.</li>
-              <li>Displays fragments of the past.</li>
-            </ul>
-            <p class="relic-status"><strong>Status:</strong> Unknown — multiple claimants exist.</p>
-          </article>
-
-          <article class="parchment relic-card">
-            <h3 class="news-title">07 · The Void Anchor</h3>
-            <p class="codex-sub">Chain Against Oblivion</p>
-            <p>
-              Created during an ancient encounter with the Void Whale, the Anchor
-              prevents places from being erased from collective memory. Entire
-              cities once depended upon it.
-            </p>
-            <ul class="relic-powers">
-              <li>Stabilizes memory.</li>
-              <li>Protects records.</li>
-              <li>Prevents historical collapse.</li>
-              <li>Resists void corruption.</li>
-            </ul>
-            <p class="relic-status"><strong>Status:</strong> Broken — its fragments scattered throughout Akalynth.</p>
-          </article>
-
-          <article class="parchment relic-card">
-            <h3 class="news-title">08 · The Hourglass of Ages</h3>
-            <p class="codex-sub">Gift of the Chronoshell Turtle</p>
-            <p>
-              A legendary artifact said to contain compressed time itself. The
-              sand within flows upward. Nobody understands its true purpose.
-            </p>
-            <ul class="relic-powers">
-              <li>Temporal observation.</li>
-              <li>Age manipulation.</li>
-              <li>Memory preservation.</li>
-              <li>Historical replay.</li>
-            </ul>
-            <p class="relic-status"><strong>Status:</strong> Hidden — the Turtle itself is rumored to know its location.</p>
-          </article>
-        </div>
-
-        <article class="parchment">
-          <p>
-            Some heroes become legends. Some villains become warnings. But
-            artifacts outlive them all.
-          </p>
-        </article>
-
-        <!-- ============ FACTIONS CODEX ============ -->
-        <h2 class="section-title">The Factions Codex — Volume I: Powers That Shape the World</h2>
-        <article class="parchment">
-          <p class="lede">
-            Cities are built from stone. Kingdoms are built from laws. History is
-            built by factions.
-          </p>
-          <p class="muted">— The Archivists of the Codex</p>
-        </article>
-
-        <figure class="codex-plate codex-poster">
-          <a href="assets/codex/factions-codex.png" target="_blank" rel="noopener">
-            <img
-              src="assets/codex/factions-codex.png"
-              alt="Factions Codex poster: the six powers that shape Akalynth, Volume I."
-              loading="lazy"
-              decoding="async"
-              width="1024"
-              height="1536"
-            />
-          </a>
-          <figcaption>Factions Codex · Volume I — open full poster ↗</figcaption>
-        </figure>
-
-        <div class="charter-grid">
-          <article class="parchment faction-card">
-            <h3 class="news-title">01 · The Codexborn</h3>
-            <p class="codex-sub">Keepers of Order · Guardians of Recorded Truth</p>
-            <p>
-              The oldest organized institution in Akalynth. Founded by the First
-              Archivist after the Great Accord, their purpose is simple: preserve
-              truth. They maintain archives, safeguard historical records,
-              authenticate treaties, and investigate attempts to manipulate
-              memory. No faction possesses more knowledge — and none is trusted
-              less by those who fear transparency.
-            </p>
-            <p class="relic-quote">“The world forgets. We do not.”</p>
-            <ul class="relic-powers">
-              <li>Truth survives only when recorded.</li>
-              <li>Knowledge belongs to civilization.</li>
-              <li>Memory is a public trust.</li>
-              <li>History must not be altered.</li>
-            </ul>
-            <dl class="faction-meta">
-              <div><dt>Headquarters</dt><dd>The First Archive · High City</dd></div>
-              <div><dt>Symbol</dt><dd>The Open Codex</dd></div>
-              <div><dt>Famous Hero</dt><dd>The First Archivist</dd></div>
-              <div><dt>Allies</dt><dd>Trinity Convergence · Dream Sanctums</dd></div>
-              <div><dt>Rivals</dt><dd>Black Archive Cells · Memory Cults</dd></div>
-            </dl>
-          </article>
-
-          <article class="parchment faction-card">
-            <h3 class="news-title">02 · The Flamebound</h3>
-            <p class="codex-sub">Forged in Purpose · Tempered by Trial</p>
-            <p>
-              The Flamebound believe fire is not destruction but transformation.
-              Originating in the Emberwilds, they built Forgehold and mastered the
-              Heartforge. Every member undergoes trials meant to reveal purpose
-              through adversity. To the Flamebound, weakness hidden becomes
-              corruption; weakness faced becomes strength.
-            </p>
-            <p class="relic-quote">“From flame we are tempered.”</p>
-            <ul class="relic-powers">
-              <li>Purpose is earned.</li>
-              <li>Fire reveals truth.</li>
-              <li>Sacrifice creates strength.</li>
-              <li>Endurance is sacred.</li>
-            </ul>
-            <dl class="faction-meta">
-              <div><dt>Headquarters</dt><dd>Forgehold Citadel</dd></div>
-              <div><dt>Symbol</dt><dd>The Eternal Flame</dd></div>
-              <div><dt>Famous Hero</dt><dd>The Flame Saint</dd></div>
-              <div><dt>Allies</dt><dd>Ashwardens · Trinity Convergence</dd></div>
-              <div><dt>Rivals</dt><dd>Ash Tyrant Loyalists · Ember Reavers</dd></div>
-            </dl>
-          </article>
-
-          <article class="parchment faction-card">
-            <h3 class="news-title">03 · The Dream Sanctums</h3>
-            <p class="codex-sub">Seekers of Understanding · Keepers of the Inner World</p>
-            <p>
-              The Dream Sanctums explore the realms of dreams, memory, and
-              possibility. Their scholars study the Dreamweaver and maintain
-              sanctuaries where visions can be safely explored. Many of Akalynth's
-              greatest philosophers emerged from the Sanctums — and many of its
-              strangest mysteries began there as well.
-            </p>
-            <p class="relic-quote">“Every dream is a door.”</p>
-            <ul class="relic-powers">
-              <li>Dreams contain wisdom.</li>
-              <li>Possibility shapes reality.</li>
-              <li>Understanding precedes judgment.</li>
-              <li>Self-knowledge is power.</li>
-            </ul>
-            <dl class="faction-meta">
-              <div><dt>Headquarters</dt><dd>Moonspire</dd></div>
-              <div><dt>Symbol</dt><dd>The Crescent Web</dd></div>
-              <div><dt>Famous Hero</dt><dd>The Dream Queen</dd></div>
-              <div><dt>Allies</dt><dd>Codexborn · Witness Moth Orders</dd></div>
-              <div><dt>Rivals</dt><dd>Veiled Prophet Cults · Nightmare Weavers</dd></div>
-            </dl>
-          </article>
-
-          <article class="parchment faction-card">
-            <h3 class="news-title">04 · The Trinity Convergence</h3>
-            <p class="codex-sub">Guardians of Balance</p>
-            <p>
-              The Trinity Convergence exists to maintain harmony between the three
-              foundational forces of Akalynth — Ley, Memory, and Will. They serve
-              as mediators between factions and often prevent disputes from
-              becoming wars. Their members are trained in diplomacy, philosophy,
-              governance, and ritual law.
-            </p>
-            <p class="relic-quote">“Balance is not weakness.”</p>
-            <ul class="relic-powers">
-              <li>Balance prevents collapse.</li>
-              <li>Power requires restraint.</li>
-              <li>Harmony is strength.</li>
-              <li>Unity creates civilization.</li>
-            </ul>
-            <dl class="faction-meta">
-              <div><dt>Headquarters</dt><dd>Trinity Nexus · High City</dd></div>
-              <div><dt>Symbol</dt><dd>The Triple Spiral</dd></div>
-              <div><dt>Famous Hero</dt><dd>The Accord Founders</dd></div>
-              <div><dt>Allies</dt><dd>Codexborn · Flamebound</dd></div>
-              <div><dt>Rivals</dt><dd>Extremist Movements · Schism Orders</dd></div>
-            </dl>
-          </article>
-
-          <article class="parchment faction-card">
-            <h3 class="news-title">05 · The Oathbound</h3>
-            <p class="codex-sub">Shield of Civilization</p>
-            <p>
-              The Oathbound are the protectors of the Great Accord. They enforce
-              law, defend settlements, and stand against threats that endanger
-              civilization itself. Unlike traditional armies, the Oathbound swear
-              personal vows that define their service — and breaking an oath
-              results in immediate expulsion.
-            </p>
-            <p class="relic-quote">“An oath is heavier than steel.”</p>
-            <ul class="relic-powers">
-              <li>Duty before self.</li>
-              <li>Oaths create trust.</li>
-              <li>Protection is service.</li>
-              <li>Law must endure.</li>
-            </ul>
-            <dl class="faction-meta">
-              <div><dt>Headquarters</dt><dd>Accord Citadel · High City</dd></div>
-              <div><dt>Symbol</dt><dd>The Accord Shield</dd></div>
-              <div><dt>Famous Hero</dt><dd>The Last Warden</dd></div>
-              <div><dt>Allies</dt><dd>Trinity Convergence · Codexborn</dd></div>
-              <div><dt>Rivals</dt><dd>Raiders · Oathbreakers · The Hollow Throne Movement</dd></div>
-            </dl>
-          </article>
-
-          <article class="parchment faction-card">
-            <h3 class="news-title">06 · The Ashwardens</h3>
-            <p class="codex-sub">Defenders of the Frontier</p>
-            <p>
-              The Ashwardens protect the borderlands where civilization meets
-              danger. Operating from Cindervale and other frontier settlements,
-              they defend trade routes, escort expeditions, and respond to
-              creature incursions. They are respected throughout Akalynth for
-              surviving conditions most citizens could not endure.
-            </p>
-            <p class="relic-quote">“The storm stops here.”</p>
-            <ul class="relic-powers">
-              <li>Endure.</li>
-              <li>Protect others.</li>
-              <li>Fear nothing.</li>
-              <li>Hold the line.</li>
-            </ul>
-            <dl class="faction-meta">
-              <div><dt>Headquarters</dt><dd>Cindervale</dd></div>
-              <div><dt>Symbol</dt><dd>The Ember Shield</dd></div>
-              <div><dt>Famous Hero</dt><dd>The Last Warden</dd></div>
-              <div><dt>Allies</dt><dd>Flamebound · Oathbound</dd></div>
-              <div><dt>Rivals</dt><dd>Ashfall Hordes · Frontier Raiders</dd></div>
-            </dl>
-          </article>
-        </div>
-
-        <h2 class="section-title">The Power Map of Akalynth</h2>
-        <article class="parchment">
-          <p>
-            Every city, every hero, every artifact, and every war can be traced
-            back to the choices of those who gathered beneath a common banner.
-          </p>
-          <table class="codex-table">
-            <thead>
-              <tr><th scope="col">Faction</th><th scope="col">Domain</th></tr>
-            </thead>
-            <tbody>
-              <tr><td>Codexborn</td><td>Truth</td></tr>
-              <tr><td>Flamebound</td><td>Purpose</td></tr>
-              <tr><td>Dream Sanctums</td><td>Possibility</td></tr>
-              <tr><td>Trinity Convergence</td><td>Balance</td></tr>
-              <tr><td>Oathbound</td><td>Duty</td></tr>
-              <tr><td>Ashwardens</td><td>Survival</td></tr>
-            </tbody>
-          </table>
-          <p class="muted small">
-            The history of Akalynth is not the story of kings. It is the story of
-            factions — and as long as the banners remain, the story continues.
-          </p>
-        </article>
-
-        <!-- ============ CHRONICLE OF AGES ============ -->
-        <h2 class="section-title">The Chronicle of Ages — Volume I: Events That Changed the World</h2>
-        <article class="parchment">
-          <p class="lede">
-            The codices describe what Akalynth is. The Chronicle records how it
-            came to be — the moments that made the creatures, cities, factions,
-            and relics, and bound them into a single history.
-          </p>
-        </article>
-
-        <ol class="chronicle">
-          <li class="parchment chronicle-card">
-            <h3 class="news-title">I · The First Binding</h3>
-            <p>
-              The first time thought was bound into living crystal. Memory became
-              something that could outlive the mind that made it — and the world's
-              oldest archive entities woke into being.
-            </p>
-            <p class="chronicle-born"><strong>Gave rise to:</strong> the Witness Moths · the Memory Serpents · the first civilization of the Vault</p>
-          </li>
-
-          <li class="parchment chronicle-card">
-            <h3 class="news-title">II · The Great Accord</h3>
-            <p>
-              After an age of scattered powers, the realms agreed to remember
-              together. Atop the converging ley currents they raised a capital to
-              hold the promise, and the first orders were sworn to keep it.
-            </p>
-            <p class="chronicle-born"><strong>Gave rise to:</strong> High City · the Codexborn · the Trinity Convergence · the Oathbound</p>
-          </li>
-
-          <li class="parchment chronicle-card">
-            <h3 class="news-title">III · The Flame Schism</h3>
-            <p>
-              A breaking over the meaning of fire — was it destruction, or
-              transformation? Those who chose transformation descended into the
-              Emberwilds and raised Forgehold around a living volcano.
-            </p>
-            <p class="chronicle-born"><strong>Gave rise to:</strong> the Flamebound · the Emberwild divisions · the rise of Forgehold</p>
-          </li>
-
-          <li class="parchment chronicle-card">
-            <h3 class="news-title">IV · The Memory Fracture</h3>
-            <p>
-              When too much was erased at once, history itself cracked. Whole
-              kingdoms fell out of memory, archives turned unstable, and the Void
-              Whale was seen drifting through waking skies.
-            </p>
-            <p class="chronicle-born"><strong>Gave rise to:</strong> lost kingdoms · broken histories · Void Whale sightings · unstable archives</p>
-          </li>
-
-          <li class="parchment chronicle-card">
-            <h3 class="news-title">V · The Silent Century</h3>
-            <p>
-              A hundred years the records barely speak of. Cities emptied,
-              factions went to ground, and knowledge was buried where the Fracture
-              could not reach it.
-            </p>
-            <p class="chronicle-born"><strong>Gave rise to:</strong> abandoned cities · hidden factions · forgotten technologies</p>
-          </li>
-
-          <li class="parchment chronicle-card">
-            <h3 class="news-title">VI · The Emergence</h3>
-            <p class="codex-sub">Beginning of the Modern Era</p>
-            <p>
-              The long silence broke. What the Silent Century had hidden was
-              unsealed, the surviving powers stepped back into the light, and the
-              modern age of Akalynth began.
-            </p>
-          </li>
-        </ol>
-
-        <article class="parchment">
-          <p>
-            Every creature, city, faction, and relic in this Codex was born from
-            one of these moments — the Chronicle is where they all connect.
-          </p>
-          <p class="muted small">
-            The Creature Codex, the City Charter Collection, the Artifacts Codex,
-            the Factions Codex, and the Chronicle of Ages form the foundation of a
-            growing Akalynth world atlas — with more volumes to come.
-          </p>
-        </article>
-      </main>
-    </div>
-
-    <footer class="site-footer" role="contentinfo">
-      <div class="footer-inner">
-        <p>© <span id="year"></span> Akalynth · High City — a pre-alpha, proof-native MMO.</p>
-        <p class="small muted">
-          Linux server + Android client. Classic-MMO aesthetic recreated with original art and copy.
+        <p class="provenance">
+          Public projection of the Akalynth world model — accepted entries only.
+          Static pre-alpha preview; lore only, not connected to any live service.
         </p>
       </div>
-    </footer>
+    </main>
 
     <script src="js/app.js" defer></script>
+    <script src="js/codex-data.js" defer></script>
+    <script src="js/codex-os.js" defer></script>
   </body>
 </html>
