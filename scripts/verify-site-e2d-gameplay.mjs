@@ -99,6 +99,52 @@ context.document.defaultView = context.window;
 context.globalThis = context.window;
 
 function responseFor(request) {
+  if (request.path === '/v1/characters' && request.method === 'POST') {
+    return {
+      ok: true,
+      character: {
+        character_id: 'char-created-site-e2d',
+        name: request.body.name,
+        world_id: request.body.world_id,
+        sex: request.body.sex,
+        outfit_id: request.body.outfit_id,
+      },
+      token: 'play-created-site-e2d',
+      expires_at: 1800000000000,
+    };
+  }
+  if (request.path === '/v1/characters/select') {
+    return {
+      ok: true,
+      character: {
+        character_id: request.body.character_id,
+        name: 'SiteProof',
+        world_id: 'high_city',
+        sex: 'female',
+        outfit_id: 'female_guard',
+      },
+      token: 'play-selected-site-e2d',
+      expires_at: 1800000000000,
+    };
+  }
+  if (request.path === '/v1/accounts/me') {
+    return { account: { account_id: 'acc-site-e2d', email_verified: true, status: 'active' } };
+  }
+  if (request.path === '/v1/characters' && request.method === 'GET') {
+    return { characters: hooks ? hooks.state.characters : [] };
+  }
+  if (request.path.startsWith('/v1/wallet')) {
+    return { balance_gold: 15 };
+  }
+  if (request.path === '/v1/worlds') {
+    return { worlds: [{ world_id: 'high_city', name: 'High City' }, { world_id: 'rookguard', name: 'Rookguard' }] };
+  }
+  if (request.path === '/v1/outfits') {
+    return { outfits: [{ outfit_id: 'female_guard', sex: 'female', name: 'City Guard' }] };
+  }
+  if (request.path === '/v1/shop/catalog') {
+    return { items: [] };
+  }
   if (request.path === '/v1/work/start') {
     return { contract_id: 'contract-site-e2d', payout_gold: 5 };
   }
@@ -149,6 +195,21 @@ hooks.state.characters = [{
 hooks.rememberSelectedCharacter('char-site-e2d');
 hooks.state.workContract = { contract_id: 'contract-site-e2d' };
 
+await hooks.createAccountCharacter({
+  name: 'CreatedSiteProof',
+  world_id: 'high_city',
+  sex: 'female',
+  outfit_id: 'female_guard',
+});
+hooks.state.characters = [{
+  character_id: 'char-site-e2d',
+  name: 'SiteProof',
+  world_id: 'high_city',
+  sex: 'female',
+  outfit_id: 'female_guard',
+}];
+hooks.rememberSelectedCharacter('char-site-e2d');
+await hooks.selectAccountCharacter('char-site-e2d');
 await hooks.startWork();
 hooks.state.workContract = { contract_id: 'contract-site-e2d' };
 await hooks.tickWork();
@@ -157,6 +218,8 @@ await hooks.changeProperty('Azura:H1', true, noopElement);
 await hooks.changeProperty('Azura:H1', false, noopElement);
 await hooks.listProperty('Azura:H1', 77, noopElement);
 
+assertRequest('/v1/characters', { name: 'CreatedSiteProof', world_id: 'high_city', sex: 'female', outfit_id: 'female_guard' });
+assertRequest('/v1/characters/select', { character_id: 'char-site-e2d' });
 assertRequest('/v1/work/start', { character_id: 'char-site-e2d' });
 assertRequest('/v1/work/tick', { character_id: 'char-site-e2d', contract_id: 'contract-site-e2d' });
 assertRequest('/v1/shop/purchase', { character_id: 'char-site-e2d', shop_key: 'healing_herb' });
