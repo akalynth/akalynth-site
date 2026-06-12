@@ -841,7 +841,7 @@
           if (err) err.textContent = blocked || "Select a character before buying.";
           return;
         }
-        api("/v1/shop/purchase", { method: "POST", body: { character_id: character && character.character_id, shop_key: itemId } })
+        api("/v1/shop/purchase", { method: "POST", body: { character_id: character.character_id, shop_key: itemId } })
           .then(function (body) {
             if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;
             if (err) err.textContent = "Purchase accepted by server.";
