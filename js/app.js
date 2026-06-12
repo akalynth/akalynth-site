@@ -390,7 +390,9 @@
             "</dl>" +
             '<button class="btn ' + (selected ? "btn-ghost" : "btn-gold") + ' btn-block" data-select-character="' + escapeHtml(c.character_id) + '">' +
             (selected ? "Selected" : "Select character") +
-            "</button></article>"
+            "</button>" +
+            (selected ? '<a class="btn btn-gold btn-block character-play-link" href="beta.html">Download Android beta</a>' : "") +
+            "</article>"
           );
         })
         .join("") +
@@ -539,7 +541,7 @@
         api("/v1/characters/select", { method: "POST", body: { character_id: id } })
           .then(function () {
             rememberSelectedCharacter(id);
-            setMessage("Character selected.", "ok");
+            setMessage("Character selected. Download the Android beta to play.", "ok");
             return loadWalletState().then(renderAll);
           })
           .catch(function (err) { setMessage(apiMessage(err), "error"); });
@@ -557,7 +559,7 @@
       api("/v1/characters", { method: "POST", body: formData(characterForm) })
         .then(function (body) {
           if (body.character && body.character.character_id) rememberSelectedCharacter(body.character.character_id);
-          state.message = "Character created.";
+          state.message = "Character created. Download the Android beta to play.";
           state.messageKind = "ok";
           return refreshPortal();
         })
