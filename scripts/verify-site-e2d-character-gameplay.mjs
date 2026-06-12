@@ -181,33 +181,107 @@ function assertRequest(path, expectedBody) {
   }
 }
 
+async function assertNoNewRequests(label, action) {
+  const before = requests.length;
+  await action();
+  if (requests.length !== before) {
+    fail(`${label} must block before calling the API`);
+  }
+}
+
+function assertMessage(label, expected) {
+  if (hooks.state.message !== expected) {
+    fail(`${label} expected message "${expected}", got "${hooks.state.message}"`);
+  }
+}
+
+function errorElement() {
+  return {
+    textContent: '',
+  };
+}
+
+function validCharacter() {
+  return {
+    character_id: 'char-site-e2d',
+    name: 'SiteProof',
+    world_id: 'high_city',
+    sex: 'female',
+    outfit_id: 'female_guard',
+  };
+}
+
+function validCreateBody() {
+  return {
+    name: 'CreatedSiteProof',
+    world_id: 'high_city',
+    sex: 'female',
+    outfit_id: 'female_guard',
+  };
+}
+
 vm.runInNewContext(appSource, context, { filename: 'js/app.js' });
 if (!hooks) fail('test hooks were not installed');
 
+hooks.state.account = null;
+hooks.state.characters = [];
+hooks.rememberSelectedCharacter('');
+await assertNoNewRequests('create character without account session', () => hooks.createAccountCharacter(validCreateBody()));
+assertMessage('create character without account session', 'Sign in with an account session before creating or selecting a character.');
+await assertNoNewRequests('select character without account session', () => hooks.selectAccountCharacter('char-site-e2d'));
+assertMessage('select character without account session', 'Sign in with an account session before creating or selecting a character.');
+await assertNoNewRequests('start work without account session', () => hooks.startWork());
+if (!hooks.state.workContract || hooks.state.workContract.error !== 'Sign in first.') {
+  fail('start work without account session must show inline sign-in helper');
+}
+const shopNoAccount = errorElement();
+await assertNoNewRequests('shop purchase without account session', () => hooks.buyShopItem('healing_herb', shopNoAccount));
+if (shopNoAccount.textContent !== 'Sign in first.') fail('shop purchase without account session must show inline sign-in helper');
+const buyNoAccount = errorElement();
+await assertNoNewRequests('property buy without account session', () => hooks.changeProperty('Azura:H1', true, buyNoAccount));
+if (buyNoAccount.textContent !== 'Sign in first.') fail('property buy without account session must show inline sign-in helper');
+const listNoAccount = errorElement();
+await assertNoNewRequests('property list without account session', () => hooks.listProperty('Azura:H1', 77, listNoAccount));
+if (listNoAccount.textContent !== 'Sign in first.') fail('property list without account session must show inline sign-in helper');
+
+document.cookie = '';
+store.delete('akalynth.csrf.v1');
 hooks.state.account = { account_id: 'acc-site-e2d', email_verified: true, status: 'active' };
-hooks.state.characters = [{
-  character_id: 'char-site-e2d',
-  name: 'SiteProof',
-  world_id: 'high_city',
-  sex: 'female',
-  outfit_id: 'female_guard',
-}];
+hooks.state.characters = [validCharacter()];
+hooks.rememberSelectedCharacter('char-site-e2d');
+hooks.state.workContract = { contract_id: 'contract-site-e2d' };
+await assertNoNewRequests('create character without csrf', () => hooks.createAccountCharacter(validCreateBody()));
+assertMessage('create character without csrf', 'Security token missing. Sign in again before creating or selecting a character.');
+await assertNoNewRequests('select character without csrf', () => hooks.selectAccountCharacter('char-site-e2d'));
+assertMessage('select character without csrf', 'Security token missing. Sign in again before creating or selecting a character.');
+await assertNoNewRequests('start work without csrf', () => hooks.startWork());
+if (!hooks.state.workContract || hooks.state.workContract.error !== 'Security token missing. Sign in again before account character or gameplay actions.') {
+  fail('start work without csrf must show inline session helper');
+}
+const shopNoCsrf = errorElement();
+await assertNoNewRequests('shop purchase without csrf', () => hooks.buyShopItem('healing_herb', shopNoCsrf));
+if (shopNoCsrf.textContent !== 'Security token missing. Sign in again before account character or gameplay actions.') {
+  fail('shop purchase without csrf must show inline session helper');
+}
+const buyNoCsrf = errorElement();
+await assertNoNewRequests('property buy without csrf', () => hooks.changeProperty('Azura:H1', true, buyNoCsrf));
+if (buyNoCsrf.textContent !== 'Security token missing. Sign in again before account character or gameplay actions.') {
+  fail('property buy without csrf must show inline session helper');
+}
+const listNoCsrf = errorElement();
+await assertNoNewRequests('property list without csrf', () => hooks.listProperty('Azura:H1', 77, listNoCsrf));
+if (listNoCsrf.textContent !== 'Security token missing. Sign in again before account character or gameplay actions.') {
+  fail('property list without csrf must show inline session helper');
+}
+
+document.cookie = 'akalynth_csrf=csrf-site-e2d';
+hooks.state.account = { account_id: 'acc-site-e2d', email_verified: true, status: 'active' };
+hooks.state.characters = [validCharacter()];
 hooks.rememberSelectedCharacter('char-site-e2d');
 hooks.state.workContract = { contract_id: 'contract-site-e2d' };
 
-await hooks.createAccountCharacter({
-  name: 'CreatedSiteProof',
-  world_id: 'high_city',
-  sex: 'female',
-  outfit_id: 'female_guard',
-});
-hooks.state.characters = [{
-  character_id: 'char-site-e2d',
-  name: 'SiteProof',
-  world_id: 'high_city',
-  sex: 'female',
-  outfit_id: 'female_guard',
-}];
+await hooks.createAccountCharacter(validCreateBody());
+hooks.state.characters = [validCharacter()];
 hooks.rememberSelectedCharacter('char-site-e2d');
 await hooks.selectAccountCharacter('char-site-e2d');
 await hooks.startWork();
