@@ -84,10 +84,12 @@ for route_page in codex/builder/index.html codex/operator/index.html codex/agent
 done
 
 for literal in \
+  'href="/account.html"' \
+  'Create account character' \
   'href="/codex/builder/"' \
   'href="/codex/operator/"' \
   'href="/codex/agent/"'; do
-  require_literal "codex.html" "$literal" "Public Codex four-surface link"
+  require_literal "codex.html" "$literal" "Public Codex four-surface account-character link"
 done
 
 for literal in \
