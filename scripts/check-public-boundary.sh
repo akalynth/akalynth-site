@@ -100,11 +100,40 @@ for pattern in \
   grep_fixed_forbidden "Forbidden public claim wording" "$pattern"
 done
 
-if ! git grep -n -I -i -E \
-  'preview-only|static public preview|no real|no payment|not connected|no entitlement|does not create|does not prove|not a production service' \
-  -- . >/dev/null; then
-  fail "Expected preview-only/no-real-service language was not found"
-fi
+require_literal() {
+  local path="$1"
+  local literal="$2"
+  local label="$3"
+
+  if ! grep -Fq -- "$literal" "$path"; then
+    fail "$label missing in $path: $literal"
+  fi
+}
+
+require_literal \
+  "PRE_ALPHA_NOTICE.md" \
+  "This repository is a static public website and account-portal frontend." \
+  "Static site/account portal boundary"
+require_literal \
+  "PRE_ALPHA_NOTICE.md" \
+  "The account portal calls the Akalynth API when available." \
+  "Account API integration boundary"
+require_literal \
+  "PUBLIC_BOUNDARY.md" \
+  "This repository may call public Akalynth API endpoints, including account and" \
+  "Public API call boundary"
+require_literal \
+  "PUBLIC_BOUNDARY.md" \
+  "shop, wallet, work, and housing actions are live only when the server accepts" \
+  "Server authority boundary"
+require_literal \
+  "SECURITY.md" \
+  "Static account, character, shop, work," \
+  "Security API surface boundary"
+require_literal \
+  "README.md" \
+  "The account, shop, wallet, work, and housing pages are static frontends that call" \
+  "README API frontend boundary"
 
 generated_matches="$(git ls-files | grep -E '(^|/)(node_modules|dist|build|artifacts)/|(^|/)\.env($|[.])|\.log$|\.sqlite3?$|\.db$' || true)"
 if [[ -n "$generated_matches" ]]; then
