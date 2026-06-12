@@ -164,7 +164,7 @@ function responseFor(request) {
 }
 
 function fail(message) {
-  console.error(`site e2d gameplay verifier failed: ${message}`);
+  console.error(`site e2d character/gameplay verifier failed: ${message}`);
   process.exit(1);
 }
 
@@ -227,4 +227,4 @@ assertRequest('/v1/property/buy', { character_id: 'char-site-e2d', property_id: 
 assertRequest('/v1/property/unlist', { character_id: 'char-site-e2d', property_id: 'Azura:H1' });
 assertRequest('/v1/property/list', { character_id: 'char-site-e2d', property_id: 'Azura:H1', price_gold: 77 });
 
-console.log('site e2d gameplay verifier passed');
+console.log('site e2d character/gameplay verifier passed');

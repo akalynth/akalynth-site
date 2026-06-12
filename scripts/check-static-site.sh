@@ -140,6 +140,8 @@ require_literal "js/app.js" 'body: { character_id: character.character_id, prope
 require_literal "js/app.js" 'window.__AKALYNTH_SITE_E2D_TEST_HOOKS__.install({' "Site E2D gameplay test hooks"
 require_literal "js/app.js" 'selectAccountCharacter: selectAccountCharacter' "Site E2D character select test hook"
 require_literal "js/app.js" 'createAccountCharacter: createAccountCharacter' "Site E2D character create test hook"
+require_literal "scripts/verify-site-e2d-gameplay.mjs" "site e2d character/gameplay verifier passed" "Site E2D character/gameplay verifier success output"
+require_literal "scripts/verify-site-e2d-gameplay.mjs" "site e2d character/gameplay verifier failed" "Site E2D character/gameplay verifier failure output"
 require_literal "scripts/verify-site-e2d-gameplay.mjs" "assertRequest('/v1/characters', { name: 'CreatedSiteProof', world_id: 'high_city', sex: 'female', outfit_id: 'female_guard' });" "Site E2D character create request proof"
 require_literal "scripts/verify-site-e2d-gameplay.mjs" "assertRequest('/v1/characters/select', { character_id: 'char-site-e2d' });" "Site E2D character select request proof"
 require_literal "scripts/verify-site-e2d-gameplay.mjs" "assertRequest('/v1/work/start', { character_id: 'char-site-e2d' });" "Site E2D work start request proof"
