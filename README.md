@@ -9,7 +9,7 @@ It is a pre-alpha static site for Akalynth's High City surface:
 - `shop.html` in-game-currency shop portal for the Akalynth API
 - `houses.html` server property market portal for the Akalynth API
 - `account.html` static account portal shell for the Akalynth API
-- `forum.html` browser-local community boards preview
+- `forum.html` read-only community boards preview
 - `codex.html` and `library.html` public-safe visual lore archive
 - `css/`, `js/`, and `screenshots/` assets used by the static site
 

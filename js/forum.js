@@ -1,15 +1,12 @@
 /*
- * Akalynth community forum — BROWSER-LOCAL PREVIEW.
+ * Akalynth community forum — READ-ONLY PREVIEW.
  *
- * Boundary: this is a static, preview-only forum. Threads and posts you create
- * live entirely in this browser (localStorage key "akalynth.forum.v1"). Nothing
- * is connected to a server, nothing is shared with other visitors, and nothing
- * persists beyond this device. The seed boards/threads below are read-only
- * in-world flavour authored as lore figures.
+ * Boundary: this static site does not own forum authority. Seed boards/threads
+ * below are read-only in-world flavour authored as lore figures. Posting stays
+ * disabled until a server-backed account-character forum API exists.
  *
- * Identity: posting requires a signed-in character. Each post is authored as the
- * account's character (the account IS the character) — name + world signature.
- * Reading is public; posting is gated.
+ * Identity: reading is public. Posting requires future server account-character
+ * authority and is intentionally unavailable here.
  *
  * Security: posts are free user text. ALL user/author strings reach the DOM via
  * textContent only — never innerHTML — so post content cannot inject markup.
@@ -19,8 +16,6 @@
 (function () {
   "use strict";
 
-  var FORUM_KEY = "akalynth.forum.v1";
-  var ACCOUNT_KEY = "akalynth.account.v1";
   var root = null;
 
   var WORLD_NAMES = { azura: "High City", rookhold: "Rookguard", emberfell: "Emberfell" };
@@ -136,35 +131,18 @@
         "2026-06-02T22:00:00.000Z") ] }
   ];
 
-  // ---- Persistence (mirrors loadHouses/saveHouses in app.js) ---------------
+  // ---- Read-only state -----------------------------------------------------
   function loadForum() {
-    try {
-      var raw = localStorage.getItem(FORUM_KEY);
-      if (!raw) return { version: 1, threads: [] };
-      var p = JSON.parse(raw);
-      if (!p || typeof p !== "object" || !Array.isArray(p.threads)) return { version: 1, threads: [] };
-      return p;
-    } catch (err) { return { version: 1, threads: [] }; }
+    return { version: 1, threads: [] };
   }
   function saveForum(state) {
-    try { localStorage.setItem(FORUM_KEY, JSON.stringify(state)); }
-    catch (err) { /* storage unavailable — stays in memory for the session */ }
+    void state;
   }
-  // Remove every thread/post created in this browser. Seed threads (static
-  // constants) are untouched. Mirrors the account "Start over" reset.
   function clearMyPosts() {
-    try { localStorage.removeItem(FORUM_KEY); } catch (err) { /* ignore */ }
+    return;
   }
-
-  // Re-read the account (same guard as loadAccount() in app.js). The account IS
-  // the character, so this is the forum's posting identity.
   function forumAccount() {
-    try {
-      var raw = localStorage.getItem(ACCOUNT_KEY);
-      if (!raw) return null;
-      var p = JSON.parse(raw);
-      return (p && typeof p === "object" && p.name) ? p : null;
-    } catch (err) { return null; }
+    return null;
   }
 
   // ---- Derived helpers ------------------------------------------------------
@@ -234,8 +212,8 @@
   function signInPrompt(lead) {
     var wrap = el("article", "parchment forum-signin");
     wrap.appendChild(el("p", "lede", lead));
-    var p = el("p", null, "The forum is open to read, but posting needs a character. ");
-    var a = el("a", null, "Create your character →"); a.href = "account.html";
+    var p = el("p", null, "Posting will require a server-backed account character once forum authority exists. ");
+    var a = el("a", null, "Create your character"); a.href = "account.html";
     p.appendChild(a);
     wrap.appendChild(p);
     return wrap;
@@ -247,43 +225,12 @@
 
   // ---- Mutations ------------------------------------------------------------
   function createThread(boardId, title, body) {
-    var acct = forumAccount();
-    if (!acct) return "Create a character to post.";
-    if (!boardById[boardId]) return "Unknown board.";
-    title = (title || "").trim();
-    body = (body || "").trim();
-    if (title.length < 3 || title.length > 80) return "Title must be 3–80 characters.";
-    if (body.length < 1 || body.length > 2000) return "Post must be 1–2000 characters.";
-    var state = loadForum();
-    var now = new Date().toISOString();
-    var tid = "t-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
-    var pid = "p-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
-    state.threads.push({
-      id: tid, boardId: boardId, title: title,
-      authorName: acct.name, authorWorld: acct.world, createdAt: now,
-      posts: [{ id: pid, authorName: acct.name, authorWorld: acct.world, body: body, createdAt: now }]
-    });
-    saveForum(state);
-    location.href = threadHref(boardId, tid);
-    return null;
+    void boardId; void title; void body;
+    return "Forum posting is read-only until server-backed account-character posting exists.";
   }
   function addReply(boardId, threadId, body) {
-    var acct = forumAccount();
-    if (!acct) return "Create a character to post.";
-    body = (body || "").trim();
-    if (body.length < 1 || body.length > 2000) return "Reply must be 1–2000 characters.";
-    var state = loadForum();
-    var t = null;
-    for (var i = 0; i < state.threads.length; i++) {
-      if (state.threads[i].id === threadId) { t = state.threads[i]; break; }
-    }
-    if (!t) return "This thread can't take replies."; // seed threads aren't user content
-    t.posts.push({
-      id: "p-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
-      authorName: acct.name, authorWorld: acct.world, body: body, createdAt: new Date().toISOString()
-    });
-    saveForum(state);
-    return null;
+    void boardId; void threadId; void body;
+    return "Forum replies are read-only until server-backed account-character posting exists.";
   }
 
   // ---- Rendering ------------------------------------------------------------
@@ -304,7 +251,7 @@
     root.appendChild(el("h1", "page-title", "The Community Boards"));
     var intro = el("article", "parchment");
     intro.appendChild(el("p", "lede",
-      "Boards for High City and the wider Akalynth preview. Read freely; sign in with a character to start a thread or reply."));
+      "Boards for High City and the wider Akalynth preview. Read freely; posting waits for server-backed account-character authority."));
     root.appendChild(intro);
 
     var list = el("div", "forum-board-list");
@@ -329,24 +276,6 @@
     });
     root.appendChild(list);
 
-    // "Clear my forum posts" — only when this browser holds user-created threads.
-    var mine = state.threads.length;
-    if (mine) {
-      var tools = el("article", "parchment forum-tools");
-      tools.appendChild(el("p", "muted small",
-        "You have " + mine + (mine === 1 ? " thread" : " threads") + " saved in this browser."));
-      var btn = el("button", "btn btn-ghost", "Clear my forum posts");
-      btn.type = "button";
-      btn.addEventListener("click", function () {
-        if (window.confirm("Clear all " + mine + (mine === 1 ? " thread" : " threads") +
-            " you posted on this device? This can't be undone.")) {
-          clearMyPosts();
-          renderBoardIndex();
-        }
-      });
-      tools.appendChild(btn);
-      root.appendChild(tools);
-    }
   }
 
   function renderBoardView(boardId) {
@@ -360,15 +289,16 @@
     var head = el("article", "parchment");
     head.appendChild(el("p", "lede", board.desc));
     var actions = el("div", "forum-actions");
-    var nt = el("a", "btn btn-gold", "Start a new thread");
-    nt.href = boardHref(boardId) + "&new=1";
+    var nt = el("button", "btn btn-ghost", "Posting disabled");
+    nt.type = "button";
+    nt.disabled = true;
     actions.appendChild(nt);
     head.appendChild(actions);
     root.appendChild(head);
 
     var threads = threadsForBoard(boardId, state);
     if (!threads.length) {
-      root.appendChild(el("article", "parchment", "No threads yet. Be the first to post."));
+      root.appendChild(el("article", "parchment", "No threads yet. Posting requires future server-backed forum authority."));
       return;
     }
     var list = el("div", "forum-thread-list");
@@ -420,38 +350,10 @@
 
     if (thread.isSeed || thread.locked) {
       root.appendChild(el("p", "muted small forum-locked-note",
-        "Preview thread — replies are disabled here. Start your own thread on this board to post."));
+        "Read-only preview thread — replies require future server-backed forum authority."));
       return;
     }
-    var acct = forumAccount();
-    if (!acct) { root.appendChild(signInPrompt("Create a character to reply.")); return; }
-    root.appendChild(replyComposer(boardId, threadId, acct));
-  }
-
-  function replyComposer(boardId, threadId, acct) {
-    var wrap = el("article", "parchment forum-composer");
-    wrap.appendChild(el("h2", "section-title", "Reply"));
-    var form = el("form", "account-form");
-    var field = el("div", "field");
-    var label = el("label", null, "Reply as " + acct.name); label.setAttribute("for", "reply-body");
-    field.appendChild(label);
-    var ta = document.createElement("textarea");
-    ta.id = "reply-body"; ta.className = "forum-textarea"; ta.maxLength = 2000; ta.rows = 5;
-    ta.setAttribute("placeholder", "Share your thoughts…");
-    field.appendChild(ta);
-    form.appendChild(field);
-    var err = el("p", "field-error"); err.setAttribute("aria-live", "polite");
-    form.appendChild(err);
-    var btn = el("button", "btn btn-gold btn-block", "Post reply"); btn.type = "submit";
-    form.appendChild(btn);
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var msg = addReply(boardId, threadId, ta.value);
-      if (msg) { err.textContent = msg; return; }
-      renderThreadView(boardId, threadId); // re-render in place with the new post
-    });
-    wrap.appendChild(form);
-    return wrap;
+    root.appendChild(signInPrompt("Forum replies are not live yet."));
   }
 
   function renderNewThread(boardId) {
@@ -463,38 +365,9 @@
       { text: board.name, href: boardHref(boardId) },
       { text: "New thread" }
     ]));
-    root.appendChild(el("h1", "page-title", "Start a new thread"));
-    root.appendChild(el("p", "muted", "Posting to " + board.name + "."));
-
-    var acct = forumAccount();
-    if (!acct) { root.appendChild(signInPrompt("Create a character to start a thread.")); return; }
-
-    var wrap = el("article", "parchment forum-composer");
-    var form = el("form", "account-form");
-
-    var f1 = el("div", "field");
-    var l1 = el("label", null, "Thread title"); l1.setAttribute("for", "thread-title"); f1.appendChild(l1);
-    var titleInput = document.createElement("input");
-    titleInput.type = "text"; titleInput.id = "thread-title"; titleInput.maxLength = 80;
-    titleInput.setAttribute("placeholder", "A clear, short title");
-    f1.appendChild(titleInput); form.appendChild(f1);
-
-    var f2 = el("div", "field");
-    var l2 = el("label", null, "Post as " + acct.name); l2.setAttribute("for", "thread-body"); f2.appendChild(l2);
-    var ta = document.createElement("textarea");
-    ta.id = "thread-body"; ta.className = "forum-textarea"; ta.maxLength = 2000; ta.rows = 6;
-    ta.setAttribute("placeholder", "Write your first post…");
-    f2.appendChild(ta); form.appendChild(f2);
-
-    var err = el("p", "field-error"); err.setAttribute("aria-live", "polite"); form.appendChild(err);
-    var btn = el("button", "btn btn-gold btn-block", "Post thread"); btn.type = "submit"; form.appendChild(btn);
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var msg = createThread(boardId, titleInput.value, ta.value);
-      if (msg) err.textContent = msg; // on success, createThread navigates away
-    });
-    wrap.appendChild(form);
-    root.appendChild(wrap);
+    root.appendChild(el("h1", "page-title", "Forum posting unavailable"));
+    root.appendChild(el("p", "muted", "Posting to " + board.name + " requires future server-backed forum authority."));
+    root.appendChild(signInPrompt("Create a character now; posting opens only when the server forum API exists."));
   }
 
   // ---- Router ---------------------------------------------------------------
