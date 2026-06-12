@@ -134,6 +134,9 @@
   function csrfToken() {
     return readCookie(CSRF_COOKIE) || sessionStorage.getItem(CSRF_STORE) || "";
   }
+  function csrfReady() {
+    return !!csrfToken();
+  }
   function rememberCsrf(body) {
     if (body && typeof body.csrf_token === "string" && body.csrf_token) {
       sessionStorage.setItem(CSRF_STORE, body.csrf_token);
@@ -201,6 +204,11 @@
     if (err.status === 403 && err.body && err.body.error === "csrf_failed") return "Security token expired. Sign in again.";
     if (err.status === 403 && err.body && err.body.error === "email_unverified") return "Verify your email before creating a character.";
     return err.message || "Request failed.";
+  }
+  function accountActionBlockedMessage() {
+    if (!state.account) return "Sign in first.";
+    if (!csrfReady()) return "Security token missing. Sign in again before account character or gameplay actions.";
+    return "";
   }
 
   // ---- Tabs (index page only) ----------------------------------------------
@@ -383,7 +391,12 @@
   }
   function startWork() {
     var character = selectedCharacter();
-    if (!character) return;
+    var blocked = accountActionBlockedMessage();
+    if (blocked || !character) {
+      state.workContract = { error: blocked || "Select a character before starting work." };
+      renderHoldings();
+      return;
+    }
     api("/v1/work/start", { method: "POST", body: { character_id: character.character_id } })
       .then(function (body) {
         state.workContract = {
@@ -402,6 +415,12 @@
   }
   function tickWork() {
     var character = selectedCharacter();
+    var blocked = accountActionBlockedMessage();
+    if (blocked) {
+      state.workContract = { contract_id: state.workContract && state.workContract.contract_id, error: blocked };
+      renderHoldings();
+      return;
+    }
     if (!character || !state.workContract || !state.workContract.contract_id) {
       state.workContract = { error: "Start work before ticking." };
       renderHoldings();
@@ -694,6 +713,11 @@
     $all("[data-select-character]", root).forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-select-character");
+        var blocked = accountActionBlockedMessage();
+        if (blocked) {
+          setMessage(blocked, "error");
+          return;
+        }
         api("/v1/characters/select", { method: "POST", body: { character_id: id } })
           .then(function (body) {
             if (!body || body.ok !== true || !validCharacter(body.character) || typeof body.token !== "string" || !body.token) {
@@ -718,6 +742,11 @@
       var data = formData(characterForm);
       if (!validWorldId(data.world_id) || !validSex(data.sex) || !validOutfitId(data.outfit_id)) {
         setMessage("Select a valid world, sex, and outfit from the server catalog.", "error");
+        return;
+      }
+      var blocked = accountActionBlockedMessage();
+      if (blocked) {
+        setMessage(blocked, "error");
         return;
       }
       api("/v1/characters", { method: "POST", body: data })
@@ -786,6 +815,11 @@
         var character = selectedCharacter();
         var err = $("#shop-error-" + itemId);
         if (err) err.textContent = "";
+        var blocked = accountActionBlockedMessage();
+        if (blocked || !character) {
+          if (err) err.textContent = blocked || "Select a character before buying.";
+          return;
+        }
         api("/v1/shop/purchase", { method: "POST", body: { character_id: character && character.character_id, shop_key: itemId } })
           .then(function (body) {
             if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;
@@ -941,6 +975,11 @@
         if (!id) return;
         var err = $("#house-error-" + id);
         if (err) err.textContent = "";
+        var blocked = accountActionBlockedMessage();
+        if (blocked || !selectedCharacter()) {
+          if (err) err.textContent = blocked || "Select a character before changing property.";
+          return;
+        }
         api(buy ? "/v1/property/buy" : "/v1/property/unlist", {
           method: "POST",
           body: { character_id: selectedCharacter() && selectedCharacter().character_id, property_id: id },
@@ -967,6 +1006,11 @@
         if (err) err.textContent = "";
         if (!Number.isInteger(price) || price < 1) {
           if (err) err.textContent = "Enter a positive gold price.";
+          return;
+        }
+        var blocked = accountActionBlockedMessage();
+        if (blocked || !selectedCharacter()) {
+          if (err) err.textContent = blocked || "Select a character before listing property.";
           return;
         }
         api("/v1/property/list", {

@@ -111,6 +111,10 @@ require_literal "js/app.js" 'function clearAccountScopedUiState()' "Account-scop
 require_literal "js/app.js" 'clearAccountScopedUiState();' "Account-scoped UI clear call"
 require_literal "js/app.js" 'function clearLocalSessionUi(message, kind)' "Local session UI clear helper"
 require_literal "js/app.js" 'Signed out locally. Server logout could not be confirmed:' "Failed logout local clear message"
+require_literal "js/app.js" 'function csrfReady()' "CSRF readiness helper"
+require_literal "js/app.js" 'function accountActionBlockedMessage()' "Account action guard helper"
+require_literal "js/app.js" 'Security token missing. Sign in again before account character or gameplay actions.' "CSRF missing inline action message"
+require_literal "js/app.js" 'var blocked = accountActionBlockedMessage();' "Account action guard call"
 
 if grep -RInE 'no .*account session integration|no .*service calls|localStorage-only|browser-preview script|does not create accounts' docs README.md *.html js >/dev/null; then
   printf '::error::Stale account/API boundary wording found; the static site now integrates account and character APIs.\n' >&2
