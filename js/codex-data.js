@@ -1,4 +1,4 @@
-// GENERATED from akalynth-ops/codex public projection. Do not hand-edit.
+// GENERATED from akalynth-ops/codex public projection (review-gated). Do not hand-edit.
 window.CODEX_PUBLIC = [
   {
     "id": "artifacts-codex",
@@ -119,6 +119,23 @@ window.CODEX_PUBLIC = [
     "source_ref": "echo-stalker"
   },
   {
+    "id": "ember-road",
+    "type": "route",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "The Ember Road",
+    "category": "Places",
+    "summary": "High City to the Forgehold Outer Gate.",
+    "body": "The first route expansion of Akalynth: regional travel from High City through the Emberwilds to the Forgehold Outer Gate.",
+    "assets": [],
+    "related": [
+      "high-city",
+      "forgehold",
+      "emberwilds"
+    ],
+    "source_ref": "ember-road"
+  },
+  {
     "id": "emberwilds-atlas",
     "type": "lore",
     "published": true,
@@ -135,6 +152,23 @@ window.CODEX_PUBLIC = [
       "cindervale"
     ],
     "source_ref": "emberwilds-atlas"
+  },
+  {
+    "id": "emberwilds",
+    "type": "region",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "The Emberwilds",
+    "category": "Places",
+    "summary": "The living-volcano frontier.",
+    "body": "A volcanic frontier region anchored by Forgehold Citadel and watched from the ash-edge by Cindervale. Crossed by the Ember Road.",
+    "assets": [],
+    "related": [
+      "forgehold",
+      "cindervale",
+      "ember-road"
+    ],
+    "source_ref": "emberwilds"
   },
   {
     "id": "factions-codex",
@@ -154,6 +188,23 @@ window.CODEX_PUBLIC = [
     "source_ref": "factions-codex"
   },
   {
+    "id": "flamebound",
+    "type": "faction",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "The Flamebound",
+    "category": "Factions",
+    "summary": "Forge-sworn of the Emberwilds.",
+    "body": "The faction of Forgehold — forge-sworn keepers of Soulsteel and the Heartforge. Their domain is Strength; their origin role is the Flamekeeper.",
+    "assets": [],
+    "related": [
+      "forgehold",
+      "soulsteel",
+      "heartforge"
+    ],
+    "source_ref": "flamebound"
+  },
+  {
     "id": "forgehold",
     "type": "place",
     "published": true,
@@ -166,9 +217,30 @@ window.CODEX_PUBLIC = [
       "assets/akalynth/visuals/cards/03-forgehold.card-800x1000.webp"
     ],
     "related": [
-      "high-city"
+      "high-city",
+      "ember-road",
+      "emberwilds",
+      "flamebound",
+      "soulsteel",
+      "heartforge"
     ],
     "source_ref": "forgehold"
+  },
+  {
+    "id": "heartforge",
+    "type": "place",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "The Heartforge",
+    "category": "Places",
+    "summary": "The great forge at the heart of Forgehold.",
+    "body": "The Heartforge burns at the centre of Forgehold Citadel — where Soulsteel is made. (Its Trial Chamber is a separate, unreleased dungeon.)",
+    "assets": [],
+    "related": [
+      "forgehold",
+      "soulsteel"
+    ],
+    "source_ref": "heartforge"
   },
   {
     "id": "heroes-codex",
@@ -238,6 +310,23 @@ window.CODEX_PUBLIC = [
       "dreamweaver"
     ],
     "source_ref": "moonspire"
+  },
+  {
+    "id": "soulsteel",
+    "type": "material",
+    "published": true,
+    "reviewed_by": "guardian@vaultmesh.org",
+    "title": "Soulsteel",
+    "category": "Materials",
+    "summary": "The signature alloy of Forgehold.",
+    "body": "A material forged and stabilized at the Heartforge of Forgehold; the core of the Forgehold crafting systems.",
+    "assets": [],
+    "related": [
+      "forgehold",
+      "flamebound",
+      "heartforge"
+    ],
+    "source_ref": "soulsteel"
   },
   {
     "id": "veridium-port",
