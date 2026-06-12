@@ -90,6 +90,9 @@ for pattern in \
   "verified ""ownership" \
   "real house ""ownership" \
   "live auction ""is" \
+  "Browser cart" \
+  "Checkout disabled" \
+  "Clear cart" \
   "production launch ""readiness" \
   "community contributions ""welcome" \
   "contributions ""welcome" \

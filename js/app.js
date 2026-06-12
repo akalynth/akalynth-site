@@ -770,14 +770,7 @@
     if (list) list.innerHTML = '<li class="cart-empty">Purchases are submitted directly to the server. No browser cart is authoritative.</li>';
     setText("#cart-count", "0");
     setText("#cart-total", "0");
-    setText("#cart-total-2", "0");
-    var checkout = $("#checkout-btn");
-    if (checkout) {
-      checkout.disabled = true;
-      checkout.textContent = "Checkout disabled";
-    }
-    var clear = $("#clear-cart-btn");
-    if (clear) clear.hidden = true;
+    setText("#purchase-authority", "Server");
     if (grid.dataset.wired !== "1") {
       grid.addEventListener("click", function (e) {
         var btn = e.target.closest ? e.target.closest("[data-shop-buy]") : null;
