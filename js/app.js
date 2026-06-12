@@ -438,6 +438,44 @@
     }
   }
 
+  function renderBetaStatus() {
+    var root = $("#beta-account-status");
+    if (!root) return;
+    var character = selectedCharacter();
+    if (state.apiOnline === false) {
+      root.innerHTML =
+        '<p class="lede">API unavailable</p>' +
+        '<p>The beta download is available, but this browser could not confirm your account character against ' +
+        escapeHtml(API_BASE) +
+        '.</p>' +
+        '<p class="muted small">Account and character authority stay on the Akalynth API; no local beta readiness is assumed here.</p>';
+      return;
+    }
+    if (state.account && character) {
+      root.innerHTML =
+        '<p class="lede">Ready for Android beta</p>' +
+        '<p>Selected character: <strong>' +
+        escapeHtml(character.name || character.character_id) +
+        '</strong> in ' +
+        escapeHtml(worldName(character.world_id)) +
+        '.</p>' +
+        '<p class="muted small">Install the Android beta, sign in with this account, and select this character to play.</p>' +
+        '<a class="btn btn-gold btn-block" href="https://beta.akalynth.com/download/akalynth-beta.apk" rel="noopener" download>Download Android APK</a>';
+      return;
+    }
+    if (state.account) {
+      root.innerHTML =
+        '<p class="lede">Account signed in; character still required</p>' +
+        '<p>Create or select a server-backed account character before installing the beta.</p>' +
+        '<a class="btn btn-gold btn-block" href="account.html">Create or select character</a>';
+      return;
+    }
+    root.innerHTML =
+      '<p class="lede">Account character required</p>' +
+      '<p>Create an account, verify email, then create or select a character before entering the Android beta.</p>' +
+      '<a class="btn btn-gold btn-block" href="account.html">Create account character</a>';
+  }
+
   // ---- Account page --------------------------------------------------------
   function accountMessageHtml() {
     if (!state.message) return "";
@@ -952,6 +990,7 @@
     renderHoldings();
     applyAccountGates();
     renderAccountPortal();
+    renderBetaStatus();
     renderShop();
     renderHouses();
   }
