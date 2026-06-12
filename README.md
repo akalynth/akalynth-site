@@ -10,7 +10,8 @@ It is a pre-alpha static site for Akalynth's High City surface:
 - `houses.html` server property market portal for the Akalynth API
 - `account.html` static account portal shell for the Akalynth API
 - `forum.html` read-only community boards preview
-- `codex.html` and `library.html` public-safe visual lore archive
+- `codex.html` and `library.html` public-safe visual lore archive; `codex.html`
+  is the Public Codex surface
 - `codex/builder/`, `codex/operator/`, and `codex/agent/` static Codex surface
   waypoints that link back to the account-character portal
 - `css/`, `js/`, and `screenshots/` assets used by the static site
@@ -46,7 +47,7 @@ Then open `http://127.0.0.1:8099/`.
 
 Run the account-character and four-surface site verifier before changing the
 account portal, beta page, Codex routes, shop/work/property API hooks, or public
-boundary wording:
+boundary wording. The four Codex surfaces are Public, Builder, Operator, Agent:
 
 ```bash
 ./scripts/verify-account-character-site.sh
