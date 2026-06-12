@@ -116,6 +116,12 @@ require_literal "js/app.js" 'function accountActionBlockedMessage()' "Account ac
 require_literal "js/app.js" 'Security token missing. Sign in again before account character or gameplay actions.' "CSRF missing inline action message"
 require_literal "js/app.js" 'var blocked = accountActionBlockedMessage();' "Account action guard call"
 
+guard_call_count="$(grep -F 'var blocked = accountActionBlockedMessage();' js/app.js | wc -l | tr -d '[:space:]')"
+if [[ "$guard_call_count" -lt 6 ]]; then
+  printf '::error::Expected account action guard before each account-owned mutation; found %s guard calls.\n' "$guard_call_count" >&2
+  exit 1
+fi
+
 if grep -RInE 'no .*account session integration|no .*service calls|localStorage-only|browser-preview script|does not create accounts' docs README.md *.html js >/dev/null; then
   printf '::error::Stale account/API boundary wording found; the static site now integrates account and character APIs.\n' >&2
   grep -RInE 'no .*account session integration|no .*service calls|localStorage-only|browser-preview script|does not create accounts' docs README.md *.html js >&2
