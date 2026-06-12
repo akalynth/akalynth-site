@@ -20,12 +20,12 @@ authority, account authority, payment processing, runtime state, receipt
 authority, anti-cheat enforcement logic, operator tooling, hosting credentials,
 or private roadmap material.
 
-The account, shop, wallet, and housing pages are static frontends that call named
-Akalynth API endpoints when available. This repository still does not contain
-account authority, session authority, receipt signing, economy authority, or
-runtime state. Shop and housing pages do not use browser-local state as
-authority; purchases and property actions are settled only when the server emits
-the relevant receipts.
+The account, shop, wallet, work, and housing pages are static frontends that call
+named Akalynth API endpoints when available. This repository still does not
+contain account authority, session authority, receipt signing, economy authority,
+or runtime state. Shop, work, and housing pages do not use browser-local state as
+authority; purchases, work payouts, and property actions are settled only when
+the server emits the relevant receipts.
 
 ## Local Preview
 
