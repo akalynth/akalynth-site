@@ -199,10 +199,14 @@
 
   function apiMessage(err) {
     if (!err) return "Request failed.";
-    if (err.status === 404) return err.body && err.body.error ? err.body.error : "That record was not found.";
+    if (err.body && (err.body.error === "character_not_found" || err.body.error === "not_found")) {
+      return "This character is not available on the signed-in account. Sign in again or select an account-owned character.";
+    }
     if (err.status === 401) return "Sign in first.";
     if (err.status === 403 && err.body && err.body.error === "csrf_failed") return "Security token expired. Sign in again.";
     if (err.status === 403 && err.body && err.body.error === "email_unverified") return "Verify your email before creating a character.";
+    if (err.status === 403 && err.body && err.body.error === "not_owner") return "Only the account-owned character that owns this property can change it.";
+    if (err.status === 404) return "That server record was not found.";
     return err.message || "Request failed.";
   }
   function accountActionBlockedMessage() {

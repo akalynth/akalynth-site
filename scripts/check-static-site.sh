@@ -128,6 +128,8 @@ require_literal "js/app.js" 'function accountActionBlockedMessage()' "Account ac
 require_literal "js/app.js" 'credentials: "include"' "Account API cookie/session transport"
 require_literal "js/app.js" 'headers["x-csrf-token"] = csrf;' "Account API CSRF header transport"
 require_literal "js/app.js" 'Security token missing. Sign in again before account character or gameplay actions.' "CSRF missing inline action message"
+require_literal "js/app.js" 'This character is not available on the signed-in account. Sign in again or select an account-owned character.' "Account-owned character error message"
+require_literal "js/app.js" 'Only the account-owned character that owns this property can change it.' "Property owner error message"
 require_literal "js/app.js" 'var blocked = accountActionBlockedMessage();' "Account action guard call"
 
 guard_call_count="$(grep -F 'var blocked = accountActionBlockedMessage();' js/app.js | wc -l | tr -d '[:space:]')"
