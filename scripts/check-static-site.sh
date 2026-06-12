@@ -133,6 +133,10 @@ require_literal "js/app.js" 'Sign in with an account session before creating or 
 require_literal "js/app.js" 'Security token missing. Sign in again before creating or selecting a character.' "Account-character CSRF required message"
 require_literal "js/app.js" 'This character is not available on the signed-in account. Sign in again or select an account-owned character.' "Account-owned character error message"
 require_literal "js/app.js" 'Only the account-owned character that owns this property can change it.' "Property owner error message"
+require_literal "js/app.js" 'This property is already listed. Unlist it before listing again.' "Property already-listed error message"
+require_literal "js/app.js" 'This property is not currently listed.' "Property not-listed error message"
+require_literal "js/app.js" 'This property is not currently for sale.' "Property not-for-sale error message"
+require_literal "js/app.js" 'Not enough earned gold for this action.' "Insufficient gold error message"
 require_literal "js/app.js" 'var blocked = accountActionBlockedMessage();' "Account action guard call"
 
 guard_call_count="$(grep -F 'var blocked = accountActionBlockedMessage();' js/app.js | wc -l | tr -d '[:space:]')"
