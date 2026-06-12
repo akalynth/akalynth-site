@@ -16,6 +16,16 @@
   var CSRF_COOKIE = "akalynth_csrf";
   var CSRF_STORE = "akalynth.csrf.v1";
   var SELECTED_CHARACTER_STORE = "akalynth.selectedCharacter.v1";
+  var VALID_WORLD_IDS = ["rookguard", "high_city"];
+  var VALID_SEXES = ["male", "female"];
+  var VALID_OUTFIT_IDS = [
+    "male_wanderer",
+    "male_guard",
+    "male_mage",
+    "female_wanderer",
+    "female_guard",
+    "female_mage",
+  ];
 
   var FALLBACK_WORLDS = [
     { world_id: "rookguard", name: "Rookguard", description: "The threshold keep where every journey begins." },
@@ -84,6 +94,32 @@
   function pageName() {
     return document.body ? document.body.getAttribute("data-page") || "" : "";
   }
+  function validWorldId(id) {
+    return VALID_WORLD_IDS.indexOf(id) !== -1;
+  }
+  function validSex(sex) {
+    return VALID_SEXES.indexOf(sex) !== -1;
+  }
+  function validOutfitId(id) {
+    return VALID_OUTFIT_IDS.indexOf(id) !== -1;
+  }
+  function validWorld(entry) {
+    return !!(entry && validWorldId(entry.world_id) && typeof entry.name === "string");
+  }
+  function validOutfit(entry) {
+    return !!(entry && validOutfitId(entry.outfit_id) && validSex(entry.sex) && typeof entry.name === "string");
+  }
+  function validCharacter(entry) {
+    return !!(
+      entry &&
+      typeof entry.character_id === "string" &&
+      entry.character_id &&
+      typeof entry.name === "string" &&
+      validWorldId(entry.world_id) &&
+      validSex(entry.sex) &&
+      validOutfitId(entry.outfit_id)
+    );
+  }
 
   function readCookie(name) {
     var parts = document.cookie ? document.cookie.split(";") : [];
@@ -147,6 +183,7 @@
     if (err.status === 404) return err.body && err.body.error ? err.body.error : "That record was not found.";
     if (err.status === 401) return "Sign in first.";
     if (err.status === 403 && err.body && err.body.error === "csrf_failed") return "Security token expired. Sign in again.";
+    if (err.status === 403 && err.body && err.body.error === "email_unverified") return "Verify your email before creating a character.";
     return err.message || "Request failed.";
   }
 
@@ -217,10 +254,12 @@
   function loadCatalogs() {
     return Promise.all([
       api("/v1/worlds").then(function (body) {
-        if (body.worlds && body.worlds.length) state.worlds = body.worlds;
+        var worlds = (body.worlds || []).filter(validWorld);
+        if (worlds.length) state.worlds = worlds;
       }).catch(function () {}),
       api("/v1/outfits").then(function (body) {
-        if (body.outfits && body.outfits.length) state.outfits = body.outfits;
+        var outfits = (body.outfits || []).filter(validOutfit);
+        if (outfits.length) state.outfits = outfits;
       }).catch(function () {}),
       api("/v1/shop/catalog").then(function (body) {
         if (body.items && body.items.length) {
@@ -244,7 +283,7 @@
         state.apiOnline = true;
         state.account = body.account || null;
         return api("/v1/characters").then(function (chars) {
-          state.characters = chars.characters || [];
+          state.characters = (chars.characters || []).filter(validCharacter);
           selectedCharacter();
         });
       })
@@ -539,8 +578,11 @@
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-select-character");
         api("/v1/characters/select", { method: "POST", body: { character_id: id } })
-          .then(function () {
-            rememberSelectedCharacter(id);
+          .then(function (body) {
+            if (!body || body.ok !== true || !validCharacter(body.character) || typeof body.token !== "string" || !body.token) {
+              throw new Error("Server returned an invalid character response.");
+            }
+            rememberSelectedCharacter(body.character.character_id);
             setMessage("Character selected. Download the Android beta to play.", "ok");
             return loadWalletState().then(renderAll);
           })
@@ -556,9 +598,17 @@
     var characterForm = $("#character-form", root);
     if (characterForm) characterForm.addEventListener("submit", function (e) {
       e.preventDefault();
-      api("/v1/characters", { method: "POST", body: formData(characterForm) })
+      var data = formData(characterForm);
+      if (!validWorldId(data.world_id) || !validSex(data.sex) || !validOutfitId(data.outfit_id)) {
+        setMessage("Select a valid world, sex, and outfit from the server catalog.", "error");
+        return;
+      }
+      api("/v1/characters", { method: "POST", body: data })
         .then(function (body) {
-          if (body.character && body.character.character_id) rememberSelectedCharacter(body.character.character_id);
+          if (!body || body.ok !== true || !validCharacter(body.character) || typeof body.token !== "string" || !body.token) {
+            throw new Error("Server returned an invalid character response.");
+          }
+          rememberSelectedCharacter(body.character.character_id);
           state.message = "Character created. Download the Android beta to play.";
           state.messageKind = "ok";
           return refreshPortal();
