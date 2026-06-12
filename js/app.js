@@ -732,6 +732,56 @@
     });
     return data;
   }
+  function selectAccountCharacter(id) {
+    var blocked = accountCharacterActionBlockedMessage();
+    if (blocked) {
+      setMessage(blocked, "error");
+      return Promise.resolve(null);
+    }
+    return api("/v1/characters/select", { method: "POST", body: { character_id: id } })
+      .then(function (body) {
+        if (!body || body.ok !== true || !validCharacter(body.character) || typeof body.token !== "string" || !body.token) {
+          throw new Error("Server returned an invalid character response.");
+        }
+        rememberSelectedCharacter(body.character.character_id);
+        setMessage("Character selected. Download the Android beta to play.", "ok");
+        return loadWalletState().then(function () {
+          renderAll();
+          return body;
+        });
+      })
+      .catch(function (err) {
+        setMessage(apiMessage(err), "error");
+        return null;
+      });
+  }
+  function createAccountCharacter(data) {
+    if (!validWorldId(data.world_id) || !validSex(data.sex) || !validOutfitId(data.outfit_id)) {
+      setMessage("Select a valid world, sex, and outfit from the server catalog.", "error");
+      return Promise.resolve(null);
+    }
+    var blocked = accountCharacterActionBlockedMessage();
+    if (blocked) {
+      setMessage(blocked, "error");
+      return Promise.resolve(null);
+    }
+    return api("/v1/characters", { method: "POST", body: data })
+      .then(function (body) {
+        if (!body || body.ok !== true || !validCharacter(body.character) || typeof body.token !== "string" || !body.token) {
+          throw new Error("Server returned an invalid character response.");
+        }
+        rememberSelectedCharacter(body.character.character_id);
+        state.message = "Character created. Download the Android beta to play.";
+        state.messageKind = "ok";
+        return refreshPortal().then(function () {
+          return body;
+        });
+      })
+      .catch(function (err) {
+        setMessage(apiMessage(err), "error");
+        return null;
+      });
+  }
   function wireAccountForms(root) {
     var register = $("#register-form", root);
     if (register) register.addEventListener("submit", function (e) {
@@ -806,21 +856,7 @@
     $all("[data-select-character]", root).forEach(function (btn) {
       btn.addEventListener("click", function () {
         var id = btn.getAttribute("data-select-character");
-        var blocked = accountCharacterActionBlockedMessage();
-        if (blocked) {
-          setMessage(blocked, "error");
-          return;
-        }
-        api("/v1/characters/select", { method: "POST", body: { character_id: id } })
-          .then(function (body) {
-            if (!body || body.ok !== true || !validCharacter(body.character) || typeof body.token !== "string" || !body.token) {
-              throw new Error("Server returned an invalid character response.");
-            }
-            rememberSelectedCharacter(body.character.character_id);
-            setMessage("Character selected. Download the Android beta to play.", "ok");
-            return loadWalletState().then(renderAll);
-          })
-          .catch(function (err) { setMessage(apiMessage(err), "error"); });
+        selectAccountCharacter(id);
       });
     });
 
@@ -832,27 +868,7 @@
     var characterForm = $("#character-form", root);
     if (characterForm) characterForm.addEventListener("submit", function (e) {
       e.preventDefault();
-      var data = formData(characterForm);
-      if (!validWorldId(data.world_id) || !validSex(data.sex) || !validOutfitId(data.outfit_id)) {
-        setMessage("Select a valid world, sex, and outfit from the server catalog.", "error");
-        return;
-      }
-      var blocked = accountCharacterActionBlockedMessage();
-      if (blocked) {
-        setMessage(blocked, "error");
-        return;
-      }
-      api("/v1/characters", { method: "POST", body: data })
-        .then(function (body) {
-          if (!body || body.ok !== true || !validCharacter(body.character) || typeof body.token !== "string" || !body.token) {
-            throw new Error("Server returned an invalid character response.");
-          }
-          rememberSelectedCharacter(body.character.character_id);
-          state.message = "Character created. Download the Android beta to play.";
-          state.messageKind = "ok";
-          return refreshPortal();
-        })
-        .catch(function (err) { setMessage(apiMessage(err), "error"); });
+      createAccountCharacter(formData(characterForm));
     });
   }
 
@@ -1110,6 +1126,8 @@
     window.__AKALYNTH_SITE_E2D_TEST_HOOKS__.install({
       state: state,
       rememberSelectedCharacter: rememberSelectedCharacter,
+      selectAccountCharacter: selectAccountCharacter,
+      createAccountCharacter: createAccountCharacter,
       startWork: startWork,
       tickWork: tickWork,
       buyShopItem: buyShopItem,
