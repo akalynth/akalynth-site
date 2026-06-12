@@ -53,8 +53,9 @@ boundary wording. The four Codex surfaces are Public, Builder, Operator, Agent:
 ./scripts/verify-account-character-site.sh
 ```
 
-This wraps the static route/link/API-hook smoke test and the public boundary
-guard.
+This wraps the static route/link/API-hook smoke test, executable site E2D
+gameplay action proof for account-scoped shop/work/property requests, and the
+public boundary guard.
 
 ## License
 
