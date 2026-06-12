@@ -54,8 +54,8 @@ boundary wording. The four Codex surfaces are Public, Builder, Operator, Agent:
 ```
 
 This wraps the static route/link/API-hook smoke test, executable site E2D
-gameplay action proof for account-scoped shop/work/property requests, and the
-public boundary guard.
+character and gameplay action proof for account-scoped
+create/select/shop/work/property requests, and the public boundary guard.
 
 ## License
 
