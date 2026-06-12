@@ -90,5 +90,5 @@ Local preview smoke checks used `127.0.0.1:8099` through `scripts/check-static-s
 - No deploy performed.
 - No merge performed.
 - No Pages, DNS, or CDN change performed.
-- No backend, runtime, account, payment, entitlement, or API work performed.
-- `js/app.js` remains a static browser-preview script; this lane added no analytics, network calls, payment integration, account session integration, or service calls.
+- No backend, runtime, payment, or entitlement work was performed in this visual-build lane.
+- Current `js/app.js` is a static frontend integration surface: it calls the account, character, shop, work, and property HTTP APIs from the browser, while still adding no analytics, payment integration, deployment, or runtime mutation.
