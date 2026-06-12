@@ -84,7 +84,15 @@ for route_page in codex/builder/index.html codex/operator/index.html codex/agent
 done
 
 for literal in \
+  'href="/codex/builder/"' \
+  'href="/codex/operator/"' \
+  'href="/codex/agent/"'; do
+  require_literal "codex.html" "$literal" "Public Codex four-surface link"
+done
+
+for literal in \
   'name="world_id"' \
+  'name="sex"' \
   'name="outfit_id"'; do
   require_literal "js/app.js" "$literal" "Account character portal field"
 done
