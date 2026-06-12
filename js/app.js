@@ -465,6 +465,78 @@
         renderHoldings();
       });
   }
+  function buyShopItem(itemId, err) {
+    var character = selectedCharacter();
+    if (err) err.textContent = "";
+    var blocked = accountActionBlockedMessage();
+    if (blocked || !character) {
+      if (err) err.textContent = blocked || "Select a character before buying.";
+      return Promise.resolve(null);
+    }
+    return api("/v1/shop/purchase", { method: "POST", body: { character_id: character.character_id, shop_key: itemId } })
+      .then(function (body) {
+        if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;
+        if (err) err.textContent = "Purchase accepted by server.";
+        renderHoldings();
+        return body;
+      })
+      .catch(function (ex) {
+        if (err) err.textContent = apiMessage(ex);
+        return null;
+      });
+  }
+  function changeProperty(id, buy, err) {
+    var character = selectedCharacter();
+    if (err) err.textContent = "";
+    var blocked = accountActionBlockedMessage();
+    if (blocked || !character) {
+      if (err) err.textContent = blocked || "Select a character before changing property.";
+      return Promise.resolve(null);
+    }
+    return api(buy ? "/v1/property/buy" : "/v1/property/unlist", {
+      method: "POST",
+      body: { character_id: character.character_id, property_id: id },
+    })
+      .then(function (body) {
+        if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;
+        rememberHouseOverride(body.property);
+        if (err) err.textContent = buy ? "Purchase accepted by server." : "Unlisted by server.";
+        renderHoldings();
+        renderHouses();
+        return body;
+      })
+      .catch(function (ex) {
+        if (err) err.textContent = apiMessage(ex);
+        return null;
+      });
+  }
+  function listProperty(id, price, err) {
+    if (err) err.textContent = "";
+    if (!Number.isInteger(price) || price < 1) {
+      if (err) err.textContent = "Enter a positive gold price.";
+      return Promise.resolve(null);
+    }
+    var character = selectedCharacter();
+    var blocked = accountActionBlockedMessage();
+    if (blocked || !character) {
+      if (err) err.textContent = blocked || "Select a character before listing property.";
+      return Promise.resolve(null);
+    }
+    return api("/v1/property/list", {
+      method: "POST",
+      body: { character_id: character.character_id, property_id: id, price_gold: price },
+    })
+      .then(function (body) {
+        rememberHouseOverride(body && body.property);
+        if (err) err.textContent = "Listed by server.";
+        renderHouses();
+        return body;
+      })
+      .catch(function (ex) {
+        if (err) err.textContent = apiMessage(ex);
+        return null;
+      });
+  }
   function applyAccountGates() {
     var hasCharacter = !!(state.account && selectedCharacter());
     $all(".requires-account").forEach(function (el) {
@@ -833,23 +905,8 @@
         var btn = e.target.closest ? e.target.closest("[data-shop-buy]") : null;
         if (!btn) return;
         var itemId = btn.getAttribute("data-shop-buy");
-        var character = selectedCharacter();
         var err = $("#shop-error-" + itemId);
-        if (err) err.textContent = "";
-        var blocked = accountActionBlockedMessage();
-        if (blocked || !character) {
-          if (err) err.textContent = blocked || "Select a character before buying.";
-          return;
-        }
-        api("/v1/shop/purchase", { method: "POST", body: { character_id: character.character_id, shop_key: itemId } })
-          .then(function (body) {
-            if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;
-            if (err) err.textContent = "Purchase accepted by server.";
-            renderHoldings();
-          })
-          .catch(function (ex) {
-            if (err) err.textContent = apiMessage(ex);
-          });
+        buyShopItem(itemId, err);
       });
       grid.dataset.wired = "1";
     }
@@ -995,27 +1052,7 @@
         var id = buy ? buy.getAttribute("data-house-buy") : unlist ? unlist.getAttribute("data-house-unlist") : "";
         if (!id) return;
         var err = $("#house-error-" + id);
-        if (err) err.textContent = "";
-        var character = selectedCharacter();
-        var blocked = accountActionBlockedMessage();
-        if (blocked || !character) {
-          if (err) err.textContent = blocked || "Select a character before changing property.";
-          return;
-        }
-        api(buy ? "/v1/property/buy" : "/v1/property/unlist", {
-          method: "POST",
-          body: { character_id: character.character_id, property_id: id },
-        })
-          .then(function (body) {
-            if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;
-            rememberHouseOverride(body.property);
-            if (err) err.textContent = buy ? "Purchase accepted by server." : "Unlisted by server.";
-            renderHoldings();
-            renderHouses();
-          })
-          .catch(function (ex) {
-            if (err) err.textContent = apiMessage(ex);
-          });
+        changeProperty(id, !!buy, err);
       });
       grid.addEventListener("submit", function (e) {
         var form = e.target.closest ? e.target.closest("[data-house-list]") : null;
@@ -1025,29 +1062,7 @@
         var input = form.querySelector('input[name="price"]');
         var price = input ? parseInt(input.value, 10) : NaN;
         var err = $("#house-error-" + id);
-        if (err) err.textContent = "";
-        if (!Number.isInteger(price) || price < 1) {
-          if (err) err.textContent = "Enter a positive gold price.";
-          return;
-        }
-        var character = selectedCharacter();
-        var blocked = accountActionBlockedMessage();
-        if (blocked || !character) {
-          if (err) err.textContent = blocked || "Select a character before listing property.";
-          return;
-        }
-        api("/v1/property/list", {
-          method: "POST",
-          body: { character_id: character.character_id, property_id: id, price_gold: price },
-        })
-          .then(function (body) {
-            rememberHouseOverride(body && body.property);
-            if (err) err.textContent = "Listed by server.";
-            renderHouses();
-          })
-          .catch(function (ex) {
-            if (err) err.textContent = apiMessage(ex);
-          });
+        listProperty(id, price, err);
       });
       grid.dataset.wired = "1";
     }
@@ -1089,6 +1104,20 @@
     initMisc();
     handleAccountQuery();
     refreshPortal();
+  }
+
+  if (window.__AKALYNTH_SITE_E2D_TEST_HOOKS__) {
+    window.__AKALYNTH_SITE_E2D_TEST_HOOKS__.install({
+      state: state,
+      rememberSelectedCharacter: rememberSelectedCharacter,
+      startWork: startWork,
+      tickWork: tickWork,
+      buyShopItem: buyShopItem,
+      changeProperty: changeProperty,
+      listProperty: listProperty,
+      accountActionBlockedMessage: accountActionBlockedMessage,
+      accountCharacterActionBlockedMessage: accountCharacterActionBlockedMessage,
+    });
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
