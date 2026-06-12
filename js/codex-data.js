@@ -16,7 +16,15 @@ window.CODEX_PUBLIC = [
       "heroes-codex",
       "chronicle-of-ages"
     ],
-    "source_ref": "artifacts-codex"
+    "source_ref": "artifacts-codex",
+    "proof": {
+      "object_id": "artifacts-codex",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_ARTIFACTS_CODEX_V1",
+      "source_kind": "source",
+      "evidence_sha256": "623158c2a8fb78b65f0c8d54dd81068fefeffa430fec1cece06e54bfb2200235"
+    }
   },
   {
     "id": "chronicle-of-ages",
@@ -34,7 +42,15 @@ window.CODEX_PUBLIC = [
       "high-city",
       "heroes-codex"
     ],
-    "source_ref": "chronicle-of-ages"
+    "source_ref": "chronicle-of-ages",
+    "proof": {
+      "object_id": "chronicle-of-ages",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_CHRONICLE_OF_AGES_V1",
+      "source_kind": "source",
+      "evidence_sha256": "ea25be36dbd9963e42f5b8721860df5b056e4405abf7f7b1d1979164528972d9"
+    }
   },
   {
     "id": "chronoshell-turtle",
@@ -49,7 +65,15 @@ window.CODEX_PUBLIC = [
       "assets/codex/chronoshell-turtle.png"
     ],
     "related": [],
-    "source_ref": "chronoshell-turtle"
+    "source_ref": "chronoshell-turtle",
+    "proof": {
+      "object_id": "chronoshell-turtle",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "codex.html creature codex",
+      "source_kind": "source",
+      "evidence_sha256": "99d69512b24ece848617541dd3f011d638f057e33a403e1a9c66af7c43fa76cf"
+    }
   },
   {
     "id": "cindervale",
@@ -67,7 +91,15 @@ window.CODEX_PUBLIC = [
       "forgehold",
       "high-city"
     ],
-    "source_ref": "cindervale"
+    "source_ref": "cindervale",
+    "proof": {
+      "object_id": "cindervale",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_CITIES_SUMMARY_V1",
+      "source_kind": "source",
+      "evidence_sha256": "3ab9b3eb971e746298cb5ac74bc0ff2244e64f8739fce66fa56a155a6040618b"
+    }
   },
   {
     "id": "dreamweaver",
@@ -84,7 +116,15 @@ window.CODEX_PUBLIC = [
     "related": [
       "moonspire"
     ],
-    "source_ref": "dreamweaver"
+    "source_ref": "dreamweaver",
+    "proof": {
+      "object_id": "dreamweaver",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "codex.html creature codex",
+      "source_kind": "source",
+      "evidence_sha256": "99d69512b24ece848617541dd3f011d638f057e33a403e1a9c66af7c43fa76cf"
+    }
   },
   {
     "id": "dungeon-codex",
@@ -101,7 +141,15 @@ window.CODEX_PUBLIC = [
     "related": [
       "high-city"
     ],
-    "source_ref": "dungeon-codex"
+    "source_ref": "dungeon-codex",
+    "proof": {
+      "object_id": "dungeon-codex",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_DUNGEON_CODEX_V1",
+      "source_kind": "source",
+      "evidence_sha256": "75a2145a34706bf49072c820c137e3d663ee5610a7c5d1124d433a9ad355599e"
+    }
   },
   {
     "id": "echo-stalker",
@@ -116,7 +164,15 @@ window.CODEX_PUBLIC = [
       "assets/codex/echo-stalker.png"
     ],
     "related": [],
-    "source_ref": "echo-stalker"
+    "source_ref": "echo-stalker",
+    "proof": {
+      "object_id": "echo-stalker",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "codex.html creature codex",
+      "source_kind": "source",
+      "evidence_sha256": "99d69512b24ece848617541dd3f011d638f057e33a403e1a9c66af7c43fa76cf"
+    }
   },
   {
     "id": "ember-road",
@@ -133,7 +189,15 @@ window.CODEX_PUBLIC = [
       "forgehold",
       "emberwilds"
     ],
-    "source_ref": "ember-road"
+    "source_ref": "ember-road",
+    "proof": {
+      "object_id": "ember-road",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1",
+      "source_kind": "receipt",
+      "evidence_sha256": "4d9eed25b50dba215da5061a72ddd5aec778ae917d588202289adebe6fd3c823"
+    }
   },
   {
     "id": "emberwilds-atlas",
@@ -151,7 +215,15 @@ window.CODEX_PUBLIC = [
       "forgehold",
       "cindervale"
     ],
-    "source_ref": "emberwilds-atlas"
+    "source_ref": "emberwilds-atlas",
+    "proof": {
+      "object_id": "emberwilds-atlas",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH world atlas",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
   },
   {
     "id": "emberwilds",
@@ -168,7 +240,15 @@ window.CODEX_PUBLIC = [
       "cindervale",
       "ember-road"
     ],
-    "source_ref": "emberwilds"
+    "source_ref": "emberwilds",
+    "proof": {
+      "object_id": "emberwilds",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1",
+      "source_kind": "receipt",
+      "evidence_sha256": "4d9eed25b50dba215da5061a72ddd5aec778ae917d588202289adebe6fd3c823"
+    }
   },
   {
     "id": "factions-codex",
@@ -185,7 +265,15 @@ window.CODEX_PUBLIC = [
     "related": [
       "high-city"
     ],
-    "source_ref": "factions-codex"
+    "source_ref": "factions-codex",
+    "proof": {
+      "object_id": "factions-codex",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_FACTIONS_CODEX_V1",
+      "source_kind": "source",
+      "evidence_sha256": "9c6c5a4afcff73644094d4eb561555ee49b12eb582641f419429a6a43cc3dafc"
+    }
   },
   {
     "id": "flamebound",
@@ -202,7 +290,15 @@ window.CODEX_PUBLIC = [
       "soulsteel",
       "heartforge"
     ],
-    "source_ref": "flamebound"
+    "source_ref": "flamebound",
+    "proof": {
+      "object_id": "flamebound",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_FACTIONS_CODEX_V1",
+      "source_kind": "source",
+      "evidence_sha256": "9c6c5a4afcff73644094d4eb561555ee49b12eb582641f419429a6a43cc3dafc"
+    }
   },
   {
     "id": "forgehold",
@@ -224,7 +320,15 @@ window.CODEX_PUBLIC = [
       "soulsteel",
       "heartforge"
     ],
-    "source_ref": "forgehold"
+    "source_ref": "forgehold",
+    "proof": {
+      "object_id": "forgehold",
+      "status": "accepted",
+      "status_label": "has-route-slice",
+      "source_ref": "AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1",
+      "source_kind": "receipt",
+      "evidence_sha256": "4d9eed25b50dba215da5061a72ddd5aec778ae917d588202289adebe6fd3c823"
+    }
   },
   {
     "id": "heartforge",
@@ -240,7 +344,15 @@ window.CODEX_PUBLIC = [
       "forgehold",
       "soulsteel"
     ],
-    "source_ref": "heartforge"
+    "source_ref": "heartforge",
+    "proof": {
+      "object_id": "heartforge",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_FORGEHOLD_ROUTE_SLICE_V1",
+      "source_kind": "receipt",
+      "evidence_sha256": "4d9eed25b50dba215da5061a72ddd5aec778ae917d588202289adebe6fd3c823"
+    }
   },
   {
     "id": "heroes-codex",
@@ -258,7 +370,15 @@ window.CODEX_PUBLIC = [
       "factions-codex",
       "chronicle-of-ages"
     ],
-    "source_ref": "heroes-codex"
+    "source_ref": "heroes-codex",
+    "proof": {
+      "object_id": "heroes-codex",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_HEROES_CODEX_V1",
+      "source_kind": "source",
+      "evidence_sha256": "3f9d4f903f455312dad0d9940221bceb75223ef3b0aa92d3ed2f3185c111d630"
+    }
   },
   {
     "id": "high-city",
@@ -278,7 +398,15 @@ window.CODEX_PUBLIC = [
       "moonspire",
       "cindervale"
     ],
-    "source_ref": "high-city"
+    "source_ref": "high-city",
+    "proof": {
+      "object_id": "high-city",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_CITIES_SUMMARY_V1",
+      "source_kind": "source",
+      "evidence_sha256": "3ab9b3eb971e746298cb5ac74bc0ff2244e64f8739fce66fa56a155a6040618b"
+    }
   },
   {
     "id": "memory-serpent",
@@ -293,7 +421,15 @@ window.CODEX_PUBLIC = [
       "assets/codex/memory-serpent.png"
     ],
     "related": [],
-    "source_ref": "memory-serpent"
+    "source_ref": "memory-serpent",
+    "proof": {
+      "object_id": "memory-serpent",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "codex.html creature codex",
+      "source_kind": "source",
+      "evidence_sha256": "99d69512b24ece848617541dd3f011d638f057e33a403e1a9c66af7c43fa76cf"
+    }
   },
   {
     "id": "moonspire",
@@ -309,7 +445,15 @@ window.CODEX_PUBLIC = [
       "high-city",
       "dreamweaver"
     ],
-    "source_ref": "moonspire"
+    "source_ref": "moonspire",
+    "proof": {
+      "object_id": "moonspire",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_CITIES_SUMMARY_V1",
+      "source_kind": "source",
+      "evidence_sha256": "3ab9b3eb971e746298cb5ac74bc0ff2244e64f8739fce66fa56a155a6040618b"
+    }
   },
   {
     "id": "soulsteel",
@@ -326,7 +470,15 @@ window.CODEX_PUBLIC = [
       "flamebound",
       "heartforge"
     ],
-    "source_ref": "soulsteel"
+    "source_ref": "soulsteel",
+    "proof": {
+      "object_id": "soulsteel",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_SOULSTEEL_STABILIZATION_V1",
+      "source_kind": "asserted",
+      "evidence_sha256": null
+    }
   },
   {
     "id": "veridium-port",
@@ -341,7 +493,15 @@ window.CODEX_PUBLIC = [
     "related": [
       "high-city"
     ],
-    "source_ref": "veridium-port"
+    "source_ref": "veridium-port",
+    "proof": {
+      "object_id": "veridium-port",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "AKALYNTH_CITIES_SUMMARY_V1",
+      "source_kind": "source",
+      "evidence_sha256": "3ab9b3eb971e746298cb5ac74bc0ff2244e64f8739fce66fa56a155a6040618b"
+    }
   },
   {
     "id": "void-whale",
@@ -356,7 +516,15 @@ window.CODEX_PUBLIC = [
       "assets/codex/void-whale.png"
     ],
     "related": [],
-    "source_ref": "void-whale"
+    "source_ref": "void-whale",
+    "proof": {
+      "object_id": "void-whale",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "codex.html creature codex",
+      "source_kind": "source",
+      "evidence_sha256": "99d69512b24ece848617541dd3f011d638f057e33a403e1a9c66af7c43fa76cf"
+    }
   },
   {
     "id": "witness-moth",
@@ -373,6 +541,14 @@ window.CODEX_PUBLIC = [
     "related": [
       "high-city"
     ],
-    "source_ref": "witness-moth"
+    "source_ref": "witness-moth",
+    "proof": {
+      "object_id": "witness-moth",
+      "status": "accepted",
+      "status_label": "accepted",
+      "source_ref": "codex.html creature codex",
+      "source_kind": "source",
+      "evidence_sha256": "99d69512b24ece848617541dd3f011d638f057e33a403e1a9c66af7c43fa76cf"
+    }
   }
 ];

@@ -118,6 +118,12 @@ body.codex-os .nav-burger span { background: var(--gold); }
 .codex-os .dot.Cities { background: var(--blue); } .codex-os .dot.Creatures { background: var(--purple); }
 .codex-os .dot.Factions { background: var(--orange); } .codex-os .dot.Systems { background: var(--green); }
 .codex-os .time { color: var(--muted); font-size: 13px; }
+.codex-os .time { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 11.5px; color: #9fb0a4; }
+
+/* proof block — object id / source ref / evidence fingerprint */
+.codex-os .mono { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 12.5px; }
+.codex-os dd.hash { word-break: break-all; color: var(--muted); }
+.codex-os .badge { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-family: Inter, sans-serif; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--gold); border: 1px solid rgba(229, 183, 92, 0.35); background: rgba(229, 183, 92, 0.08); }
 
 .codex-os .detail-panel { padding: 24px; position: sticky; top: 96px; }
 .codex-os .detail-panel p { color: #bbc2cb; line-height: 1.65; }

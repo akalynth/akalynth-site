@@ -1,34 +1,33 @@
-/* Akalynth Codex — public surface renderer.
-   Reads window.CODEX_PUBLIC (the projection output, js/codex-data.js) and renders
-   the dark console. Display-only: no entry creation, no network, no state mutation. */
+/* Akalynth Codex — public surface renderer (proof-backed).
+   Reads window.CODEX_PUBLIC (the review-gated projection). Each entry carries a
+   public `proof` block (object_id, status, source_ref, evidence sha256). The
+   detail panel surfaces that proof so the page is provenance-backed world memory,
+   not just lore. Display-only: no creation, no network, no state mutation. */
 (function () {
   'use strict';
   var DATA = Array.isArray(window.CODEX_PUBLIC) ? window.CODEX_PUBLIC : [];
   var byId = {};
   DATA.forEach(function (e) { byId[e.id] = e; });
-
   var $ = function (id) { return document.getElementById(id); };
-  var iconFor = function (e) { return e.type === 'creature' ? '✦' : e.type === 'place' ? '◇' : '◌'; };
-  var assetUrl = function (p) { return p; };
+  var iconFor = function (e) { return e.type === 'creature' ? '✦' : (e.type === 'faction' ? '◈' : (e.type === 'material' ? '◆' : (e.type === 'lore' ? '▤' : '◇'))); };
+  var shortHash = function (h) { return h ? h.slice(0, 8) + '…' + h.slice(-6) : '—'; };
 
   var selectedCategory = null;
   var selectedId = null;
 
   function categories() {
     var counts = {};
-    DATA.forEach(function (e) { var c = (e.category || 'Other'); counts[c] = (counts[c] || 0) + 1; });
+    DATA.forEach(function (e) { var c = e.category || 'Other'; counts[c] = (counts[c] || 0) + 1; });
     return Object.keys(counts).sort().map(function (name) { return { name: name, count: counts[name] }; });
   }
 
   function renderStats() {
     var cats = categories();
-    var cities = DATA.filter(function (e) { return e.category === 'Cities'; }).length;
-    var creatures = DATA.filter(function (e) { return e.category === 'Creatures'; }).length;
     var stats = [
       { label: 'Entries', value: DATA.length, icon: '▣' },
       { label: 'Categories', value: cats.length, icon: '▦' },
-      { label: 'Cities', value: cities, icon: '◉' },
-      { label: 'Creatures', value: creatures, icon: '✦' }
+      { label: 'Cities', value: DATA.filter(function (e) { return e.category === 'Cities'; }).length, icon: '◉' },
+      { label: 'Creatures', value: DATA.filter(function (e) { return e.category === 'Creatures'; }).length, icon: '✦' }
     ];
     $('codexStats').innerHTML = stats.map(function (s) {
       return '<article class="stat-card"><div class="stat-icon">' + s.icon + '</div><div>' +
@@ -59,16 +58,19 @@
     });
   }
 
+  function rowHtml(e) {
+    var label = (e.proof && e.proof.status_label) || 'accepted';
+    return '<article class="entry-row ' + (selectedId === e.id ? 'selected' : '') + '" data-id="' + e.id + '">' +
+      '<div class="entry-icon">' + iconFor(e) + '</div>' +
+      '<div><div class="entry-title">' + e.title + '</div><div class="entry-summary">' + (e.summary || '') + '</div></div>' +
+      '<div class="pill"><span class="dot ' + e.category + '"></span>' + e.category + '</div>' +
+      '<div class="time">' + label + '</div></article>';
+  }
+
   function renderList() {
     var data = filtered();
     if (!data.length) { $('codexList').innerHTML = '<div class="empty">No entries match this filter.</div>'; return; }
-    $('codexList').innerHTML = data.map(function (e) {
-      return '<article class="entry-row ' + (selectedId === e.id ? 'selected' : '') + '" data-id="' + e.id + '">' +
-        '<div class="entry-icon">' + iconFor(e) + '</div>' +
-        '<div><div class="entry-title">' + e.title + '</div><div class="entry-summary">' + (e.summary || '') + '</div></div>' +
-        '<div class="pill"><span class="dot ' + e.category + '"></span>' + e.category + '</div>' +
-        '<div class="time">accepted</div></article>';
-    }).join('');
+    $('codexList').innerHTML = data.map(rowHtml).join('');
     Array.prototype.forEach.call(document.querySelectorAll('.entry-row'), function (row) {
       row.addEventListener('click', function () { select(row.dataset.id); });
     });
@@ -80,20 +82,29 @@
     return rels.map(function (id) { return '<a data-go="' + id + '">' + byId[id].title + '</a>'; }).join(', ');
   }
 
-  function select(id) {
-    var e = byId[id]; if (!e) return;
-    selectedId = id;
-    var art = (e.assets && e.assets[0]) ? '<img class="detail-art" src="' + assetUrl(e.assets[0]) + '" alt="' + e.title + '" loading="lazy" />' : '';
-    $('codexDetail').innerHTML =
-      '<p class="panel-kicker">Selected Entry</p>' +
+  function detailHtml(e) {
+    var p = e.proof || {};
+    var art = (e.assets && e.assets[0]) ? '<img class="detail-art" src="' + e.assets[0] + '" alt="' + e.title + '" loading="lazy" />' : '';
+    var ev = p.evidence_sha256
+      ? '<dd class="mono hash" title="' + p.evidence_sha256 + '">' + shortHash(p.evidence_sha256) + ' <span class="badge">' + (p.source_kind || '') + '</span></dd>'
+      : '<dd class="mono">asserted (no source hash)</dd>';
+    return '<p class="panel-kicker">Selected Entry</p>' +
       '<h3>' + e.title + '</h3>' + art +
       '<p>' + (e.body || e.summary || '') + '</p>' +
       '<dl class="meta">' +
-        '<div><dt>Category</dt><dd>' + e.category + '</dd></div>' +
-        '<div><dt>Status</dt><dd>accepted</dd></div>' +
+        '<div><dt>Object ID</dt><dd class="mono">' + (p.object_id || e.id) + '</dd></div>' +
+        '<div><dt>Status</dt><dd>' + (p.status_label || 'accepted') + '</dd></div>' +
+        '<div><dt>Source</dt><dd class="mono">' + (p.source_ref || '—') + '</dd></div>' +
+        '<div><dt>Evidence</dt>' + ev + '</div>' +
         '<div><dt>Authority</dt><dd>Akalynth</dd></div>' +
         '<div class="rel"><dt>Related</dt><dd>' + relatedLinks(e) + '</dd></div>' +
       '</dl>';
+  }
+
+  function select(id) {
+    var e = byId[id]; if (!e) return;
+    selectedId = id;
+    $('codexDetail').innerHTML = detailHtml(e);
     Array.prototype.forEach.call($('codexDetail').querySelectorAll('[data-go]'), function (a) {
       a.addEventListener('click', function () { select(a.dataset.go); window.scrollTo({ top: 0, behavior: 'smooth' }); });
     });
@@ -112,5 +123,5 @@
 
   if (!DATA.length) { return; }
   renderStats(); renderCategories(); renderList(); wire();
-  select(DATA[0].id);
+  select(byId['forgehold'] ? 'forgehold' : DATA[0].id);   // Forgehold leads — the proof exemplar
 })();
