@@ -166,6 +166,7 @@ for label, marker, window, guard in checks:
             errors.append(f"{label}: missing nearby {guard} guard before line {idx + 1}")
 
 selected_character_checks = [
+    ("wallet read", 'api("/v1/wallet?character_id="', 10),
     ("shop purchase", 'api("/v1/shop/purchase", { method: "POST"', 12),
     ("work start", 'api("/v1/work/start", { method: "POST"', 12),
     ("work tick", 'api("/v1/work/tick", { method: "POST"', 16),
@@ -181,6 +182,8 @@ for label, marker, window in selected_character_checks:
         context = "\n".join(lines[start:idx])
         if "selectedCharacter" not in context and "character" not in context:
             errors.append(f"{label}: missing nearby selected-character guard before line {idx + 1}")
+        if label == "wallet read" and "state.account" not in context:
+            errors.append(f"{label}: missing nearby account guard before line {idx + 1}")
 
 if errors:
     for error in errors:
