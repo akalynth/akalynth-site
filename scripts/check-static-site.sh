@@ -82,6 +82,10 @@ done
 require_literal "account.html" 'id="account-portal-root"' "Account character portal hook"
 require_literal "README.md" 'The four Codex surfaces are Public, Builder, Operator, Agent' "Site four-surface taxonomy"
 require_literal "README.md" 'is the Public Codex surface' "Public Codex surface authority"
+require_literal "codex.html" 'Codex Surface / Public / Layer 1' "Public Codex surface label"
+require_literal "codex/builder/index.html" 'Codex Surface / Builder / Layer 2' "Builder Codex surface label"
+require_literal "codex/operator/index.html" 'Codex Surface / Operator / Layer 3' "Operator Codex surface label"
+require_literal "codex/agent/index.html" 'Codex Surface / Agent' "Agent Codex surface label"
 
 for route_page in codex/builder/index.html codex/operator/index.html codex/agent/index.html; do
   require_literal "$route_page" 'Create account character' "Codex surface account-character CTA"
