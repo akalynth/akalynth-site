@@ -64,6 +64,8 @@ for literal in \
   'api("/v1/accounts/register", { method: "POST"' \
   'api("/v1/accounts/login", { method: "POST"' \
   'api("/v1/accounts/verify-email", { method: "POST"' \
+  'api("/v1/worlds").then' \
+  'api("/v1/outfits").then' \
   'api("/v1/characters").then' \
   'api("/v1/characters/select", { method: "POST"' \
   'api("/v1/characters", { method: "POST"' \
@@ -93,6 +95,8 @@ for literal in \
 done
 
 for literal in \
+  'function validWorld(entry)' \
+  'function validOutfit(entry)' \
   'name="world_id"' \
   'name="sex"' \
   'name="outfit_id"'; do
