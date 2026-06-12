@@ -100,10 +100,10 @@
     "backend_runtime_account_payment_entitlement_api_work": false,
     "js_app_static": true,
     "analytics_added": false,
-    "network_calls_added": false,
+    "network_calls_added": true,
     "payment_integration_added": false,
-    "account_session_integration_added": false,
-    "service_calls_added": false
+    "account_session_integration_added": true,
+    "service_calls_added": true
   },
   "final_status_default": "closed_draft_pr_opened_ci_pending_no_deploy"
 }

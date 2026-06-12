@@ -128,6 +128,12 @@ if grep -RInE 'no .*account session integration|no .*service calls|localStorage-
   exit 1
 fi
 
+if grep -RInE '"network_calls_added": false|"account_session_integration_added": false|"service_calls_added": false' docs/receipts >/dev/null; then
+  printf '::error::Stale receipt boundary flags found; the static site now calls account, character, shop, work, and property APIs.\n' >&2
+  grep -RInE '"network_calls_added": false|"account_session_integration_added": false|"service_calls_added": false' docs/receipts >&2
+  exit 1
+fi
+
 python3 - "$repo_root" "${required_pages[@]}" <<'PY'
 import re
 import sys
