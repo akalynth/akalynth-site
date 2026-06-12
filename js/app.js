@@ -144,6 +144,13 @@
     if (state.selectedCharacterId) sessionStorage.setItem(SELECTED_CHARACTER_STORE, state.selectedCharacterId);
     else sessionStorage.removeItem(SELECTED_CHARACTER_STORE);
   }
+  function clearAccountScopedUiState() {
+    state.account = null;
+    state.characters = [];
+    state.goldBalance = null;
+    state.workContract = null;
+    rememberSelectedCharacter("");
+  }
 
   function api(path, opts) {
     opts = opts || {};
@@ -292,15 +299,11 @@
       .catch(function (err) {
         if (err && err.status === 401) {
           state.apiOnline = true;
-          state.account = null;
-          state.characters = [];
-          state.goldBalance = null;
+          clearAccountScopedUiState();
           return;
         }
         state.apiOnline = false;
-        state.account = null;
-        state.characters = [];
-        state.goldBalance = null;
+        clearAccountScopedUiState();
       });
   }
 
@@ -675,9 +678,7 @@
       api("/v1/accounts/logout", { method: "POST", body: {} })
         .then(function () {
           sessionStorage.removeItem(CSRF_STORE);
-          rememberSelectedCharacter("");
-          state.account = null;
-          state.characters = [];
+          clearAccountScopedUiState();
           setMessage("Signed out.", "ok");
           renderAll();
         })
