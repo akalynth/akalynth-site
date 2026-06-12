@@ -56,6 +56,7 @@
     worlds: FALLBACK_WORLDS.slice(),
     outfits: FALLBACK_OUTFITS.slice(),
     shopItems: SHOP_ITEMS.slice(),
+    propertyOverrides: {},
     goldBalance: null,
     apiOnline: null,
     message: "",
@@ -712,6 +713,10 @@
     });
     return target;
   }
+  function rememberHouseOverride(property) {
+    if (!property || typeof property.property_id !== "string" || !property.property_id) return;
+    state.propertyOverrides[property.property_id] = property;
+  }
   function loadHouseCards() {
     var byId = {};
     HOUSE_PLOTS.forEach(function (plot) {
@@ -741,6 +746,10 @@
         }));
       })
       .then(function () {
+        Object.keys(state.propertyOverrides).forEach(function (id) {
+          if (!byId[id]) byId[id] = blankHouse(state.propertyOverrides[id]);
+          mergeHouse(byId[id], state.propertyOverrides[id]);
+        });
         return HOUSE_PLOTS.map(function (plot) { return byId[plot.property_id]; });
       });
   }
@@ -829,6 +838,7 @@
         })
           .then(function (body) {
             if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;
+            rememberHouseOverride(body.property);
             if (err) err.textContent = buy ? "Purchase accepted by server." : "Unlisted by server.";
             renderHoldings();
             renderHouses();
@@ -854,7 +864,8 @@
           method: "POST",
           body: { character_id: selectedCharacter() && selectedCharacter().character_id, property_id: id, price_gold: price },
         })
-          .then(function () {
+          .then(function (body) {
+            rememberHouseOverride(body && body.property);
             if (err) err.textContent = "Listed by server.";
             renderHouses();
           })
