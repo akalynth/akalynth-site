@@ -93,6 +93,12 @@ require_literal "js/app.js" 'clearAccountScopedUiState();' "Account-scoped UI cl
 require_literal "js/app.js" 'function clearLocalSessionUi(message, kind)' "Local session UI clear helper"
 require_literal "js/app.js" 'Signed out locally. Server logout could not be confirmed:' "Failed logout local clear message"
 
+if grep -RInE 'no .*account session integration|no .*service calls|localStorage-only|browser-preview script' docs README.md *.html js >/dev/null; then
+  printf '::error::Stale account/API boundary wording found; the static site now integrates account and character APIs.\n' >&2
+  grep -RInE 'no .*account session integration|no .*service calls|localStorage-only|browser-preview script' docs README.md *.html js >&2
+  exit 1
+fi
+
 python3 - "$repo_root" "${required_pages[@]}" <<'PY'
 import re
 import sys
