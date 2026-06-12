@@ -24,5 +24,5 @@ It does not contain:
 - Private roadmap or planning material
 
 This repository may call public Akalynth API endpoints, but it does not own the
-authority behind them. Account, shop, wallet, and housing actions are live only
-when the server accepts them and the relevant receipt/verifier path exists.
+authority behind them. Account, shop, wallet, work, and housing actions are live
+only when the server accepts them and the relevant receipt/verifier path exists.

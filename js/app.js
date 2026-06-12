@@ -57,6 +57,7 @@
     outfits: FALLBACK_OUTFITS.slice(),
     shopItems: SHOP_ITEMS.slice(),
     propertyOverrides: {},
+    workContract: null,
     goldBalance: null,
     apiOnline: null,
     message: "",
@@ -339,10 +340,80 @@
       setText("#holdings-world", worldName(character.world_id));
       setText("#holdings-gold", state.goldBalance == null ? "server" : fmt(state.goldBalance));
       setText("#holdings-premium", "Not in V1");
+      renderWorkControls(body, character);
     } else {
       if (empty) empty.hidden = false;
       if (body) body.hidden = true;
     }
+  }
+  function workStatusText() {
+    if (!state.workContract) return "Earn gold through server work contracts.";
+    if (state.workContract.error) return "Work: " + state.workContract.error;
+    if (state.workContract.completed) return "Work complete: +" + fmt(state.workContract.credited_gold || state.workContract.payout_gold || 0) + " gold.";
+    if (state.workContract.ticks_required) return "Work: " + fmt(state.workContract.ticks_observed || 0) + "/" + fmt(state.workContract.ticks_required) + " ticks.";
+    return "Work started: +" + fmt(state.workContract.payout_gold || 0) + " gold available.";
+  }
+  function renderWorkControls(body, character) {
+    if (!body || !character) return;
+    var controls = $("#work-controls", body);
+    if (!controls) {
+      body.insertAdjacentHTML(
+        "beforeend",
+        '<div class="work-controls" id="work-controls">' +
+          '<p class="muted small" id="work-status"></p>' +
+          '<button class="btn btn-ghost btn-block" type="button" id="work-start-btn">Start work</button>' +
+          '<button class="btn btn-gold btn-block" type="button" id="work-tick-btn">Tick work</button>' +
+          "</div>"
+      );
+      controls = $("#work-controls", body);
+      $("#work-start-btn", body)?.addEventListener("click", startWork);
+      $("#work-tick-btn", body)?.addEventListener("click", tickWork);
+    }
+    setText("#work-status", workStatusText());
+  }
+  function startWork() {
+    var character = selectedCharacter();
+    if (!character) return;
+    api("/v1/work/start", { method: "POST", body: { character_id: character.character_id } })
+      .then(function (body) {
+        state.workContract = {
+          contract_id: body.contract_id,
+          payout_gold: body.payout_gold,
+          ticks_observed: 0,
+          ticks_required: 0,
+          completed: false,
+        };
+        renderHoldings();
+      })
+      .catch(function (err) {
+        state.workContract = { error: apiMessage(err) };
+        renderHoldings();
+      });
+  }
+  function tickWork() {
+    var character = selectedCharacter();
+    if (!character || !state.workContract || !state.workContract.contract_id) {
+      state.workContract = { error: "Start work before ticking." };
+      renderHoldings();
+      return;
+    }
+    api("/v1/work/tick", { method: "POST", body: { character_id: character.character_id, contract_id: state.workContract.contract_id } })
+      .then(function (body) {
+        state.workContract = {
+          contract_id: body.contract_id,
+          payout_gold: state.workContract && state.workContract.payout_gold,
+          ticks_observed: body.ticks_observed,
+          ticks_required: body.ticks_required,
+          completed: body.completed === true,
+          credited_gold: body.credited_gold,
+        };
+        if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;
+        renderHoldings();
+      })
+      .catch(function (err) {
+        state.workContract = { contract_id: state.workContract && state.workContract.contract_id, error: apiMessage(err) };
+        renderHoldings();
+      });
   }
   function applyAccountGates() {
     var hasCharacter = !!(state.account && selectedCharacter());
