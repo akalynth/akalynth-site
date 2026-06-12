@@ -14,7 +14,7 @@ It does not contain:
 
 - The Akalynth game server
 - Live economy authority
-- Real account creation
+- Account or session authority
 - Real house ownership settlement
 - Payment processing
 - Operator credentials
@@ -23,6 +23,7 @@ It does not contain:
 - Anti-cheat enforcement logic
 - Private roadmap or planning material
 
-This repository may call public Akalynth API endpoints, but it does not own the
-authority behind them. Account, shop, wallet, work, and housing actions are live
-only when the server accepts them and the relevant receipt/verifier path exists.
+This repository may call public Akalynth API endpoints, including account and
+character endpoints, but it does not own the authority behind them. Account,
+shop, wallet, work, and housing actions are live only when the server accepts
+them and the relevant receipt/verifier path exists.
