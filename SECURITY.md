@@ -2,9 +2,11 @@
 
 This repository is public for transparency and preview of the Akalynth website.
 It contains the static public site only. It does not contain the Akalynth game
-server, live account authority, live economy authority, payment processing,
+server, account/session authority, live economy authority, payment processing,
 runtime state, receipt authority, anti-cheat enforcement logic, operator
-credentials, or private infrastructure.
+credentials, or private infrastructure. Static account, character, shop, work,
+wallet, and housing pages may call named Akalynth API endpoints, but authority
+stays on the server and receipt/verifier side.
 
 ## Reporting Security Issues
 
@@ -31,7 +33,7 @@ Out of scope:
 
 - The Akalynth game server
 - Private runtime infrastructure
-- Real account creation
+- Account/session authority behind the static account portal
 - Payment processing
 - House ownership settlement
 - Auction settlement
