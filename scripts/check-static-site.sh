@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
-required_pages=(index.html beta.html codex.html library.html wallpapers.html shop.html houses.html account.html forum.html)
+required_pages=(index.html beta.html codex.html library.html wallpapers.html shop.html houses.html account.html forum.html codex/builder/index.html codex/operator/index.html codex/agent/index.html)
 
 for page in "${required_pages[@]}"; do
   if [[ ! -f "$page" ]]; then
@@ -45,6 +45,10 @@ for page in "${required_pages[@]}"; do
   curl -fsSI "http://127.0.0.1:${port}/${page}" >/dev/null
 done
 
+for route in codex/builder/ codex/operator/ codex/agent/; do
+  curl -fsSI "http://127.0.0.1:${port}/${route}" >/dev/null
+done
+
 require_literal() {
   local file="$1"
   local literal="$2"
@@ -73,6 +77,11 @@ for literal in \
 done
 
 require_literal "account.html" 'id="account-portal-root"' "Account character portal hook"
+
+for route_page in codex/builder/index.html codex/operator/index.html codex/agent/index.html; do
+  require_literal "$route_page" 'Create account character' "Codex surface account-character CTA"
+  require_literal "$route_page" '/account.html' "Codex surface account portal link"
+done
 
 for literal in \
   'name="world_id"' \

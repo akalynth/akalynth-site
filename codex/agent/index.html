@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent Codex — Akalynth</title>
+    <meta
+      name="description"
+      content="Akalynth Agent Codex surface — static, public-safe notes for agent-facing boundaries and account-character readiness."
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/codex-fonts.css" />
+    <link rel="stylesheet" href="/css/codex.css" />
+  </head>
+  <body class="codex-os" data-page="codex-agent">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header" role="banner">
+      <div class="header-inner">
+        <a class="brand" href="/index.html#home">
+          <span class="brand-mark" aria-hidden="true">⚔</span>
+          <span class="brand-text">
+            <span class="brand-name">Akalynth</span>
+            <span class="brand-tag">Agent Codex</span>
+          </span>
+        </a>
+        <nav class="top-nav" aria-label="Primary">
+          <ul>
+            <li><a class="tab-btn" href="/codex.html">Public Codex</a></li>
+            <li><a class="tab-btn" href="/codex/builder/">Builder</a></li>
+            <li><a class="tab-btn" href="/codex/operator/">Operator</a></li>
+            <li><a class="tab-btn is-active" href="/codex/agent/" aria-current="page">Agent</a></li>
+            <li><a class="tab-btn" href="/account.html">Create Character</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="content" id="main" role="main" tabindex="-1">
+      <div class="wrap">
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow">Codex Surface / Agent</p>
+            <h1>Agent Codex</h1>
+            <p class="lede">
+              A static public-safe waypoint for agent-facing boundaries. It
+              records that agent work must respect server authority,
+              account-character entry, and proof-backed changes.
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-gold" href="/account.html">Create account character</a>
+              <a class="btn btn-ghost" href="/codex.html">Read public Codex</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="content-grid">
+          <article class="parchment">
+            <h2 class="news-title">Boundary</h2>
+            <p>
+              Agent is addressable as a Codex surface only. Public visitors get
+              orientation and links; no autonomous actions, private tools, or
+              gameplay authority are exposed here.
+            </p>
+          </article>
+          <article class="parchment">
+            <h2 class="news-title">Account-character flow</h2>
+            <p>
+              Characters are created through the account portal and server API.
+              Agents do not bypass account sessions, email verification, CSRF,
+              or server-owned gameplay state.
+            </p>
+          </article>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>
