@@ -55,6 +55,7 @@
             <li><a class="tab-btn" href="library.html" data-nav="library">Library</a></li>
             <li><a class="tab-btn" href="wallpapers.html" data-nav="wallpapers">Wallpapers</a></li>
             <li><a class="tab-btn is-active" href="beta.html" data-nav="beta" aria-current="page">Beta</a></li>
+            <li><a class="tab-btn" href="account.html" data-nav="account">Account</a></li>
           </ul>
         </nav>
       </div>
@@ -83,7 +84,26 @@
         <section class="panel">
           <h2 class="panel-title">Ways to Play</h2>
           <div class="panel-body">
+            <a class="btn btn-ghost btn-block" href="account.html">Create character</a>
             <a class="btn btn-gold btn-block" href="https://beta.akalynth.com/download/akalynth-beta.apk" rel="noopener">Get the Android beta ▶</a>
+          </div>
+        </section>
+
+        <section class="panel" id="holdings-panel">
+          <h2 class="panel-title">Your Character</h2>
+          <div class="panel-body">
+            <div id="holdings-empty">
+              <p class="muted small">No account character selected.</p>
+              <a class="btn btn-ghost btn-block" href="account.html">Create character</a>
+            </div>
+            <div id="holdings-body" hidden>
+              <p class="holdings-name"><strong id="holdings-name">—</strong></p>
+              <p class="muted small">City: <span id="holdings-world">—</span></p>
+              <p class="holdings-gold">
+                <span class="gold" id="holdings-gold">-</span> gold
+              </p>
+              <p class="muted small">Premium: <strong id="holdings-premium">—</strong></p>
+            </div>
           </div>
         </section>
       </aside>
@@ -102,6 +122,11 @@
               Create an account character on the site, then install the Android beta
               and sign in to play that character in the live server-authoritative world.
             </p>
+          </article>
+
+          <article class="parchment" id="beta-account-status">
+            <p class="lede">Checking account character readiness...</p>
+            <p class="muted small">This page uses the Akalynth API session. It does not create local play authority.</p>
           </article>
 
           <h2 class="section-title" id="download">Download for Android</h2>
@@ -135,5 +160,6 @@
         </p>
       </div>
     </footer>
+    <script src="js/app.js" defer></script>
   </body>
 </html>
