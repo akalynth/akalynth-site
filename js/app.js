@@ -151,6 +151,13 @@
     state.workContract = null;
     rememberSelectedCharacter("");
   }
+  function clearLocalSessionUi(message, kind) {
+    sessionStorage.removeItem(CSRF_STORE);
+    clearAccountScopedUiState();
+    state.message = message;
+    state.messageKind = kind || "ok";
+    renderAll();
+  }
 
   function api(path, opts) {
     opts = opts || {};
@@ -677,12 +684,11 @@
     if (logout) logout.addEventListener("click", function () {
       api("/v1/accounts/logout", { method: "POST", body: {} })
         .then(function () {
-          sessionStorage.removeItem(CSRF_STORE);
-          clearAccountScopedUiState();
-          setMessage("Signed out.", "ok");
-          renderAll();
+          clearLocalSessionUi("Signed out.", "ok");
         })
-        .catch(function (err) { setMessage(apiMessage(err), "error"); });
+        .catch(function (err) {
+          clearLocalSessionUi("Signed out locally. Server logout could not be confirmed: " + apiMessage(err), "warn");
+        });
     });
 
     $all("[data-select-character]", root).forEach(function (btn) {

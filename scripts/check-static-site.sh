@@ -90,6 +90,8 @@ require_literal "js/app.js" 'data-shop-buy="' "Direct server shop action hook"
 require_literal "shop.html" 'id="purchase-authority"' "Direct server shop status hook"
 require_literal "js/app.js" 'function clearAccountScopedUiState()' "Account-scoped UI clear helper"
 require_literal "js/app.js" 'clearAccountScopedUiState();' "Account-scoped UI clear call"
+require_literal "js/app.js" 'function clearLocalSessionUi(message, kind)' "Local session UI clear helper"
+require_literal "js/app.js" 'Signed out locally. Server logout could not be confirmed:' "Failed logout local clear message"
 
 python3 - "$repo_root" "${required_pages[@]}" <<'PY'
 import re
