@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#050910" />
     <title>Akalynth — Play the Beta</title>
     <meta
       name="description"
@@ -27,8 +28,47 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="assets/akalynth/visuals/og/02-rookguard-gate.og-1200x630.webp" />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/fonts.css" />
+    <link rel="stylesheet" href="css/theme-dark.css" />
+    <style>
+      /* Beta page only — Android download options + F-Droid repo card.
+         Reuses the dark theme tokens (--td-*) from css/theme-dark.css. */
+      .dl-options { display: grid; gap: 16px; }
+      .dl-card { position: relative; }
+      .dl-card--primary { border-color: rgba(229, 183, 92, 0.4); }
+      .dl-badge {
+        position: absolute; top: 16px; right: 18px;
+        font-family: Inter, system-ui, sans-serif; font-size: 10.5px;
+        letter-spacing: 0.09em; text-transform: uppercase; color: var(--td-gold);
+        border: 1px solid rgba(229, 183, 92, 0.4); background: rgba(229, 183, 92, 0.1);
+        border-radius: 999px; padding: 2px 10px;
+      }
+      .fdroid-steps { margin: 12px 0 18px; padding-left: 20px; line-height: 1.6; }
+      .fdroid-steps li { margin-bottom: 6px; }
+      .fdroid-add { display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start; }
+      .qr-frame {
+        margin: 0; flex: 0 0 auto; background: #fff; border-radius: 10px;
+        padding: 10px 10px 6px; text-align: center;
+        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.45);
+      }
+      .qr-frame img { display: block; width: 200px; height: 200px; }
+      .qr-frame figcaption { font-size: 11px; color: #4a4030; margin-top: 5px; }
+      .fdroid-add__body { flex: 1 1 240px; min-width: 0; }
+      .repo-line { margin: 14px 0 0; font-size: 13px; color: var(--td-muted); }
+      .repo-line code {
+        display: inline-block; margin-top: 5px; font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: 12.5px; color: var(--td-text); background: rgba(4, 9, 16, 0.6);
+        border: 1px solid var(--td-line-2); border-radius: 6px; padding: 6px 9px;
+        word-break: break-all;
+      }
+      .repo-line code.fp { font-size: 11.5px; letter-spacing: 0.05em; color: var(--td-gold-2); }
+      @media (max-width: 540px) {
+        .fdroid-add { justify-content: center; }
+        .qr-frame { margin: 0 auto; }
+      }
+    </style>
   </head>
-  <body data-page="beta">
+  <body class="theme-dark" data-page="beta">
     <!--
       Akalynth public beta page (akalynth.com/beta.html).
       Public beta page. Points players to account character setup and the
@@ -51,7 +91,6 @@
           <ul>
             <li><a class="tab-btn" href="index.html#home" data-nav="home">Home</a></li>
             <li><a class="tab-btn" href="index.html#world" data-nav="world">High City</a></li>
-            <li><a class="tab-btn" href="codex.html" data-nav="codex">Codex</a></li>
             <li><a class="tab-btn" href="library.html" data-nav="library">Library</a></li>
             <li><a class="tab-btn" href="wallpapers.html" data-nav="wallpapers">Wallpapers</a></li>
             <li><a class="tab-btn is-active" href="beta.html" data-nav="beta" aria-current="page">Beta</a></li>
@@ -85,7 +124,8 @@
           <h2 class="panel-title">Ways to Play</h2>
           <div class="panel-body">
             <a class="btn btn-ghost btn-block" href="account.html">Create character</a>
-            <a class="btn btn-gold btn-block" href="https://beta.akalynth.com/download/akalynth-beta.apk" rel="noopener">Get the Android beta ▶</a>
+            <a class="btn btn-gold btn-block" href="#fdroid">Install via F-Droid ▶</a>
+            <a class="btn btn-ghost btn-block" href="#download">Sideload the APK</a>
           </div>
         </section>
 
@@ -129,25 +169,60 @@
             <p class="muted small">This page uses the Akalynth API session. It does not create local play authority.</p>
           </article>
 
-          <h2 class="section-title" id="download">Download for Android</h2>
-          <article class="parchment">
-            <p>
-              The beta runs on Android. Open the download page to get the latest
-              client, with install steps and the file checksum. You may need to allow
-              installs from unknown sources on your device.
-            </p>
-            <a class="btn btn-gold btn-block" href="https://beta.akalynth.com/download/akalynth-beta.apk" rel="noopener" download>
-              Download Android APK ⤓
-            </a>
-            <p class="muted small">
-              Pre-alpha build, debug-signed for sideloading. Minimum Android 8.0 (API 26).
-              <a href="https://beta.akalynth.com/download/akalynth-beta.apk.sha256" rel="noopener">Checksum</a>.
-            </p>
-            <p class="muted small">
-              To verify the file after download, save the checksum beside the APK and run:
-            </p>
-            <code class="verify-command">sha256sum -c akalynth-beta.apk.sha256</code>
-          </article>
+          <h2 class="section-title" id="get">Get Akalynth on Android</h2>
+          <div class="dl-options">
+            <article class="parchment dl-card dl-card--primary" id="fdroid">
+              <span class="dl-badge">Recommended</span>
+              <h3 class="news-title">Install via F-Droid</h3>
+              <p>
+                Add the Akalynth F-Droid repository once and your device keeps the
+                client up to date automatically. Every build is signed by the same
+                key, so each update is verified end to end.
+              </p>
+              <ol class="fdroid-steps">
+                <li>Install the <a href="https://f-droid.org" rel="noopener">F-Droid app</a> (skip if you already have it).</li>
+                <li>Add the Akalynth repo — on your phone tap <strong>Add Akalynth repo</strong> below, or in F-Droid open <em>Settings → Repositories → +</em> and scan the QR or paste the URL.</li>
+                <li>Open the repo and install <strong>Akalynth</strong>. New beta builds arrive as updates.</li>
+              </ol>
+              <div class="fdroid-add">
+                <figure class="qr-frame">
+                  <img src="assets/fdroid/repo-qr.svg" width="200" height="200"
+                       alt="QR code to add the Akalynth F-Droid repository" />
+                  <figcaption>Scan in F-Droid to add the repo</figcaption>
+                </figure>
+                <div class="fdroid-add__body">
+                  <a class="btn btn-gold btn-block"
+                     href="https://fdroid.akalynth.com/fdroid/repo?fingerprint=7517DE35C94C589131E159E72CADDA7F4915B359948CCCE21EE6AC9D21106344"
+                     rel="noopener">Add Akalynth repo to F-Droid</a>
+                  <p class="repo-line">Repository URL<br />
+                    <code>https://fdroid.akalynth.com/fdroid/repo</code>
+                  </p>
+                  <p class="repo-line">Signing fingerprint (SHA-256) — verify this matches in F-Droid<br />
+                    <code class="fp">7517 DE35 C94C 5891 31E1 59E7 2CAD DA7F 4915 B359 948C CCE2 1EE6 AC9D 2110 6344</code>
+                  </p>
+                </div>
+              </div>
+            </article>
+
+            <article class="parchment dl-card" id="download">
+              <h3 class="news-title">Or sideload the APK</h3>
+              <p>
+                Prefer a one-off install? Download the latest signed build directly.
+                You may need to allow installs from unknown sources on your device.
+              </p>
+              <a class="btn btn-gold btn-block" href="https://beta.akalynth.com/download/akalynth-beta.apk" rel="noopener" download>
+                Download Android APK ⤓
+              </a>
+              <p class="muted small">
+                Pre-alpha build, debug-signed for sideloading. Minimum Android 8.0 (API 26).
+                <a href="https://beta.akalynth.com/download/akalynth-beta.apk.sha256" rel="noopener">Checksum</a>.
+              </p>
+              <p class="muted small">
+                To verify the file after download, save the checksum beside the APK and run:
+              </p>
+              <code class="verify-command">sha256sum -c akalynth-beta.apk.sha256</code>
+            </article>
+          </div>
         </section>
       </main>
     </div>

@@ -1,0 +1,375 @@
+/*
+ * Akalynth — site-wide dark theme.
+ * Scoped under body.theme-dark; loaded after css/style.css on every public page
+ * so it overrides the parchment/stone base with a dark "operator-console" look:
+ * near-black gradient backdrop, gold Cinzel headings, glass panels.
+ * Self-hosted fonts: css/fonts.css (Cinzel + Inter). Original CSS — no 3rd-party assets.
+ * Purely additive: style.css keeps layout/structure; this only recolors.
+ */
+
+body.theme-dark {
+  --td-bg: #050910;
+  --td-text: #f6f0e6;
+  --td-soft: #c2c8d0;
+  --td-muted: #9aa3ad;
+  --td-gold: #e5b75c;
+  --td-gold-2: #ffd982;
+  --td-line: rgba(255, 255, 255, 0.08);
+  --td-line-2: rgba(255, 255, 255, 0.13);
+  --td-panel: linear-gradient(180deg, rgba(13, 20, 31, 0.88), rgba(8, 13, 22, 0.82));
+  --td-input: rgba(4, 9, 16, 0.6);
+  --td-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+  color: var(--td-text);
+  font-family: Inter, system-ui, sans-serif;
+  background-color: var(--td-bg);
+  background-image:
+    radial-gradient(circle at 78% 12%, rgba(229, 183, 92, 0.1), transparent 30%),
+    radial-gradient(circle at 22% 4%, rgba(112, 183, 255, 0.05), transparent 24%),
+    linear-gradient(180deg, #050910 0%, #07101b 58%, #050910 100%);
+  background-attachment: fixed;
+}
+
+body.theme-dark a {
+  color: var(--td-gold);
+}
+
+/* Display font for all heading-like surfaces. */
+body.theme-dark .brand-name,
+body.theme-dark .page-title,
+body.theme-dark .section-title,
+body.theme-dark .panel-title,
+body.theme-dark .news-title,
+body.theme-dark .marketing-hero__title,
+body.theme-dark .feature h3,
+body.theme-dark .shop-card-name,
+body.theme-dark .shop-card-price,
+body.theme-dark .house-name,
+body.theme-dark .wallpaper-card__body h2,
+body.theme-dark .visual-card__body strong,
+body.theme-dark .lore-banner__body strong,
+body.theme-dark .forum-board-name,
+body.theme-dark .thread-title,
+body.theme-dark .sig-name,
+body.theme-dark .codex-plate figcaption,
+body.theme-dark .codex-table thead th,
+body.theme-dark .big-number,
+body.theme-dark .cart-foot,
+body.theme-dark .cart-foot-total {
+  font-family: "Cinzel", serif;
+}
+
+/* ---------- Header / nav ---------- */
+body.theme-dark .site-header {
+  background: rgba(4, 8, 14, 0.78);
+  border-bottom: 1px solid var(--td-line);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(16px);
+}
+body.theme-dark .brand-name {
+  color: var(--td-gold);
+  letter-spacing: 0.08em;
+  text-shadow: none;
+}
+body.theme-dark .brand-tag { color: var(--td-muted); }
+body.theme-dark .brand-mark {
+  color: var(--td-gold);
+  text-shadow: 0 0 12px rgba(229, 183, 92, 0.4);
+}
+body.theme-dark .tab-btn {
+  background: rgba(10, 16, 26, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--td-muted);
+}
+body.theme-dark .tab-btn:hover {
+  color: var(--td-text);
+  border-color: rgba(229, 183, 92, 0.4);
+}
+body.theme-dark .tab-btn.is-active {
+  background: linear-gradient(180deg, var(--td-gold-2), var(--td-gold));
+  color: #141008;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+body.theme-dark .nav-burger {
+  background: rgba(10, 16, 26, 0.8);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+body.theme-dark .nav-burger span { background: var(--td-gold); }
+
+/* ---------- Sidebar / panels ---------- */
+body.theme-dark .panel {
+  background: var(--td-panel);
+  border: 1px solid var(--td-line);
+  box-shadow: var(--td-shadow);
+}
+body.theme-dark .panel-title {
+  color: var(--td-gold);
+  background: rgba(8, 13, 22, 0.7);
+  border-bottom: 1px solid var(--td-line);
+  text-shadow: none;
+}
+body.theme-dark .big-number { color: var(--td-gold); }
+body.theme-dark .cart-summary { color: var(--td-gold); }
+body.theme-dark .sidebar .gold { color: var(--td-gold-2); }
+body.theme-dark .aside-bar {
+  color: var(--td-gold);
+  background: var(--td-panel);
+  border: 1px solid var(--td-line);
+}
+
+/* ---------- Content / parchment cards ---------- */
+body.theme-dark .page-title,
+body.theme-dark .section-title {
+  color: var(--td-gold);
+  text-shadow: none;
+}
+body.theme-dark .parchment {
+  color: var(--td-text);
+  background: var(--td-panel);
+  border: 1px solid var(--td-line);
+  box-shadow: var(--td-shadow);
+}
+body.theme-dark .parchment a { color: var(--td-gold-2); }
+body.theme-dark .parchment a:hover { color: var(--td-gold); }
+body.theme-dark .lede { color: var(--td-soft); }
+body.theme-dark .news-title { color: var(--td-gold); }
+body.theme-dark .news-meta { color: var(--td-muted); }
+body.theme-dark .parchment .muted { color: var(--td-muted); opacity: 1; }
+body.theme-dark .muted { color: var(--td-muted); opacity: 1; }
+body.theme-dark .notice {
+  background: rgba(229, 183, 92, 0.1);
+  border: 1px solid rgba(229, 183, 92, 0.4);
+  color: var(--td-soft);
+}
+body.theme-dark .feature {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--td-line);
+}
+body.theme-dark .feature h3 { color: var(--td-gold); }
+body.theme-dark .verify-command {
+  color: var(--td-soft);
+  background: rgba(4, 9, 16, 0.82);
+  border: 1px solid var(--td-line-2);
+}
+
+/* ---------- Marketing hero / image cards (sit over photos) ---------- */
+body.theme-dark .marketing-hero,
+body.theme-dark .visual-card,
+body.theme-dark .lore-banner,
+body.theme-dark .archive-hero {
+  border-color: rgba(229, 183, 92, 0.3);
+  background: #08111c;
+}
+body.theme-dark .visual-card__body strong,
+body.theme-dark .lore-banner__body strong { color: var(--td-gold-2); }
+body.theme-dark .hero-kicker { color: var(--td-gold); }
+
+/* ---------- Asset gallery / lore plates (Library, Home media) ---------- */
+body.theme-dark .asset-gallery a { color: var(--td-gold-2); }
+body.theme-dark .asset-gallery img {
+  border: 1px solid var(--td-line);
+  background: #08111c;
+}
+body.theme-dark .asset-gallery a:hover span,
+body.theme-dark .asset-gallery a:focus-visible span { color: var(--td-gold); }
+body.theme-dark .codex-plate,
+body.theme-dark .wallpaper-card {
+  background: var(--td-panel);
+  border: 1px solid var(--td-line);
+  box-shadow: var(--td-shadow);
+}
+body.theme-dark .codex-plate figcaption {
+  color: var(--td-gold);
+  background: rgba(8, 13, 22, 0.7);
+  border-top: 1px solid var(--td-line);
+}
+body.theme-dark .wallpaper-card__image { background: #08111c; }
+body.theme-dark .wallpaper-card__body h2 { color: var(--td-gold-2); }
+
+/* ---------- Library codex-art lore components (kept) ---------- */
+body.theme-dark .codex-sub,
+body.theme-dark .charter-motto,
+body.theme-dark .faction-meta dd,
+body.theme-dark .relic-status strong,
+body.theme-dark .chronicle-born strong { color: var(--td-gold); }
+body.theme-dark .relic-quote,
+body.theme-dark .faction-meta dt { color: var(--td-muted); }
+body.theme-dark .faction-meta > div,
+body.theme-dark .codex-table th,
+body.theme-dark .codex-table td { border-color: var(--td-line); }
+body.theme-dark .codex-table { color: var(--td-text); }
+body.theme-dark .codex-table thead th { color: var(--td-gold); border-bottom: 2px solid rgba(229, 183, 92, 0.4); }
+body.theme-dark .codex-table tbody td:first-child { color: var(--td-gold-2); }
+body.theme-dark .chronicle-card { border-left: 4px solid var(--td-gold); }
+
+/* ---------- Library page-local gallery (library.html inline <style>) ---------- */
+body.theme-dark .lib-jump__link {
+  color: var(--td-gold);
+  border: 1px solid var(--td-line-2);
+  background: rgba(10, 16, 26, 0.7);
+}
+body.theme-dark .lib-jump__link:hover,
+body.theme-dark .lib-jump__link:focus-visible {
+  color: #141008;
+  background: linear-gradient(180deg, var(--td-gold-2), var(--td-gold));
+}
+body.theme-dark .lib-card__body {
+  background: var(--td-panel);
+  border: 1px solid var(--td-line);
+  box-shadow: var(--td-shadow);
+}
+body.theme-dark .lib-card__desc { color: var(--td-soft); }
+
+/* ---------- Shop ---------- */
+body.theme-dark .shop-card {
+  background: var(--td-panel);
+  border: 1px solid var(--td-line);
+  box-shadow: var(--td-shadow);
+}
+body.theme-dark .shop-card-body { color: var(--td-text); }
+body.theme-dark .shop-card-name { color: var(--td-gold); }
+body.theme-dark .shop-card-desc { color: var(--td-muted); }
+body.theme-dark .shop-card-price { color: var(--td-gold-2); }
+body.theme-dark .shop-card-price .usd { color: var(--td-muted); }
+body.theme-dark .shop-tag {
+  background: rgba(229, 183, 92, 0.12);
+  color: var(--td-gold);
+  border: 1px solid rgba(229, 183, 92, 0.3);
+}
+
+/* ---------- Cart ---------- */
+body.theme-dark .cart-item {
+  color: var(--td-text);
+  border-bottom: 1px dashed var(--td-line);
+}
+body.theme-dark .cart-item-price,
+body.theme-dark .cart-foot-total { color: var(--td-gold-2); }
+body.theme-dark .cart-empty,
+body.theme-dark .cart-qty { color: var(--td-muted); }
+body.theme-dark .cart-foot {
+  color: var(--td-text);
+  border-top: 2px solid var(--td-line);
+}
+
+/* ---------- Buttons (btn-gold/ghost already read well on dark) ---------- */
+body.theme-dark .btn { border: 1px solid rgba(229, 183, 92, 0.45); }
+body.theme-dark .btn-gold {
+  background: linear-gradient(180deg, var(--td-gold-2), var(--td-gold));
+  color: #141008;
+}
+body.theme-dark .btn-ghost { color: var(--td-gold); }
+body.theme-dark .btn-ghost:hover:not(:disabled) { background: rgba(229, 183, 92, 0.12); }
+
+/* ---------- Currency ---------- */
+body.theme-dark .gold { color: var(--td-gold-2); }
+
+/* ---------- Footer ---------- */
+body.theme-dark .site-footer {
+  border-top: 1px solid var(--td-line);
+  background: rgba(4, 8, 14, 0.78);
+}
+
+/* ---------- Houses ---------- */
+body.theme-dark .house-card {
+  background: var(--td-panel);
+  border: 1px solid var(--td-line);
+  color: var(--td-text);
+  box-shadow: var(--td-shadow);
+}
+body.theme-dark .house-name { color: var(--td-gold); }
+body.theme-dark .house-world,
+body.theme-dark .house-meta dt,
+body.theme-dark .resale-note,
+body.theme-dark .resale-label { color: var(--td-muted); }
+body.theme-dark .house-meta dd { color: var(--td-text); }
+body.theme-dark .house-bid { border-top: 1px dashed var(--td-line); }
+body.theme-dark #auctions-planned .section-title { color: var(--td-muted); }
+
+/* ---------- Forms / account ---------- */
+body.theme-dark .field > label:not(.radio),
+body.theme-dark .field legend { color: var(--td-gold); }
+body.theme-dark input[type="text"],
+body.theme-dark input[type="email"],
+body.theme-dark input[type="password"],
+body.theme-dark select,
+body.theme-dark textarea,
+body.theme-dark .resale-input,
+body.theme-dark .forum-textarea {
+  background: var(--td-input);
+  color: var(--td-text);
+  border: 1px solid var(--td-line-2);
+}
+body.theme-dark ::placeholder { color: var(--td-muted); }
+body.theme-dark .radio-group { border: 1px solid var(--td-line); }
+body.theme-dark .radio { color: var(--td-text); }
+body.theme-dark .radio input { accent-color: var(--td-gold); }
+body.theme-dark .summary-list div { border-bottom: 1px dashed var(--td-line); }
+body.theme-dark .summary-list dt { color: var(--td-muted); }
+body.theme-dark .summary-list dd { color: var(--td-text); }
+body.theme-dark .portal-inline {
+  color: var(--td-text);
+  background: var(--td-panel);
+  border: 1px solid var(--td-line);
+}
+body.theme-dark .portal-inline--ok { border-color: rgba(139, 211, 143, 0.55); }
+body.theme-dark .character-card {
+  color: var(--td-text);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--td-line);
+}
+body.theme-dark .character-card.is-selected {
+  border-color: rgba(229, 183, 92, 0.5);
+  box-shadow: inset 0 0 0 1px rgba(229, 183, 92, 0.35);
+}
+
+/* ---------- Forum ---------- */
+body.theme-dark .forum-crumbs { color: var(--td-gold); }
+body.theme-dark .forum-crumbs a { color: var(--td-gold-2); }
+body.theme-dark .forum-crumbs .crumb-current { color: var(--td-text); }
+body.theme-dark .forum-board-row,
+body.theme-dark .forum-thread-row,
+body.theme-dark .post {
+  background: var(--td-panel);
+  border: 1px solid var(--td-line);
+  border-left: 3px solid var(--td-gold);
+  color: var(--td-text);
+  box-shadow: var(--td-shadow);
+}
+body.theme-dark .post { border-left-width: 1px; }
+body.theme-dark .forum-board-name,
+body.theme-dark .thread-title,
+body.theme-dark .sig-name { color: var(--td-gold); }
+body.theme-dark .forum-board-name:hover,
+body.theme-dark .thread-title:hover { color: var(--td-gold-2); }
+body.theme-dark .forum-board-desc,
+body.theme-dark .forum-board-meta,
+body.theme-dark .forum-thread-side,
+body.theme-dark .thread-meta,
+body.theme-dark .post-time { color: var(--td-muted); }
+body.theme-dark .forum-board-stats,
+body.theme-dark .thread-replies { color: var(--td-text); }
+body.theme-dark .sig-role { color: var(--td-gold); }
+body.theme-dark .forum-pill {
+  background: rgba(229, 183, 92, 0.12);
+  color: var(--td-gold);
+  border: 1px solid rgba(229, 183, 92, 0.25);
+}
+body.theme-dark .pill-pinned {
+  background: rgba(217, 162, 58, 0.22);
+  color: var(--td-gold-2);
+  border-color: rgba(217, 162, 58, 0.5);
+}
+body.theme-dark .pill-locked {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--td-muted);
+  border-color: var(--td-line);
+}
+
+/* ---------- Focus visibility ---------- */
+body.theme-dark a:focus-visible,
+body.theme-dark button:focus-visible,
+body.theme-dark input:focus-visible,
+body.theme-dark select:focus-visible,
+body.theme-dark textarea:focus-visible {
+  outline: 2px solid var(--td-gold-2);
+  outline-offset: 2px;
+}

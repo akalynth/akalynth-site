@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
-required_pages=(index.html beta.html codex.html library.html wallpapers.html shop.html houses.html account.html forum.html codex/builder/index.html codex/operator/index.html codex/agent/index.html)
+required_pages=(index.html beta.html library.html wallpapers.html shop.html houses.html account.html forum.html)
 
 for page in "${required_pages[@]}"; do
   if [[ ! -f "$page" ]]; then
@@ -12,6 +12,21 @@ for page in "${required_pages[@]}"; do
     exit 1
   fi
 done
+
+# Codex is operator-only: it must NOT be present on the public site, and no page
+# may link to it. Source of truth lives outside this repo (akalynth-ops/codex).
+forbidden_paths=(codex.html codex css/codex.css js/codex-data.js js/codex-os.js)
+for path in "${forbidden_paths[@]}"; do
+  if [[ -e "$path" ]]; then
+    printf '::error::Public Codex surface must be removed: %s\n' "$path" >&2
+    exit 1
+  fi
+done
+if grep -RIl --include='*.html' -e 'href="codex.html"' -e 'href="/codex/' . >/dev/null 2>&1; then
+  printf '::error::Public page links to the removed Codex surface (codex.html or /codex/).\n' >&2
+  grep -RIn --include='*.html' -e 'href="codex.html"' -e 'href="/codex/' . >&2
+  exit 1
+fi
 
 port="${AKALYNTH_SITE_TEST_PORT:-8099}"
 log_file="$(mktemp)"
@@ -45,10 +60,6 @@ for page in "${required_pages[@]}"; do
   curl -fsSI "http://127.0.0.1:${port}/${page}" >/dev/null
 done
 
-for route in codex/builder/ codex/operator/ codex/agent/; do
-  curl -fsSI "http://127.0.0.1:${port}/${route}" >/dev/null
-done
-
 require_literal() {
   local file="$1"
   local literal="$2"
@@ -80,33 +91,9 @@ for literal in \
 done
 
 require_literal "account.html" 'id="account-portal-root"' "Account character portal hook"
-require_literal "README.md" 'The four Codex surfaces are Public, Builder, Operator, Agent' "Site four-surface taxonomy"
-require_literal "README.md" 'is the Public Codex surface' "Public Codex surface authority"
 require_literal "README.md" 'executable site E2D' "Site E2D proof documentation"
 require_literal "README.md" 'create/select/shop/work/property requests' "Site E2D character and gameplay proof documentation"
 require_literal "README.md" 'explicit no-session/no-CSRF inline' "Site E2D no-session/no-CSRF helper proof documentation"
-require_literal "codex.html" 'Codex Surface / Public / Layer 1' "Public Codex surface label"
-require_literal "codex/builder/index.html" 'Codex Surface / Builder / Layer 2' "Builder Codex surface label"
-require_literal "codex/operator/index.html" 'Codex Surface / Operator / Layer 3' "Operator Codex surface label"
-require_literal "codex/agent/index.html" 'Codex Surface / Agent / Layer 4' "Agent Codex surface label"
-require_literal "codex.html" 'Identity: gold.' "Public Codex identity"
-require_literal "codex/builder/index.html" 'Identity: blue.' "Builder Codex identity"
-require_literal "codex/operator/index.html" 'Identity: gold/red.' "Operator Codex identity"
-require_literal "codex/agent/index.html" 'Identity: green.' "Agent Codex identity"
-
-for route_page in codex/builder/index.html codex/operator/index.html codex/agent/index.html; do
-  require_literal "$route_page" 'Create account character' "Codex surface account-character CTA"
-  require_literal "$route_page" '/account.html' "Codex surface account portal link"
-done
-
-for literal in \
-  'href="/account.html"' \
-  'Create account character' \
-  'href="/codex/builder/"' \
-  'href="/codex/operator/"' \
-  'href="/codex/agent/"'; do
-  require_literal "codex.html" "$literal" "Public Codex four-surface account-character link"
-done
 
 for literal in \
   'function validWorld(entry)' \

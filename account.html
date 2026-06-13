@@ -6,7 +6,7 @@
     <title>Account — Akalynth Portal</title>
     <meta
       name="description"
-      content="The Akalynth account portal — create an email-verified account, sign in, create a character, choose a world, sex, and outfit, then enter the Android beta."
+      content="The Akalynth account portal — create an account with a nickname (email optional), sign in, create a character, choose a world, sex, and outfit, then enter the Android beta."
     />
     <link
       rel="icon"
@@ -17,7 +17,7 @@
     <meta property="og:title" content="Account Portal — Akalynth" />
     <meta
       property="og:description"
-      content="Create an email-verified Akalynth account, choose a character, and prepare for the Android beta."
+      content="Create an Akalynth account with a nickname (email optional), choose a character, and prepare for the Android beta."
     />
     <meta property="og:image" content="assets/akalynth/visuals/og/02-rookguard-gate.og-1200x630.webp" />
     <meta
@@ -27,8 +27,10 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="assets/akalynth/visuals/og/02-rookguard-gate.og-1200x630.webp" />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/fonts.css" />
+    <link rel="stylesheet" href="css/theme-dark.css" />
   </head>
-  <body data-page="account">
+  <body class="theme-dark" data-page="account">
     <!--
       Akalynth account portal. Static frontend only: account authority,
       sessions, character creation, and receipts live on the Akalynth API.
@@ -50,7 +52,6 @@
           <ul>
             <li><a class="tab-btn" href="index.html#home" data-nav="home">Home</a></li>
             <li><a class="tab-btn" href="index.html#world" data-nav="world">High City</a></li>
-            <li><a class="tab-btn" href="codex.html" data-nav="codex">Codex</a></li>
             <li><a class="tab-btn" href="library.html" data-nav="library">Library</a></li>
             <li><a class="tab-btn" href="wallpapers.html" data-nav="wallpapers">Wallpapers</a></li>
             <li class="requires-account"><a class="tab-btn" href="houses.html" data-nav="houses">Houses</a></li>
