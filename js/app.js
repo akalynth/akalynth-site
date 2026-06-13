@@ -594,7 +594,7 @@
     }
     root.innerHTML =
       '<p class="lede">Account character required</p>' +
-      '<p>Create an account, verify email, then create or select a character before entering the Android beta.</p>' +
+      '<p>Create an account with a nickname, then create or select a character before entering the Android beta.</p>' +
       '<a class="btn btn-gold btn-block" href="account.html">Create account character</a>';
   }
 
@@ -608,14 +608,15 @@
       '<div class="portal-grid">' +
       '<article class="parchment"><p class="lede">Create account</p>' +
       '<form class="account-form" id="register-form" novalidate>' +
-      '<div class="field"><label for="reg-email">Email</label><input type="email" id="reg-email" name="email" autocomplete="email" required /></div>' +
+      '<div class="field"><label for="reg-handle">Nickname</label><input type="text" id="reg-handle" name="handle" autocomplete="username" minlength="3" maxlength="32" required /></div>' +
+      '<div class="field"><label for="reg-email">Email <span class="muted small">(optional)</span></label><input type="email" id="reg-email" name="email" autocomplete="email" /></div>' +
       '<div class="field"><label for="reg-password">Password</label><input type="password" id="reg-password" name="password" autocomplete="new-password" minlength="8" required /></div>' +
       '<button class="btn btn-gold btn-block" type="submit">Create account</button>' +
-      '<p class="muted small">A verification link is required before character creation.</p>' +
+      '<p class="muted small">Pick a unique nickname. Email is optional and can be verified later for password recovery — without an email there is no recovery.</p>' +
       "</form></article>" +
       '<article class="parchment"><p class="lede">Sign in</p>' +
       '<form class="account-form" id="login-form" novalidate>' +
-      '<div class="field"><label for="login-email">Email</label><input type="email" id="login-email" name="email" autocomplete="email" required /></div>' +
+      '<div class="field"><label for="login-identifier">Nickname or email</label><input type="text" id="login-identifier" name="identifier" autocomplete="username" required /></div>' +
       '<div class="field"><label for="login-password">Password</label><input type="password" id="login-password" name="password" autocomplete="current-password" required /></div>' +
       '<button class="btn btn-gold btn-block" type="submit">Sign in</button>' +
       "</form></article>" +
@@ -671,7 +672,9 @@
     );
   }
   function createCharacterHtml() {
-    if (!state.account || !state.account.email_verified) return "";
+    // Email verification is a later, non-blocking lane — characters can be created
+    // on an unverified or email-less (nickname-only) account.
+    if (!state.account) return "";
     return (
       '<article class="parchment"><p class="lede">Create character</p>' +
       '<form class="account-form" id="character-form" novalidate>' +
@@ -687,18 +690,28 @@
     );
   }
   function dashboardHtml() {
+    var hasEmail = !!state.account.has_email;
+    var emailStatus = !hasEmail ? "None (no recovery)" : state.account.email_verified ? "Verified" : "Unverified";
+    var nicknameRow = state.account.handle
+      ? "<div><dt>Nickname</dt><dd>" + escapeHtml(state.account.handle) + "</dd></div>"
+      : "";
+    var verifyNotice = "";
+    if (hasEmail && !state.account.email_verified) {
+      verifyNotice = '<article class="parchment notice"><p>Optional: verify your email to enable password recovery. Use the link from your email, or paste the token here.</p><form class="account-form" id="verify-form"><div class="field"><label for="verify-token">Verification token</label><input type="text" id="verify-token" name="token" /></div><button class="btn btn-gold btn-block" type="submit">Verify email</button></form></article>';
+    } else if (!hasEmail) {
+      verifyNotice = '<article class="parchment notice"><p class="muted small">No email is set on this account, so password recovery is unavailable. Keep your password safe.</p></article>';
+    }
     return (
       '<article class="parchment portal-status"><p class="lede">Signed in</p>' +
       '<dl class="summary-list">' +
+      nicknameRow +
       "<div><dt>Account</dt><dd>" + escapeHtml(state.account.account_id) + "</dd></div>" +
-      "<div><dt>Email</dt><dd>" + (state.account.email_verified ? "Verified" : "Verification required") + "</dd></div>" +
+      "<div><dt>Email</dt><dd>" + escapeHtml(emailStatus) + "</dd></div>" +
       "<div><dt>Status</dt><dd>" + escapeHtml(state.account.status || "active") + "</dd></div>" +
       "</dl>" +
       '<button class="btn btn-ghost" id="logout-btn" type="button">Sign out</button>' +
       "</article>" +
-      (!state.account.email_verified
-        ? '<article class="parchment notice"><p>Verify your email before creating a character. Use the link from your email, or paste the token here.</p><form class="account-form" id="verify-form"><div class="field"><label for="verify-token">Verification token</label><input type="text" id="verify-token" name="token" /></div><button class="btn btn-gold btn-block" type="submit">Verify email</button></form></article>'
-        : "") +
+      verifyNotice +
       '<article class="parchment"><p class="lede">Characters</p>' + characterCardsHtml() + "</article>" +
       createCharacterHtml()
     );
@@ -788,7 +801,13 @@
       e.preventDefault();
       api("/v1/accounts/register", { method: "POST", body: formData(register) })
         .then(function (body) {
-          var msg = body.message || "If the account can be registered, a verification link has been sent.";
+          var msg;
+          if (body.account && body.account.handle) {
+            msg = "Account created — nickname " + body.account.handle + ". Sign in to continue.";
+            if (body.recovery === "none") msg += " No email set, so there is no password recovery.";
+          } else {
+            msg = body.message || "If the account can be registered, a verification link has been sent.";
+          }
           if (body.dev_verification_token) msg += " Dev token: " + body.dev_verification_token;
           setMessage(msg, "ok");
         })
