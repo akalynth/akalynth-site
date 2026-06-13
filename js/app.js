@@ -12,7 +12,9 @@
     window.AKALYNTH_API_BASE ||
     (location.hostname === "localhost" || location.hostname === "127.0.0.1"
       ? "http://127.0.0.1:3000"
-      : "https://" + "api." + "akalynth.com");
+      : /(^|\.)(beta|staging|sim)\.akalynth\.com$/.test(location.hostname)
+        ? location.origin // lane sites talk to their own same-origin /v1 (proxied to the lane server)
+        : "https://" + "api." + "akalynth.com");
   var CSRF_COOKIE = "akalynth_csrf";
   var CSRF_STORE = "akalynth.csrf.v1";
   var SELECTED_CHARACTER_STORE = "akalynth.selectedCharacter.v1";
