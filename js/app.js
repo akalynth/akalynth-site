@@ -360,12 +360,23 @@
       });
   }
 
+  function refreshLibraryDiscovery() {
+    if (pageName() !== "library") return Promise.resolve();
+    if (!state.account || !state.selectedCharacterId) return Promise.resolve();
+    return apiGet("/v1/library/discovery?character_id=" + encodeURIComponent(state.selectedCharacterId))
+      .then(function (body) {
+        if (window.AKALYNTH_APPLY_LIBRARY_DISCOVERY) window.AKALYNTH_APPLY_LIBRARY_DISCOVERY(body);
+      })
+      .catch(function () {});
+  }
+
   function refreshPortal() {
     return loadCatalogs()
       .then(loadAccountState)
       .then(loadWalletState)
       .then(function () {
         renderAll();
+        return refreshLibraryDiscovery();
       });
   }
 

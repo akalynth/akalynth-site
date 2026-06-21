@@ -255,6 +255,41 @@
   // Expose the registry for reuse/inspection without forcing a module system.
   window.AKALYNTH_CODEX_LIBRARY = CODEX_LIBRARY;
 
+  /** @type {Record<string, string>} asset id → public graph node id */
+  var ASSET_GRAPH_IDS = {
+    "high-city-charter": "high-city",
+    "high-city-cross-section": "high-city",
+    "emberwilds-atlas": "emberwilds-atlas",
+    "memory-serpent": "memory-serpent",
+    "echo-stalker": "echo-stalker",
+    "witness-moth": "witness-moth",
+    "void-whale": "void-whale",
+    "dreamweaver": "dreamweaver",
+    "chronoshell-turtle": "chronoshell-turtle",
+    "heroes-codex": "heroes-codex",
+    "artifacts-codex": "artifacts-codex",
+    "factions-codex": "factions-codex",
+    "chronicle-of-ages": "chronicle-of-ages",
+    "dungeon-codex": "dungeon-codex",
+    "origins-codex": "origins-codex",
+    rookguard: "rookguard",
+  };
+
+  /** @type {Record<string, object>} */
+  var PUBLIC_GRAPH_BY_ID = {};
+  /** @type {Record<string, {state: string, reason?: string}>} */
+  var DISCOVERY_BY_GRAPH_ID = {};
+
+  window.AKALYNTH_APPLY_LIBRARY_DISCOVERY = function (payload) {
+    if (!payload || !payload.ok || !Array.isArray(payload.entries)) return;
+    DISCOVERY_BY_GRAPH_ID = {};
+    payload.entries.forEach(function (entry) {
+      DISCOVERY_BY_GRAPH_ID[entry.codex_id] = { state: entry.state, reason: entry.reason || "" };
+    });
+    var root = document.getElementById("codex-library-root");
+    if (root) render(root);
+  };
+
   function el(tag, className, text) {
     var node = document.createElement(tag);
     if (className) node.className = className;
@@ -303,11 +338,44 @@
     return figure;
   }
 
+  function graphIdForAsset(asset) {
+    return ASSET_GRAPH_IDS[asset.id] || asset.id;
+  }
+
+  function discoveryForAsset(asset) {
+    return DISCOVERY_BY_GRAPH_ID[graphIdForAsset(asset)] || null;
+  }
+
+  function buildRelatedLinks(asset) {
+    var graphId = graphIdForAsset(asset);
+    var node = PUBLIC_GRAPH_BY_ID[graphId];
+    if (!node || !Array.isArray(node.related) || !node.related.length) return null;
+    var nav = el("nav", "lib-related");
+    nav.setAttribute("aria-label", "Related codex entries");
+    node.related.forEach(function (relId) {
+      var link = el("a", "lib-related__link", relId.replace(/-/g, " "));
+      link.href = "#asset-" + relId;
+      nav.appendChild(link);
+    });
+    return nav;
+  }
+
   function buildCard(asset) {
     var card = el("article", "lib-card");
     card.id = "asset-" + asset.id;
+    var discovery = discoveryForAsset(asset);
 
-    if (asset.status === "planned") {
+    if (discovery && discovery.state === "locked") {
+      card.className = "lib-card lib-card--locked";
+      var lock = el("span", "lib-badge lib-badge--locked", "Locked");
+      card.appendChild(lock);
+    } else if (discovery && discovery.state === "highlighted") {
+      var hi = el("span", "lib-badge lib-badge--discovered", "Your mark");
+      card.appendChild(hi);
+    } else if (discovery && discovery.state === "discovered") {
+      var disc = el("span", "lib-badge lib-badge--discovered", "Discovered");
+      card.appendChild(disc);
+    } else if (asset.status === "planned") {
       var badge = el("span", "lib-badge lib-badge--planned", "Planned");
       card.appendChild(badge);
     }
@@ -317,7 +385,11 @@
     var body = el("div", "lib-card__body");
     body.appendChild(el("h3", "news-title", asset.title));
     body.appendChild(el("p", "codex-sub", asset.subtitle));
-    body.appendChild(el("p", "lib-card__desc", asset.description));
+    var graphNode = PUBLIC_GRAPH_BY_ID[graphIdForAsset(asset)];
+    var desc = graphNode && graphNode.body ? graphNode.body : asset.description;
+    body.appendChild(el("p", "lib-card__desc", desc));
+    var related = buildRelatedLinks(asset);
+    if (related) body.appendChild(related);
     card.appendChild(body);
 
     return card;
@@ -374,9 +446,72 @@
     }
   }
 
+  function mergePublicGraph(nodes) {
+    PUBLIC_GRAPH_BY_ID = {};
+    if (!Array.isArray(nodes)) return;
+    nodes.forEach(function (node) {
+      if (node && node.id) PUBLIC_GRAPH_BY_ID[node.id] = node;
+    });
+    // Sync hand registry descriptions from graph where available.
+    CODEX_LIBRARY.forEach(function (cat) {
+      cat.assets.forEach(function (asset) {
+        var node = PUBLIC_GRAPH_BY_ID[graphIdForAsset(asset)];
+        if (!node) return;
+        if (node.summary) asset.subtitle = node.summary;
+        if (node.body) asset.description = node.body;
+        if (node.assets && node.assets[0] && !asset.image) {
+          asset.image = node.assets[0];
+        }
+        if (node.published && asset.status === "planned") asset.status = "created";
+      });
+    });
+    // Append graph-only public nodes not yet in the hand registry.
+    var world = CODEX_LIBRARY[0];
+    if (world && world.id === "world-foundation") {
+      ["rookguard", "forgehold", "high-city"].forEach(function (id) {
+        if (world.assets.some(function (a) { return graphIdForAsset(a) === id; })) return;
+        var node = PUBLIC_GRAPH_BY_ID[id];
+        if (!node) return;
+        world.assets.push({
+          id: id,
+          title: node.title || id,
+          category: node.category || "World Foundation",
+          subtitle: node.summary || "",
+          image: node.assets && node.assets[0] ? node.assets[0] : null,
+          alt: (node.title || id) + " codex entry",
+          description: node.body || node.summary || "",
+          status: node.assets && node.assets[0] ? "created" : "planned",
+        });
+        ASSET_GRAPH_IDS[id] = id;
+      });
+    }
+    var civ = CODEX_LIBRARY.find(function (c) { return c.id === "civilization-codices"; });
+    if (civ) {
+      var origins = PUBLIC_GRAPH_BY_ID["origins-codex"];
+      if (origins) {
+        var existing = civ.assets.find(function (a) { return a.id === "origins-codex"; });
+        if (existing) {
+          existing.status = "created";
+          existing.subtitle = origins.summary || existing.subtitle;
+          existing.description = origins.body || existing.description;
+        }
+      }
+    }
+  }
+
+  function loadPublicGraph() {
+    return fetch("js/codex-public.graph.json", { cache: "no-store" })
+      .then(function (res) { return res.ok ? res.json() : []; })
+      .catch(function () { return []; });
+  }
+
   function init() {
     var root = document.getElementById("codex-library-root");
-    if (root) render(root);
+    if (!root) return;
+    loadPublicGraph().then(function (nodes) {
+      mergePublicGraph(nodes);
+      render(root);
+    });
   }
 
   if (document.readyState === "loading") {
