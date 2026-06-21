@@ -130,6 +130,34 @@
         background: var(--amber);
         border: 1px solid var(--gold-deep);
       }
+      .lib-badge--discovered {
+        background: linear-gradient(180deg, #3d5a34, #2a3f24);
+        border: 1px solid #5a7a4a;
+        color: #b8e0a8;
+      }
+      .lib-badge--locked {
+        background: linear-gradient(180deg, #4a4040, #2e2828);
+        border: 1px solid #5a5050;
+        color: #9a8f8f;
+      }
+      .lib-card--locked {
+        opacity: 0.72;
+      }
+      .lib-related {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .lib-related__link {
+        font-size: 11px;
+        text-transform: capitalize;
+        color: var(--gold-1);
+        text-decoration: none;
+        border: 1px solid var(--gold-deep);
+        border-radius: 999px;
+        padding: 2px 8px;
+      }
       @media (max-width: 560px) {
         .lib-grid {
           grid-template-columns: 1fr 1fr;
