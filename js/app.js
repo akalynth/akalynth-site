@@ -15,6 +15,8 @@
       : /(^|\.)(beta|staging|sim)\.akalynth\.com$/.test(location.hostname)
         ? location.origin // lane sites talk to their own same-origin /v1 (proxied to the lane server)
         : "https://" + "api." + "akalynth.com");
+  var BETA_PLAY_URL = "https://beta.akalynth.com/play/";
+  var BETA_WAYS_URL = "beta.html";
   var CSRF_COOKIE = "akalynth_csrf";
   var CSRF_STORE = "akalynth.csrf.v1";
   var SELECTED_CHARACTER_STORE = "akalynth.selectedCharacter.v1";
@@ -577,26 +579,27 @@
     }
     if (state.account && character) {
       root.innerHTML =
-        '<p class="lede">Ready for Android beta</p>' +
+        '<p class="lede">Ready to play</p>' +
         '<p>Selected character: <strong>' +
         escapeHtml(character.name || character.character_id) +
         '</strong> in ' +
         escapeHtml(worldName(character.world_id)) +
         '.</p>' +
-        '<p class="muted small">Install the Android beta, sign in with this account, and select this character to play.</p>' +
-        '<a class="btn btn-gold btn-block" href="https://beta.akalynth.com/download/akalynth-beta.apk" rel="noopener" download>Download Android APK</a>';
+        '<p class="muted small">Sign in with this account in the browser or on Android, then select this character to enter the world.</p>' +
+        '<a class="btn btn-gold btn-block" href="' + BETA_PLAY_URL + '" rel="noopener">Play in browser ▶</a>' +
+        '<a class="btn btn-ghost btn-block" href="' + BETA_WAYS_URL + '">Or get the Android client</a>';
       return;
     }
     if (state.account) {
       root.innerHTML =
         '<p class="lede">Account signed in; character still required</p>' +
-        '<p>Create or select a server-backed account character before installing the beta.</p>' +
+        '<p>Create or select a server-backed account character before playing the beta.</p>' +
         '<a class="btn btn-gold btn-block" href="account.html">Create or select character</a>';
       return;
     }
     root.innerHTML =
       '<p class="lede">Account character required</p>' +
-      '<p>Create an account with a nickname, then create or select a character before entering the Android beta.</p>' +
+      '<p>Create an account with a nickname, then create or select a character before playing the beta.</p>' +
       '<a class="btn btn-gold btn-block" href="account.html">Create account character</a>';
   }
 
@@ -665,7 +668,10 @@
             '<button class="btn ' + (selected ? "btn-ghost" : "btn-gold") + ' btn-block" data-select-character="' + escapeHtml(c.character_id) + '">' +
             (selected ? "Selected" : "Select character") +
             "</button>" +
-            (selected ? '<a class="btn btn-gold btn-block character-play-link" href="beta.html">Download Android beta</a>' : "") +
+            (selected
+              ? '<a class="btn btn-gold btn-block character-play-link" href="' + BETA_PLAY_URL + '" rel="noopener">Play in browser ▶</a>' +
+                '<a class="btn btn-ghost btn-block" href="' + BETA_WAYS_URL + '">Or get the Android client</a>'
+              : "") +
             "</article>"
           );
         })
@@ -759,7 +765,7 @@
           throw new Error("Server returned an invalid character response.");
         }
         rememberSelectedCharacter(body.character.character_id);
-        setMessage("Character selected. Download the Android beta to play.", "ok");
+        setMessage("Character selected. Play in your browser to enter the world.", "ok");
         return loadWalletState().then(function () {
           renderAll();
           return body;
@@ -786,7 +792,7 @@
           throw new Error("Server returned an invalid character response.");
         }
         rememberSelectedCharacter(body.character.character_id);
-        state.message = "Character created. Download the Android beta to play.";
+        state.message = "Character created. Play in your browser to enter the world.";
         state.messageKind = "ok";
         return refreshPortal().then(function () {
           return body;
