@@ -4,6 +4,9 @@ import vm from 'node:vm';
 const appSource = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const requests = [];
 let hooks;
+let betaStatusMode = 'success';
+const deferredBetaStatusResponses = [];
+const replacedUrls = [];
 
 const store = new Map();
 const noopElement = {
@@ -57,7 +60,11 @@ const context = {
     hash: '',
   },
   history: {
-    replaceState() {},
+    replaceState(_state, _title, url) {
+      replacedUrls.push(url);
+      context.location.search = '';
+      context.location.hash = '';
+    },
   },
   window: {
     AKALYNTH_API_BASE: 'https://api.example.test',
@@ -82,6 +89,23 @@ const context = {
       body: options.body ? JSON.parse(options.body) : null,
     };
     requests.push(request);
+    if (request.path === '/v1/beta/me' && betaStatusMode === 'transport-error') {
+      throw new Error('simulated optional beta-status transport failure');
+    }
+    if (request.path === '/v1/beta/me' && betaStatusMode === 'deferred') {
+      return new Promise((resolve) => {
+        deferredBetaStatusResponses.push({
+          resolve(body) {
+            resolve({
+              ok: true,
+              status: 200,
+              statusText: 'OK',
+              text: async () => JSON.stringify(body),
+            });
+          },
+        });
+      });
+    }
     return {
       ok: true,
       status: 200,
@@ -129,6 +153,14 @@ function responseFor(request) {
   }
   if (request.path === '/v1/accounts/me') {
     return { account: { account_id: 'acc-site-e2d', email_verified: true, status: 'active' } };
+  }
+  if (request.path === '/v1/beta/me') {
+    return {
+      cohort: {
+        cohort_id: 'rookguard-blind-01',
+        release_commit: '0123456789abcdef0123456789abcdef01234567',
+      },
+    };
   }
   if (request.path === '/v1/characters' && request.method === 'GET') {
     return { characters: hooks ? hooks.state.characters : [] };
@@ -222,6 +254,108 @@ function validCreateBody() {
 
 vm.runInNewContext(appSource, context, { filename: 'js/app.js' });
 if (!hooks) fail('test hooks were not installed');
+
+const registrationWithoutInvite = hooks.registrationPayload({
+  handle: 'NoInvite',
+  email: '',
+  password: 'correct horse battery staple',
+  invite_code: '   ',
+});
+if (Object.prototype.hasOwnProperty.call(registrationWithoutInvite, 'invite_code')) {
+  fail('empty invite must be omitted from registration payload');
+}
+const registrationWithInvite = hooks.registrationPayload({
+  handle: 'Invited',
+  email: 'invited@example.test',
+  password: 'correct horse battery staple',
+  invite_code: '  BETA-PASTE-ONLY  ',
+});
+if (
+  registrationWithInvite.invite_code !== 'BETA-PASTE-ONLY' ||
+  Object.keys(registrationWithInvite).filter((key) => key === 'invite_code').length !== 1
+) {
+  fail('pasted invite must be trimmed and included exactly once');
+}
+
+document.body.getAttribute = (name) => name === 'data-page' ? 'account' : '';
+context.location.search = '?invite=URL-INJECTION&view=register';
+hooks.state.accountView = '';
+hooks.state.resetToken = '';
+hooks.handleAccountQuery();
+if (
+  hooks.state.accountView !== 'register' ||
+  hooks.state.resetToken !== '' ||
+  replacedUrls.at(-1) !== 'account.html'
+) {
+  fail('registration route must not consume an invite from the query string');
+}
+const querySafeRegistration = hooks.registrationPayload({
+  handle: 'QuerySafe',
+  email: '',
+  password: 'correct horse battery staple',
+});
+if (Object.prototype.hasOwnProperty.call(querySafeRegistration, 'invite_code')) {
+  fail('registration payload must not inherit a query-string invite');
+}
+
+context.location.hash = '#reset=reset-token-site-e2d';
+hooks.state.resetToken = '';
+hooks.handleAccountQuery();
+if (
+  hooks.state.resetToken !== 'reset-token-site-e2d' ||
+  context.location.hash !== '' ||
+  replacedUrls.at(-1) !== 'account.html'
+) {
+  fail('reset fragment token must bind and scrub from the account URL');
+}
+context.location.search = '';
+
+hooks.state.account = { account_id: 'acc-site-e2d', email_verified: true, status: 'active' };
+betaStatusMode = 'success';
+await hooks.refreshControlledBetaStatus();
+if (
+  !hooks.state.betaCohort ||
+  hooks.state.betaCohort.cohort_id !== 'rookguard-blind-01' ||
+  hooks.state.betaCohort.release_commit !== '0123456789abcdef0123456789abcdef01234567'
+) {
+  fail('controlled beta status must retain the authorized cohort projection');
+}
+betaStatusMode = 'transport-error';
+await hooks.refreshControlledBetaStatus();
+if (hooks.state.betaCohort !== null) {
+  fail('beta status transport failure must clear the optional projection');
+}
+
+hooks.state.account = { account_id: 'acc-old-site-e2d', email_verified: true, status: 'active' };
+betaStatusMode = 'deferred';
+const oldAccountStatus = hooks.refreshControlledBetaStatus();
+hooks.state.account = { account_id: 'acc-current-site-e2d', email_verified: true, status: 'active' };
+const currentAccountStatus = hooks.refreshControlledBetaStatus();
+if (deferredBetaStatusResponses.length !== 2) {
+  fail('controlled beta race proof must hold two out-of-order account responses');
+}
+deferredBetaStatusResponses[1].resolve({
+  cohort: {
+    cohort_id: 'current-account-cohort',
+    release_commit: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+  },
+});
+await currentAccountStatus;
+deferredBetaStatusResponses[0].resolve({
+  cohort: {
+    cohort_id: 'old-account-cohort',
+    release_commit: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+  },
+});
+await oldAccountStatus;
+if (
+  !hooks.state.betaCohort ||
+  hooks.state.betaCohort.cohort_id !== 'current-account-cohort' ||
+  hooks.state.betaCohort.release_commit !== 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
+) {
+  fail('stale controlled beta response must not overwrite the current account projection');
+}
+betaStatusMode = 'success';
 
 hooks.state.account = null;
 hooks.state.characters = [];

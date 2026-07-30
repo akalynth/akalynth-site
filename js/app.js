@@ -67,7 +67,10 @@
     message: "",
     messageKind: "info",
     resetToken: "",
+    accountView: "",
+    betaCohort: null,
   };
+  var betaStatusRequestGeneration = 0;
 
   function $(sel, root) {
     return (root || document).querySelector(sel);
@@ -152,10 +155,12 @@
     else sessionStorage.removeItem(SELECTED_CHARACTER_STORE);
   }
   function clearAccountScopedUiState() {
+    betaStatusRequestGeneration += 1;
     state.account = null;
     state.characters = [];
     state.goldBalance = null;
     state.workContract = null;
+    state.betaCohort = null;
     rememberSelectedCharacter("");
   }
   function clearLocalSessionUi(message, kind) {
@@ -376,6 +381,7 @@
       .then(loadWalletState)
       .then(function () {
         renderAll();
+        void refreshControlledBetaStatus();
         return refreshLibraryDiscovery();
       });
   }
@@ -619,17 +625,56 @@
     if (!state.message) return "";
     return '<p class="portal-inline portal-inline--' + escapeHtml(state.messageKind) + '">' + escapeHtml(state.message) + "</p>";
   }
-  function authFormsHtml() {
+  function registrationPayload(data) {
+    var payload = {
+      handle: data.handle,
+      email: data.email,
+      password: data.password,
+    };
+    var invite = typeof data.invite_code === "string" ? data.invite_code.trim() : "";
+    if (invite) payload.invite_code = invite;
+    return payload;
+  }
+  function registerCardHtml() {
     return (
-      '<div class="portal-grid">' +
       '<article class="parchment"><p class="lede">Create account</p>' +
       '<form class="account-form" id="register-form" novalidate>' +
+      '<div class="field"><label for="reg-invite">Beta invite code <span class="muted small">(if provided)</span></label><input type="text" id="reg-invite" name="invite_code" autocomplete="off" spellcheck="false" placeholder="Paste your invite code" /></div>' +
       '<div class="field"><label for="reg-handle">Nickname</label><input type="text" id="reg-handle" name="handle" autocomplete="username" minlength="3" maxlength="32" required /></div>' +
       '<div class="field"><label for="reg-email">Email <span class="muted small">(optional)</span></label><input type="email" id="reg-email" name="email" autocomplete="email" /></div>' +
       '<div class="field"><label for="reg-password">Password</label><input type="password" id="reg-password" name="password" autocomplete="new-password" minlength="8" required /></div>' +
       '<button class="btn btn-gold btn-block" type="submit">Create account</button>' +
       '<p class="muted small">Pick a unique nickname. Email is optional and can be verified later for password recovery — without an email there is no recovery.</p>' +
-      "</form></article>" +
+      "</form></article>"
+    );
+  }
+  function resetRequestCardHtml() {
+    return (
+      '<article class="parchment"><p class="lede">Reset password</p>' +
+      '<form class="account-form" id="reset-request-form" novalidate>' +
+      '<div class="field"><label for="reset-email">Email</label><input type="email" id="reset-email" name="email" autocomplete="email" required /></div>' +
+      '<button class="btn btn-ghost btn-block" type="submit">Send reset link</button>' +
+      "</form></article>"
+    );
+  }
+  function authRouteLinksHtml() {
+    return (
+      '<article class="parchment"><p class="muted small"><a href="account.html">Sign in</a> · ' +
+      '<a href="register.html">Create account</a> · <a href="forgot.html">Forgot password</a></p></article>'
+    );
+  }
+  function authFormsHtml() {
+    var registerCard = registerCardHtml();
+    var resetCard = resetRequestCardHtml();
+    if (state.accountView === "register") {
+      return '<div class="portal-grid">' + registerCard + authRouteLinksHtml() + "</div>";
+    }
+    if (state.accountView === "forgot") {
+      return '<div class="portal-grid">' + resetCard + authRouteLinksHtml() + "</div>";
+    }
+    return (
+      '<div class="portal-grid">' +
+      registerCard +
       '<article class="parchment"><p class="lede">Sign in</p>' +
       '<form class="account-form" id="login-form" novalidate>' +
       '<div class="field"><label for="login-identifier">Nickname or email</label><input type="text" id="login-identifier" name="identifier" autocomplete="username" required /></div>' +
@@ -641,11 +686,7 @@
       '<div class="field"><label for="verify-token">Verification token</label><input type="text" id="verify-token" name="token" autocomplete="off" /></div>' +
       '<button class="btn btn-ghost btn-block" type="submit">Verify</button>' +
       "</form></article>" +
-      '<article class="parchment"><p class="lede">Reset password</p>' +
-      '<form class="account-form" id="reset-request-form" novalidate>' +
-      '<div class="field"><label for="reset-email">Email</label><input type="email" id="reset-email" name="email" autocomplete="email" required /></div>' +
-      '<button class="btn btn-ghost btn-block" type="submit">Send reset link</button>' +
-      "</form></article>" +
+      resetCard +
       "</div>"
     );
   }
@@ -730,6 +771,7 @@
       "</dl>" +
       '<button class="btn btn-ghost" id="logout-btn" type="button">Sign out</button>' +
       "</article>" +
+      '<article class="parchment notice" id="controlled-beta-status" aria-live="polite" hidden></article>' +
       verifyNotice +
       '<article class="parchment"><p class="lede">Characters</p>' + characterCardsHtml() + "</article>" +
       createCharacterHtml()
@@ -742,7 +784,84 @@
       accountMessageHtml() +
       (state.resetToken ? resetConfirmHtml(state.resetToken) : state.account ? dashboardHtml() : authFormsHtml());
     renderApiStatus(root);
+    renderControlledBetaStatus();
     wireAccountForms(root);
+  }
+  function renderControlledBetaStatus() {
+    var root = $("#controlled-beta-status");
+    if (!root) return;
+    var cohort = state.betaCohort;
+    if (
+      !cohort ||
+      typeof cohort.cohort_id !== "string" ||
+      !cohort.cohort_id ||
+      typeof cohort.release_commit !== "string" ||
+      !cohort.release_commit
+    ) {
+      root.hidden = true;
+      root.textContent = "";
+      return;
+    }
+    root.hidden = false;
+    root.innerHTML =
+      '<p class="lede">Controlled beta</p><p>' +
+      escapeHtml(cohort.cohort_id) +
+      " · release " +
+      escapeHtml(cohort.release_commit.slice(0, 12)) +
+      "</p>";
+  }
+  function refreshControlledBetaStatus() {
+    var requestGeneration = ++betaStatusRequestGeneration;
+    var accountId =
+      state.account && typeof state.account.account_id === "string"
+        ? state.account.account_id
+        : "";
+    state.betaCohort = null;
+    renderControlledBetaStatus();
+    if (!accountId) {
+      return Promise.resolve(null);
+    }
+    return api("/v1/beta/me")
+      .then(function (body) {
+        if (
+          requestGeneration !== betaStatusRequestGeneration ||
+          !state.account ||
+          state.account.account_id !== accountId
+        ) {
+          return;
+        }
+        var cohort = body && body.cohort;
+        if (
+          cohort &&
+          typeof cohort.cohort_id === "string" &&
+          typeof cohort.release_commit === "string"
+        ) {
+          state.betaCohort = {
+            cohort_id: cohort.cohort_id,
+            release_commit: cohort.release_commit,
+          };
+        }
+      })
+      .catch(function () {
+        if (
+          requestGeneration === betaStatusRequestGeneration &&
+          state.account &&
+          state.account.account_id === accountId
+        ) {
+          state.betaCohort = null;
+        }
+      })
+      .then(function () {
+        if (
+          requestGeneration !== betaStatusRequestGeneration ||
+          !state.account ||
+          state.account.account_id !== accountId
+        ) {
+          return null;
+        }
+        renderControlledBetaStatus();
+        return state.betaCohort;
+      });
   }
   function outfitOptionsFor(sex) {
     return state.outfits.filter(function (o) { return o.sex === sex; });
@@ -818,7 +937,7 @@
     var register = $("#register-form", root);
     if (register) register.addEventListener("submit", function (e) {
       e.preventDefault();
-      api("/v1/accounts/register", { method: "POST", body: formData(register) })
+      api("/v1/accounts/register", { method: "POST", body: registrationPayload(formData(register)) })
         .then(function (body) {
           var msg;
           if (body.account && body.account.handle) {
@@ -912,13 +1031,23 @@
 
   function handleAccountQuery() {
     var params = new URLSearchParams(location.search);
+    var fragment = location.hash && location.hash.charAt(0) === "#"
+      ? new URLSearchParams(location.hash.slice(1))
+      : new URLSearchParams();
     var verify = params.get("verify");
-    var reset = params.get("reset");
+    var reset = fragment.get("reset");
+    var view = params.get("view");
+    if (view === "register" || view === "forgot") state.accountView = view;
     if (reset) state.resetToken = reset;
+    if (
+      pageName() === "account" &&
+      (verify || reset || view || params.has("invite") || params.has("reset"))
+    ) {
+      history.replaceState(null, "", "account.html");
+    }
     if (verify && pageName() === "account") {
       api("/v1/accounts/verify-email", { method: "POST", body: { token: verify } })
         .then(function () {
-          history.replaceState(null, "", "account.html");
           state.message = "Email verified. Sign in to continue.";
           state.messageKind = "ok";
           return refreshPortal();
@@ -1173,6 +1302,9 @@
       listProperty: listProperty,
       accountActionBlockedMessage: accountActionBlockedMessage,
       accountCharacterActionBlockedMessage: accountCharacterActionBlockedMessage,
+      registrationPayload: registrationPayload,
+      refreshControlledBetaStatus: refreshControlledBetaStatus,
+      handleAccountQuery: handleAccountQuery,
     });
   }
 
