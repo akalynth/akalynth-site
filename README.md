@@ -9,6 +9,8 @@ It is a pre-alpha static site for Akalynth's High City surface:
 - `shop.html` in-game-currency shop portal for the Akalynth API
 - `houses.html` server property market portal for the Akalynth API
 - `account.html` static account portal shell for the Akalynth API
+- `register.html` paste-only beta invite entry path into the existing account portal
+- `forgot.html` password-reset entry and confirmation path into the existing account portal
 - `forum.html` read-only community boards preview
 - `library.html` public-safe visual lore archive
 - `css/`, `js/`, and `screenshots/` assets used by the static site
@@ -26,6 +28,11 @@ contain account authority, session authority, receipt signing, economy authority
 or runtime state. Shop, work, and housing pages do not use browser-local state as
 authority; purchases, work payouts, and property actions are settled only when
 the server emits the relevant receipts.
+
+The account portal may submit an explicitly pasted beta invite with registration
+and may show an authenticated controlled-beta cohort status. Invite values are
+never read from the page URL. Cohort status is an optional API projection:
+failure or absence hides it without blocking account, character, or play access.
 
 ## Local Preview
 

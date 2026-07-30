@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
-required_pages=(index.html beta.html library.html wallpapers.html shop.html houses.html account.html forum.html)
+required_pages=(index.html beta.html library.html wallpapers.html shop.html houses.html account.html register.html forgot.html forum.html)
 
 for page in "${required_pages[@]}"; do
   if [[ ! -f "$page" ]]; then
@@ -70,6 +70,16 @@ require_literal() {
   fi
 }
 
+forbid_literal() {
+  local file="$1"
+  local literal="$2"
+  local label="$3"
+  if grep -Fq -- "$literal" "$file"; then
+    printf '::error::%s present in %s: %s\n' "$label" "$file" "$literal" >&2
+    exit 1
+  fi
+}
+
 for literal in \
   'api("/v1/accounts/me")' \
   'api("/v1/accounts/register", { method: "POST"' \
@@ -91,9 +101,44 @@ for literal in \
 done
 
 require_literal "account.html" 'id="account-portal-root"' "Account character portal hook"
+require_literal "beta.html" 'https://beta.akalynth.com/download/akalynth-beta-v12.apk' "Immutable direct Android v12 download"
+require_literal "beta.html" 'https://beta.akalynth.com/download/akalynth-beta-v12.apk.sha256' "Immutable direct Android v12 checksum"
+if grep -Fq 'https://beta.akalynth.com/download/akalynth-beta.apk' beta.html; then
+  printf '::error::Direct Android download must not use the mutable generic APK alias.\n' >&2
+  exit 1
+fi
+require_literal "register.html" 'window.location.replace("account.html?view=register");' "Paste-only registration route"
+require_literal "forgot.html" 'window.history.replaceState(null, "", "forgot.html");' "Password-reset source URL scrubbing"
+require_literal "forgot.html" 'window.location.replace("account.html?view=forgot");' "Password-reset request fallback"
+forbid_literal "forgot.html" 'params.get("reset")' "Query password-reset token consumption"
+forbid_literal "js/app.js" 'params.get("reset")' "Account query password-reset token consumption"
+require_literal "account.html" '<meta name="referrer" content="no-referrer" />' "Account token referrer suppression"
 require_literal "README.md" 'executable site E2D' "Site E2D proof documentation"
 require_literal "README.md" 'create/select/shop/work/property requests' "Site E2D character and gameplay proof documentation"
 require_literal "README.md" 'explicit no-session/no-CSRF inline' "Site E2D no-session/no-CSRF helper proof documentation"
+require_literal "README.md" '`register.html` paste-only beta invite entry path' "Paste-only registration documentation"
+require_literal "README.md" '`forgot.html` password-reset entry and confirmation path' "Password-reset documentation"
+
+for literal in \
+  'name="invite_code"' \
+  'registrationPayload(formData(register))' \
+  'if (invite) payload.invite_code = invite;' \
+  'api("/v1/beta/me")' \
+  'var betaStatusRequestGeneration = 0;' \
+  'requestGeneration !== betaStatusRequestGeneration' \
+  'state.account.account_id !== accountId' \
+  'void refreshControlledBetaStatus();' \
+  'history.replaceState(null, "", "account.html");' \
+  'id="controlled-beta-status"'; do
+  require_literal "js/app.js" "$literal" "Beta player-readiness portal behavior"
+done
+
+if grep -Fq 'get("invite")' js/app.js register.html ||
+   grep -Fq "get('invite')" js/app.js register.html ||
+   grep -Fq 'location.search' register.html; then
+  printf '::error::Registration must accept invite codes by explicit paste only; URL invite prefill is forbidden.\n' >&2
+  exit 1
+fi
 
 for literal in \
   'function validWorld(entry)' \
@@ -151,6 +196,12 @@ require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertNoNewReq
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertNoNewRequests('shop purchase without csrf'" "Site E2D shop without CSRF proof"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertNoNewRequests('property buy without csrf'" "Site E2D property buy without CSRF proof"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertNoNewRequests('property list without csrf'" "Site E2D property list without CSRF proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "empty invite must be omitted from registration payload" "Site E2D empty-invite omission proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "pasted invite must be trimmed and included exactly once" "Site E2D pasted-invite proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "reset fragment token must bind and scrub from the account URL" "Site E2D reset-token proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "controlled beta status must retain the authorized cohort projection" "Site E2D controlled-beta status proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "beta status transport failure must clear the optional projection" "Site E2D nonblocking beta status proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "stale controlled beta response must not overwrite the current account projection" "Site E2D cross-account beta status isolation proof"
 require_literal "js/app.js" 'Purchase accepted by server.' "Server-backed purchase success message"
 require_literal "js/app.js" 'Work complete: +' "Server-backed work completion message"
 require_literal "js/app.js" 'rememberHouseOverride(body.property);' "Server-backed property mutation mirror"
