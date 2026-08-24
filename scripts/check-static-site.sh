@@ -358,7 +358,7 @@ def should_skip(ref):
     if ref.startswith("#"):
         return True
     path = parsed.path or ref
-    # Prod game lane paths are served by Caddy on akalynth.com, not static files in this repo.
+    # Prod game lane paths (/play/, /download/) are hosted outside this static site repo.
     if path == "/play" or path.startswith("/play/") or path.startswith("/download/"):
         return True
     return False
