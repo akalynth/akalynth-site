@@ -15,7 +15,7 @@
       : /(^|\.)(beta|staging|sim)\.akalynth\.com$/.test(location.hostname)
         ? location.origin // lane sites talk to their own same-origin /v1 (proxied to the lane server)
         : "https://" + "api." + "akalynth.com");
-  var BETA_PLAY_URL = "https://beta.akalynth.com/play/";
+  var PLAY_URL = "/play/";
   var BETA_WAYS_URL = "beta.html";
   var CSRF_COOKIE = "akalynth_csrf";
   var CSRF_STORE = "akalynth.csrf.v1";
@@ -603,7 +603,7 @@
         escapeHtml(worldName(character.world_id)) +
         '.</p>' +
         '<p class="muted small">Sign in with this account in the browser or on Android, then select this character to enter the world.</p>' +
-        '<a class="btn btn-gold btn-block" href="' + BETA_PLAY_URL + '" rel="noopener">Play in browser ▶</a>' +
+        '<a class="btn btn-gold btn-block" href="' + PLAY_URL + '" rel="noopener">Play in browser ▶</a>' +
         '<a class="btn btn-ghost btn-block" href="' + BETA_WAYS_URL + '">Or get the Android client</a>';
       return;
     }
@@ -721,7 +721,7 @@
             (selected ? "Selected" : "Select character") +
             "</button>" +
             (selected
-              ? '<a class="btn btn-gold btn-block character-play-link" href="' + BETA_PLAY_URL + '" rel="noopener">Play in browser ▶</a>' +
+              ? '<a class="btn btn-gold btn-block character-play-link" href="' + PLAY_URL + '" rel="noopener">Play in browser ▶</a>' +
                 '<a class="btn btn-ghost btn-block" href="' + BETA_WAYS_URL + '">Or get the Android client</a>'
               : "") +
             "</article>"
