@@ -101,8 +101,8 @@ for literal in \
 done
 
 require_literal "account.html" 'id="account-portal-root"' "Account character portal hook"
-require_literal "beta.html" 'https://beta.akalynth.com/download/akalynth-beta-v12.apk' "Immutable direct Android v12 download"
-require_literal "beta.html" 'https://beta.akalynth.com/download/akalynth-beta-v12.apk.sha256' "Immutable direct Android v12 checksum"
+require_literal "beta.html" 'href="/download/akalynth-beta-v12.apk"' "Immutable direct Android v12 download"
+require_literal "beta.html" 'href="/download/akalynth-beta-v12.apk.sha256"' "Immutable direct Android v12 checksum"
 if grep -Fq 'https://beta.akalynth.com/download/akalynth-beta.apk' beta.html; then
   printf '::error::Direct Android download must not use the mutable generic APK alias.\n' >&2
   exit 1
@@ -355,7 +355,13 @@ def should_skip(ref):
         return True
     if parsed.netloc:
         return True
-    return ref.startswith("#")
+    if ref.startswith("#"):
+        return True
+    path = parsed.path or ref
+    # Prod game lane paths are served by Caddy on akalynth.com, not static files in this repo.
+    if path == "/play" or path.startswith("/play/") or path.startswith("/download/"):
+        return True
+    return False
 
 
 def check_ref(ref, base, source):
