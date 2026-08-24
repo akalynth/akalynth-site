@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
-required_pages=(index.html beta.html library.html wallpapers.html shop.html houses.html account.html forum.html)
+required_pages=(index.html beta.html library.html wallpapers.html shop.html houses.html account.html register.html forgot.html forum.html)
 
 for page in "${required_pages[@]}"; do
   if [[ ! -f "$page" ]]; then
@@ -91,9 +91,37 @@ for literal in \
 done
 
 require_literal "account.html" 'id="account-portal-root"' "Account character portal hook"
+require_literal "beta.html" 'https://beta.akalynth.com/download/akalynth-beta-v12.apk' "Immutable direct Android v12 download"
+require_literal "beta.html" 'https://beta.akalynth.com/download/akalynth-beta-v12.apk.sha256' "Immutable direct Android v12 checksum"
+if grep -Fq 'https://beta.akalynth.com/download/akalynth-beta.apk' beta.html; then
+  printf '::error::Direct Android download must not use the mutable generic APK alias.\n' >&2
+  exit 1
+fi
+require_literal "register.html" 'window.location.replace("account.html?view=register");' "Paste-only registration route"
+require_literal "forgot.html" 'var reset = params.get("reset");' "Password-reset token route"
+require_literal "forgot.html" '"account.html?reset=" + encodeURIComponent(reset)' "Password-reset token forwarding"
 require_literal "README.md" 'executable site E2D' "Site E2D proof documentation"
 require_literal "README.md" 'create/select/shop/work/property requests' "Site E2D character and gameplay proof documentation"
 require_literal "README.md" 'explicit no-session/no-CSRF inline' "Site E2D no-session/no-CSRF helper proof documentation"
+require_literal "README.md" '`register.html` paste-only beta invite entry path' "Paste-only registration documentation"
+require_literal "README.md" '`forgot.html` password-reset entry and confirmation path' "Password-reset documentation"
+
+for literal in \
+  'name="invite_code"' \
+  'registrationPayload(formData(register))' \
+  'if (invite) payload.invite_code = invite;' \
+  'api("/v1/beta/me")' \
+  'void refreshControlledBetaStatus();' \
+  'id="controlled-beta-status"'; do
+  require_literal "js/app.js" "$literal" "Beta player-readiness portal behavior"
+done
+
+if grep -Fq 'get("invite")' js/app.js register.html ||
+   grep -Fq "get('invite')" js/app.js register.html ||
+   grep -Fq 'location.search' register.html; then
+  printf '::error::Registration must accept invite codes by explicit paste only; URL invite prefill is forbidden.\n' >&2
+  exit 1
+fi
 
 for literal in \
   'function validWorld(entry)' \
@@ -138,6 +166,11 @@ require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertRequest(
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertRequest('/v1/property/buy', { character_id: 'char-site-e2d', property_id: 'Azura:H1' });" "Site E2D property buy request proof"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertRequest('/v1/property/unlist', { character_id: 'char-site-e2d', property_id: 'Azura:H1' });" "Site E2D property unlist request proof"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertRequest('/v1/property/list', { character_id: 'char-site-e2d', property_id: 'Azura:H1', price_gold: 77 });" "Site E2D property list request proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "empty invite must be omitted from registration payload" "Site E2D empty-invite omission proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "pasted invite must be trimmed and included exactly once" "Site E2D pasted-invite proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "reset query token must bind to the existing account reset flow" "Site E2D reset-token proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "controlled beta status must retain the authorized cohort projection" "Site E2D controlled-beta status proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "beta status transport failure must clear the optional projection" "Site E2D nonblocking beta status proof"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "async function assertNoNewRequests(label, action)" "Site E2D no-request guard helper"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertNoNewRequests('create character without account session'" "Site E2D create without session proof"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertNoNewRequests('select character without account session'" "Site E2D select without session proof"

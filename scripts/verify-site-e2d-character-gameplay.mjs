@@ -4,6 +4,7 @@ import vm from 'node:vm';
 const appSource = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const requests = [];
 let hooks;
+let betaStatusFailure = false;
 
 const store = new Map();
 const noopElement = {
@@ -82,6 +83,9 @@ const context = {
       body: options.body ? JSON.parse(options.body) : null,
     };
     requests.push(request);
+    if (request.path === '/v1/beta/me' && betaStatusFailure) {
+      throw new Error('simulated beta status transport failure');
+    }
     return {
       ok: true,
       status: 200,
@@ -129,6 +133,14 @@ function responseFor(request) {
   }
   if (request.path === '/v1/accounts/me') {
     return { account: { account_id: 'acc-site-e2d', email_verified: true, status: 'active' } };
+  }
+  if (request.path === '/v1/beta/me') {
+    return {
+      cohort: {
+        cohort_id: 'beta-site-e2d',
+        release_commit: '1234567890abcdef1234567890abcdef12345678',
+      },
+    };
   }
   if (request.path === '/v1/characters' && request.method === 'GET') {
     return { characters: hooks ? hooks.state.characters : [] };
@@ -181,6 +193,14 @@ function assertRequest(path, expectedBody) {
   }
 }
 
+function assertReadRequest(path) {
+  const request = requests.find((entry) => entry.path === path);
+  if (!request) fail(`missing request ${path}`);
+  if (request.method !== 'GET') fail(`${path} must use GET`);
+  if (request.credentials !== 'include') fail(`${path} must include account session cookies`);
+  if (request.body !== null) fail(`${path} must not send a request body`);
+}
+
 async function assertNoNewRequests(label, action) {
   const before = requests.length;
   await action();
@@ -222,6 +242,33 @@ function validCreateBody() {
 
 vm.runInNewContext(appSource, context, { filename: 'js/app.js' });
 if (!hooks) fail('test hooks were not installed');
+
+context.location.search = '?invite=must-not-be-read';
+const noInvitePayload = hooks.registrationPayload({
+  invite_code: '   ',
+  handle: 'SiteProof',
+  email: '',
+  password: 'correct horse battery staple',
+});
+if (Object.prototype.hasOwnProperty.call(noInvitePayload, 'invite_code')) {
+  fail('empty invite must be omitted from registration payload');
+}
+const invitePayload = hooks.registrationPayload({
+  invite_code: '  INVITE-SITE-E2E  ',
+  handle: 'SiteProof',
+  email: '',
+  password: 'correct horse battery staple',
+});
+if (invitePayload.invite_code !== 'INVITE-SITE-E2E') {
+  fail('pasted invite must be trimmed and included exactly once');
+}
+
+context.location.search = '?reset=reset-site-e2e';
+hooks.handleAccountQuery();
+if (hooks.state.resetToken !== 'reset-site-e2e') {
+  fail('reset query token must bind to the existing account reset flow');
+}
+context.location.search = '';
 
 hooks.state.account = null;
 hooks.state.characters = [];
@@ -300,5 +347,21 @@ assertRequest('/v1/shop/purchase', { character_id: 'char-site-e2d', shop_key: 'h
 assertRequest('/v1/property/buy', { character_id: 'char-site-e2d', property_id: 'Azura:H1' });
 assertRequest('/v1/property/unlist', { character_id: 'char-site-e2d', property_id: 'Azura:H1' });
 assertRequest('/v1/property/list', { character_id: 'char-site-e2d', property_id: 'Azura:H1', price_gold: 77 });
+
+await hooks.refreshControlledBetaStatus();
+assertReadRequest('/v1/beta/me');
+if (
+  !hooks.state.betaCohort ||
+  hooks.state.betaCohort.cohort_id !== 'beta-site-e2d' ||
+  hooks.state.betaCohort.release_commit !== '1234567890abcdef1234567890abcdef12345678'
+) {
+  fail('controlled beta status must retain the authorized cohort projection');
+}
+
+betaStatusFailure = true;
+await hooks.refreshControlledBetaStatus();
+if (hooks.state.betaCohort !== null) {
+  fail('beta status transport failure must clear the optional projection');
+}
 
 console.log('site e2d character/gameplay verifier passed');

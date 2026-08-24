@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Password Reset — Akalynth Portal</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/fonts.css" />
+    <link rel="stylesheet" href="css/theme-dark.css" />
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var reset = params.get("reset");
+        var target = reset
+          ? "account.html?reset=" + encodeURIComponent(reset)
+          : "account.html?view=forgot";
+        window.location.replace(target);
+      })();
+    </script>
+  </head>
+  <body class="theme-dark">
+    <main class="content" id="main">
+      <h1 class="page-title">Password Reset</h1>
+      <article class="parchment">
+        <p>Continue to the Akalynth account portal to request or complete a password reset.</p>
+        <a class="btn btn-gold" href="account.html?view=forgot">Continue</a>
+      </article>
+    </main>
+  </body>
+</html>
