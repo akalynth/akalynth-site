@@ -5,7 +5,7 @@
   var output = document.getElementById("diagnostic-output");
   var status = document.getElementById("diagnostic-status");
   var copy = document.getElementById("copy-diagnostics");
-  if (!form || !output || !copy) return;
+  if (!form || !output || !status || !copy) return;
 
   function safeValue(name) {
     var field = form.elements.namedItem(name);
