@@ -7,7 +7,8 @@ It may contain:
 - Static HTML, CSS, and JavaScript for the public site
 - Public-safe screenshots
 - Public lore and preview copy
-- Static portal pages for account, shop, and housing views
+- Static companion pages for account, characters, shop, property, community,
+  support, and Android download views
 - Public-safe documentation for this static site
 
 It does not contain:
@@ -17,6 +18,7 @@ It does not contain:
 - Account or session authority
 - Real house ownership settlement
 - Payment processing
+- Browser gameplay or a second game client
 - Operator credentials
 - Runtime state
 - Receipt authority
@@ -25,5 +27,11 @@ It does not contain:
 
 This repository may call public Akalynth API endpoints, including account and
 character endpoints, but it does not own the authority behind them. Account,
-shop, wallet, work, and housing actions are live only when the server accepts
-them and the relevant receipt/verifier path exists.
+shop, wallet, work, and housing actions are live only when the server accepts them.
+The site disables duplicate submissions and refreshes server-backed state after
+accepted mutations. It does not optimistically mint an item or claim property.
+
+Community is read-only because there is no public posting contract. Support
+provides FAQ and a user-controlled safe diagnostic-copy helper only; no contact
+destination or ticket submission is connected. The Patron Pack is a visibly
+non-live design proposal with no price, checkout, payment, or entitlement path.

@@ -43,9 +43,16 @@ grep_regex_forbidden() {
 }
 
 check_required_file "index.html"
+check_required_file "download.html"
 check_required_file "shop.html"
 check_required_file "houses.html"
+check_required_file "market.html"
 check_required_file "account.html"
+check_required_file "community.html"
+check_required_file "support.html"
+check_required_file "beta.html"
+check_required_file "forum.html"
+check_required_file "AKALYNTH-PORTAL-EXPANSION-SPEC.md"
 check_required_file "PUBLIC_BOUNDARY.md"
 check_required_file "PRE_ALPHA_NOTICE.md"
 check_required_file "LICENSE"
@@ -112,8 +119,8 @@ require_literal() {
 
 require_literal \
   "PRE_ALPHA_NOTICE.md" \
-  "This repository is a static public website and account-portal frontend." \
-  "Static site/account portal boundary"
+  "This repository is a static Android companion website and account-portal" \
+  "Android companion/account portal boundary"
 require_literal \
   "PRE_ALPHA_NOTICE.md" \
   "The account portal calls the Akalynth API when available." \
@@ -127,6 +134,26 @@ require_literal \
   "shop, wallet, work, and housing actions are live only when the server accepts" \
   "Server authority boundary"
 require_literal \
+  "PUBLIC_BOUNDARY.md" \
+  "The site disables duplicate submissions and refreshes server-backed state after" \
+  "Post-mutation refresh boundary"
+require_literal \
+  "PUBLIC_BOUNDARY.md" \
+  "Community is read-only because there is no public posting contract." \
+  "Read-only community boundary"
+require_literal \
+  "PUBLIC_BOUNDARY.md" \
+  "Support" \
+  "Support boundary"
+require_literal \
+  "PUBLIC_BOUNDARY.md" \
+  "no contact" \
+  "Disconnected support boundary"
+require_literal \
+  "PUBLIC_BOUNDARY.md" \
+  "The Patron Pack is a visibly" \
+  "Non-live Patron proposal boundary"
+require_literal \
   "SECURITY.md" \
   "Static account, character, shop, work," \
   "Security API surface boundary"
@@ -135,10 +162,32 @@ require_literal \
   "The account, shop, wallet, work, and housing pages are static frontends that call" \
   "README API frontend boundary"
 
-generated_matches="$(git ls-files | grep -E '(^|/)(node_modules|dist|build|artifacts)/|(^|/)\.env($|[.])|\.log$|\.sqlite3?$|\.db$' || true)"
+for section in \
+  "## SOURCE-BACKED" \
+  "## IMPLEMENTED" \
+  "## DESIGN PROPOSAL" \
+  "## UNKNOWN / OWNER DECISION" \
+  "## NOT CLAIMED"; do
+  require_literal "AKALYNTH-PORTAL-EXPANSION-SPEC.md" "$section" "Portal expansion specification section"
+done
+
+require_literal \
+  "AKALYNTH-PORTAL-EXPANSION-SPEC.md" \
+  "mutation is followed by server-backed state refresh." \
+  "Portal server-authority specification"
+require_literal \
+  "AKALYNTH-PORTAL-EXPANSION-SPEC.md" \
+  "SUPPORT CHANNEL NOT" \
+  "Portal disconnected-support specification"
+require_literal \
+  "AKALYNTH-PORTAL-EXPANSION-SPEC.md" \
+  "NOT YET AVAILABLE" \
+  "Portal non-live Patron specification"
+
+generated_matches="$(git ls-files | grep -E '(^|/)(node_modules|dist|build|artifacts|repo-patch)/|(^|/)\.env($|[.])|\.log$|\.sqlite3?$|\.db$|\.zip$|\.dc\.html$' || true)"
 if [[ -n "$generated_matches" ]]; then
   printf '%s\n' "$generated_matches" >&2
-  fail "Generated, runtime, environment, or database artifact committed"
+  fail "Generated, runtime, environment, database, or raw design-handoff artifact committed"
 fi
 
 if (( failures != 0 )); then
