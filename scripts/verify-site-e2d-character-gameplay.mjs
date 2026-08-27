@@ -41,11 +41,13 @@ const document = {
   getElementById() { return null; },
   querySelector() { return null; },
   querySelectorAll() { return []; },
+  dispatchEvent() {},
 };
 
 const context = {
   console,
   URLSearchParams,
+  URL,
   Number,
   Promise,
   Error,
@@ -62,6 +64,7 @@ const context = {
   },
   location: {
     hostname: '127.0.0.1',
+    origin: 'https://akalynth.com',
     search: '',
     hash: '',
   },
@@ -86,6 +89,12 @@ const context = {
     },
   },
   document,
+  CustomEvent: class CustomEvent {
+    constructor(type, init = {}) {
+      this.type = type;
+      this.detail = init.detail;
+    }
+  },
   fetch: async (url, options = {}) => {
     const request = {
       path: String(url).replace('https://api.example.test', ''),
@@ -131,6 +140,7 @@ const context = {
       status: 200,
       statusText: 'OK',
       text: async () => JSON.stringify(responseFor(request)),
+      json: async () => responseFor(request),
     };
   },
 };
@@ -143,6 +153,22 @@ context.document.defaultView = context.window;
 context.globalThis = context.window;
 
 function responseFor(request) {
+  if (request.path === '/v1/client/android-update?lane=prod') {
+    return {
+      ok: true,
+      lane: 'prod',
+      version_code: 2026082701,
+      version_name: '0.1.20-prod-v13',
+      apk_url: 'https://akalynth.com/download/akalynth-beta-v13.apk',
+      apk_sha256: 'a'.repeat(64),
+      size_bytes: 40000000,
+      required: false,
+      published_at: '2026-08-27T12:00:00.000Z',
+      source_commit: 'b'.repeat(40),
+      ui_contract: 'hud-v2-four-way',
+      signing_certificate_sha256: 'c'.repeat(64),
+    };
+  }
   if (request.path === '/v1/characters' && request.method === 'POST') {
     return {
       ok: true,
@@ -317,6 +343,28 @@ function validCreateBody() {
 
 vm.runInNewContext(appSource, context, { filename: 'js/app.js' });
 if (!hooks) fail('test hooks were not installed');
+
+await hooks.loadAndroidRelease();
+const releaseRequest = requests.find((entry) => entry.path === '/v1/client/android-update?lane=prod');
+if (
+  !releaseRequest ||
+  releaseRequest.credentials !== 'omit' ||
+  context.window.AKALYNTH_ANDROID_RELEASE.version_name !== '0.1.20-prod-v13'
+) {
+  fail('Android download identity must load from the credential-free authoritative prod release API');
+}
+if (hooks.validAndroidRelease({
+  ...responseFor({ path: '/v1/client/android-update?lane=prod' }),
+  apk_url: 'https://example.test/download/akalynth-beta-v13.apk',
+})) {
+  fail('Android release lookup must reject a non-Akalynth artifact authority');
+}
+if (hooks.validAndroidRelease({
+  ...responseFor({ path: '/v1/client/android-update?lane=prod' }),
+  ui_contract: undefined,
+})) {
+  fail('Android release lookup must reject a partial provenance identity');
+}
 
 await hooks.loadCatalogs();
 if (

@@ -7,7 +7,7 @@
     <title>Download Akalynth for Android</title>
     <meta
       name="description"
-      content="Download Akalynth for Android. Version 0.1.19-prod-v12, requires Android 8.0 or newer. Direct APK with a published SHA-256 checksum and install instructions."
+      content="Download Akalynth for Android. Requires Android 8.0 or newer. Direct APK with a published SHA-256 checksum and install instructions."
     />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231f1a13'/%3E%3Cpath d='M16 5l7 11-7 11-7-11z' fill='%23d9b25a'/%3E%3C/svg%3E" />
     <link rel="canonical" href="https://akalynth.com/download.html" />
@@ -69,7 +69,7 @@
               <button id="chrome-signout" type="button" hidden>Sign out</button>
             </nav>
           </details>
-          <a class="btn btn-gold nav-dl" href="/download/akalynth-beta-v12.apk" download aria-label="Download Akalynth for Android">DOWNLOAD ANDROID APK</a>
+          <a class="btn btn-gold nav-dl" data-android-download href="/download/akalynth-beta-v12.apk" download aria-label="Download Akalynth for Android">DOWNLOAD ANDROID APK</a>
         </div>
       </div>
     </header>
@@ -82,8 +82,8 @@
           <h2 class="panel-title">Release</h2>
           <div class="panel-body">
             <ul class="status-list">
-              <li><span class="dot dot-green"></span> Version <strong>0.1.19-prod-v12</strong></li>
-              <li><span class="dot dot-green"></span> Build <strong>2026082401</strong></li>
+              <li><span class="dot dot-green"></span> Version <strong data-android-version>0.1.19-prod-v12</strong></li>
+              <li><span class="dot dot-green"></span> Build <strong data-android-version-code>2026082401</strong></li>
               <li><span class="dot dot-green"></span> Requires <strong>Android 8.0+</strong></li>
               <li><span class="dot dot-blue"></span> Channel <strong>Direct APK</strong></li>
             </ul>
@@ -92,7 +92,7 @@
         <section class="panel">
           <h2 class="panel-title">Verify</h2>
           <div class="panel-body">
-            <a class="btn btn-ghost btn-block" href="/download/akalynth-beta-v12.apk.sha256" rel="noopener">SHA-256 checksum</a>
+            <a class="btn btn-ghost btn-block" data-android-checksum href="/download/akalynth-beta-v12.apk.sha256" rel="noopener">SHA-256 checksum</a>
             <p class="muted small">Save the checksum beside the APK, then run the command on this page.</p>
           </div>
         </section>
@@ -110,27 +110,45 @@
           </article>
 
           <div class="dl-options">
-            <article class="parchment dl-card dl-card--primary" id="download">
+            <article class="parchment dl-card dl-card--primary" id="download" data-android-release-inspector>
               <span class="dl-badge">Current</span>
               <h2 class="news-title">Akalynth for Android</h2>
               <a class="btn btn-gold btn-block btn-hero"
-                 href="/download/akalynth-beta-v12.apk"
+                 data-android-download href="/download/akalynth-beta-v12.apk"
                  download
                  rel="noopener"
                  aria-label="Download Akalynth for Android, version 0.1.19-prod-v12">DOWNLOAD FOR ANDROID</a>
               <dl class="summary-list ak-release">
-                <div><dt>Version</dt><dd>0.1.19-prod-v12</dd></div>
-                <div><dt>Build</dt><dd>2026082401</dd></div>
+                <div><dt>Version</dt><dd data-android-version>0.1.19-prod-v12</dd></div>
+                <div><dt>Build</dt><dd data-android-version-code>2026082401</dd></div>
                 <div><dt>Requires</dt><dd>Android 8.0 or newer</dd></div>
                 <div><dt>Channel</dt><dd>Direct APK</dd></div>
               </dl>
               <h3 class="news-title">Verify the download</h3>
               <p>
                 Every release is published with a SHA-256 checksum beside it. Download
-                <a href="/download/akalynth-beta-v12.apk.sha256" rel="noopener">the checksum file</a>,
+                <a data-android-checksum href="/download/akalynth-beta-v12.apk.sha256" rel="noopener">the checksum file</a>,
                 put it next to the APK, and run:
               </p>
-              <code class="verify-command">sha256sum -c akalynth-beta-v12.apk.sha256</code>
+              <code class="verify-command" data-android-verify-command>sha256sum -c akalynth-beta-v12.apk.sha256</code>
+              <h3 class="news-title">Release inspector</h3>
+              <p class="portal-inline release-inspector-status" data-android-inspector-status data-kind="loading" role="status" aria-live="polite">
+                Loading the authoritative prod release record&hellip;
+              </p>
+              <dl class="summary-list release-inspector-fields">
+                <div><dt>Artifact</dt><dd data-android-apk-name>akalynth-beta-v12.apk</dd></div>
+                <div><dt>Size</dt><dd data-android-size>36.6 MiB</dd></div>
+                <div><dt>Published</dt><dd data-android-published>2026-08-24T22:16:56.000Z</dd></div>
+                <div><dt>APK SHA-256</dt><dd><code data-android-sha256>cb71b7f77c0fcb35162d0bfb92deb70e3d1efa65794d223309dd1d4c76e8b613</code></dd></div>
+                <div><dt>Source commit</dt><dd><code data-android-source>Not recorded for this legacy release</code></dd></div>
+                <div><dt>UI contract</dt><dd><code data-android-ui-contract>Not recorded for this legacy release</code></dd></div>
+                <div><dt>Signing certificate</dt><dd><code data-android-signer>Not recorded for this legacy release</code></dd></div>
+              </dl>
+              <p class="muted small">
+                This panel reads the public server release record. Verify the downloaded bytes with
+                the checksum file; provenance-aware releases also identify their exact source, UI
+                contract, and public signing-certificate fingerprint.
+              </p>
             </article>
 
             <article class="parchment dl-card">
@@ -169,11 +187,11 @@
     <footer class="site-footer" role="contentinfo">
       <div class="footer-inner">
         <p class="footer-dl">
-          <a class="btn btn-gold" href="/download/akalynth-beta-v12.apk" download aria-label="Download Akalynth for Android">DOWNLOAD FOR ANDROID</a>
+          <a class="btn btn-gold" data-android-download href="/download/akalynth-beta-v12.apk" download aria-label="Download Akalynth for Android">DOWNLOAD FOR ANDROID</a>
         </p>
         <p>&copy; <span id="year"></span> Akalynth &middot; High City</p>
         <p class="small muted">
-          Version 0.1.19-prod-v12 &middot; Android 8.0 or newer &middot; direct APK.
+          Version <span data-android-version>0.1.19-prod-v12</span> &middot; Android 8.0 or newer &middot; direct APK.
           <a href="download.html" data-nav="download">Install notes and checksum</a>.
         </p>
         <p class="small muted footer-links">

@@ -6,6 +6,10 @@
   var status = document.getElementById("diagnostic-status");
   var copy = document.getElementById("copy-diagnostics");
   if (!form || !output || !status || !copy) return;
+  var release = window.AKALYNTH_ANDROID_RELEASE || {
+    version_name: "0.1.19-prod-v12",
+    version_code: 2026082401,
+  };
 
   function safeValue(name) {
     var field = form.elements.namedItem(name);
@@ -15,8 +19,8 @@
   function diagnostics() {
     return [
       "Akalynth safe diagnostics",
-      "Version: 0.1.19-prod-v12",
-      "Build: 2026082401",
+      "Version: " + release.version_name,
+      "Build: " + release.version_code,
       "Supported Android: 8.0+ (API 26+)",
       "Page: " + location.pathname.split("/").pop(),
       "Device model: " + (safeValue("device") || "not provided"),
@@ -30,6 +34,11 @@
   }
 
   form.addEventListener("input", refresh);
+  document.addEventListener("akalynth:android-release", function (event) {
+    if (!event.detail || typeof event.detail.version_name !== "string") return;
+    release = event.detail;
+    refresh();
+  });
   copy.addEventListener("click", function () {
     refresh();
     var write = navigator.clipboard && navigator.clipboard.writeText
