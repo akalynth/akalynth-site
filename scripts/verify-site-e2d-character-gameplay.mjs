@@ -6,6 +6,12 @@ const requests = [];
 let hooks;
 let betaStatusMode = 'success';
 const deferredBetaStatusResponses = [];
+let shopPurchaseMode = 'success';
+const deferredShopPurchaseResponses = [];
+let shopCatalogMode = 'valid';
+let marketPayloadMode = 'valid';
+let marketMode = 'listed';
+let ledgerOwnerName = 'player_private-site-e2d';
 const replacedUrls = [];
 
 const store = new Map();
@@ -106,6 +112,20 @@ const context = {
         });
       });
     }
+    if (request.path === '/v1/shop/purchase' && shopPurchaseMode === 'deferred') {
+      return new Promise((resolve) => {
+        deferredShopPurchaseResponses.push({
+          resolve(body) {
+            resolve({
+              ok: true,
+              status: 200,
+              statusText: 'OK',
+              text: async () => JSON.stringify(body),
+            });
+          },
+        });
+      });
+    }
     return {
       ok: true,
       status: 200,
@@ -175,7 +195,46 @@ function responseFor(request) {
     return { outfits: [{ outfit_id: 'female_guard', sex: 'female', name: 'City Guard' }] };
   }
   if (request.path === '/v1/shop/catalog') {
-    return { items: [] };
+    if (shopCatalogMode === 'invalid') return { items: [{ shop_key: 'broken' }] };
+    return {
+      items: [{
+        shop_key: 'pilgrim_mark',
+        item_type: 'pilgrim_mark',
+        name: 'Pilgrim Mark',
+        tag: 'Cosmetic',
+        description: 'A non-power mark for identity and memory.',
+        price_gold: 10,
+        currency: 'gold',
+      }],
+    };
+  }
+  if (request.path === '/v1/property/market') {
+    if (marketPayloadMode === 'invalid') return { listings: { not: 'an array' } };
+    return {
+      listings: marketMode === 'listed' ? [{
+        property_id: 'Azura:H1',
+        zone: 'high_city',
+        plot_id: 'H1',
+        district: 'Azura',
+        status: 'listed',
+        owner_name: 'player_private-site-e2d',
+        primary_price_gold: 20,
+        listed_price_gold: 77,
+      }] : [],
+      total: marketMode === 'listed' ? 1 : 0,
+    };
+  }
+  if (request.path.startsWith('/v1/property/ledger?')) {
+    const propertyId = new URLSearchParams(request.path.split('?')[1]).get('property_id');
+    return {
+      property_id: propertyId,
+      district: propertyId === 'Azura:H1' ? 'Azura' : null,
+      owner_name: propertyId === 'Azura:H1' ? ledgerOwnerName : null,
+      sale_count: propertyId === 'Azura:H1' ? 2 : 0,
+      owner_count: propertyId === 'Azura:H1' ? 2 : 0,
+      last_sale: null,
+      owner_history: [],
+    };
   }
   if (request.path === '/v1/work/start') {
     return { contract_id: 'contract-site-e2d', payout_gold: 5 };
@@ -187,9 +246,13 @@ function responseFor(request) {
     return { balance_gold: 10, item: { item_id: 'item-site-e2d' } };
   }
   if (request.path === '/v1/property/buy' || request.path === '/v1/property/unlist') {
-    return { balance_gold: 5, property: { property_id: request.body.property_id, status: request.path.endsWith('/buy') ? 'owned' : 'unowned' } };
+    marketMode = 'owned';
+    ledgerOwnerName = 'SiteProof';
+    return { balance_gold: 5, property: { property_id: request.body.property_id, status: 'owned' } };
   }
   if (request.path === '/v1/property/list') {
+    marketMode = 'listed';
+    ledgerOwnerName = 'SiteProof';
     return { property: { property_id: request.body.property_id, status: 'listed', listed_price_gold: request.body.price_gold } };
   }
   return {};
@@ -254,6 +317,60 @@ function validCreateBody() {
 
 vm.runInNewContext(appSource, context, { filename: 'js/app.js' });
 if (!hooks) fail('test hooks were not installed');
+
+await hooks.loadCatalogs();
+if (
+  hooks.state.shopStatus !== 'ready' ||
+  hooks.state.shopItems.length !== 1 ||
+  hooks.state.shopItems[0].id !== 'pilgrim_mark' ||
+  hooks.state.shopItems[0].gold !== 10
+) {
+  fail('shop UI state must come from the server catalog without a local product fallback');
+}
+shopCatalogMode = 'invalid';
+await hooks.loadCatalogs();
+if (hooks.state.shopStatus !== 'error' || hooks.state.shopItems.length !== 0) {
+  fail('malformed shop catalog items must fail closed instead of reaching the renderer');
+}
+shopCatalogMode = 'valid';
+await hooks.loadCatalogs();
+await hooks.loadHouseCards();
+if (
+  hooks.state.marketStatus !== 'ready' ||
+  hooks.state.currentHouses.length !== 1 ||
+  hooks.state.currentHouses[0].property_id !== 'Azura:H1' ||
+  hooks.state.currentHouses[0].owner_name !== 'Private owner' ||
+  hooks.state.currentHouses[0].sale_count !== 2
+) {
+  fail('house registry must use public market/ledger data and mask raw-looking owner identifiers');
+}
+marketPayloadMode = 'invalid';
+let malformedMarketRejected = false;
+try {
+  await hooks.loadHouseCards();
+} catch {
+  malformedMarketRejected = true;
+}
+if (!malformedMarketRejected || hooks.state.marketStatus !== 'error' || hooks.state.currentHouses.length !== 0) {
+  fail('malformed market payloads must fail closed instead of becoming a successful empty registry');
+}
+marketPayloadMode = 'valid';
+await hooks.loadHouseCards();
+for (const path of ['/v1/shop/catalog', '/v1/property/market']) {
+  const request = requests.find((entry) => entry.path === path);
+  if (!request || request.method !== 'GET' || request.credentials !== 'include') {
+    fail(`${path} must be fetched from the API with the account session policy`);
+  }
+}
+if (hooks.safeOwnerName('guest_secret-id') !== 'Private owner') {
+  fail('raw-looking public owner identifiers must not be rendered');
+}
+if (
+  hooks.projectedBalanceText(5, 10) !== 'Insufficient by 5 gold' ||
+  hooks.projectedBalanceText(15, 10) !== '5 gold'
+) {
+  fail('purchase review must show an honest balance or shortfall');
+}
 
 const registrationWithoutInvite = hooks.registrationPayload({
   handle: 'NoInvite',
@@ -414,6 +531,27 @@ hooks.state.characters = [validCharacter()];
 hooks.rememberSelectedCharacter('char-site-e2d');
 hooks.state.workContract = { contract_id: 'contract-site-e2d' };
 
+shopPurchaseMode = 'deferred';
+const purchasesBeforeDuplicateProof = requests.filter((entry) => entry.path === '/v1/shop/purchase').length;
+const firstPendingPurchase = hooks.buyShopItem('pilgrim_mark', noopElement);
+const duplicatePurchaseError = errorElement();
+await hooks.buyShopItem('pilgrim_mark', duplicatePurchaseError);
+const purchasesAfterDuplicateProof = requests.filter((entry) => entry.path === '/v1/shop/purchase').length;
+if (
+  purchasesAfterDuplicateProof !== purchasesBeforeDuplicateProof + 1 ||
+  duplicatePurchaseError.textContent !== 'This purchase is already pending.' ||
+  deferredShopPurchaseResponses.length !== 1
+) {
+  fail('duplicate shop submissions must be blocked while the server mutation is pending');
+}
+shopPurchaseMode = 'success';
+deferredShopPurchaseResponses[0].resolve({
+  ok: true,
+  balance_gold: 10,
+  item: { item_id: 'item-site-e2d', item_type: 'pilgrim_mark', shop_key: 'pilgrim_mark' },
+});
+await firstPendingPurchase;
+
 await hooks.createAccountCharacter(validCreateBody());
 hooks.state.characters = [validCharacter()];
 hooks.rememberSelectedCharacter('char-site-e2d');
@@ -421,18 +559,30 @@ await hooks.selectAccountCharacter('char-site-e2d');
 await hooks.startWork();
 hooks.state.workContract = { contract_id: 'contract-site-e2d' };
 await hooks.tickWork();
-await hooks.buyShopItem('healing_herb', noopElement);
+await hooks.buyShopItem('pilgrim_mark', noopElement);
 await hooks.changeProperty('Azura:H1', true, noopElement);
+let ownedHouse = hooks.state.currentHouses.find((entry) => entry.property_id === 'Azura:H1');
+if (!ownedHouse || ownedHouse.status !== 'owned' || !hooks.houseIsMine(ownedHouse) || !hooks.houseActionsHtml(ownedHouse).includes('data-house-list')) {
+  fail('an accepted property purchase must remain discoverable from its source-backed ledger and expose listing review');
+}
 await hooks.changeProperty('Azura:H1', false, noopElement);
+ownedHouse = hooks.state.currentHouses.find((entry) => entry.property_id === 'Azura:H1');
+if (!ownedHouse || ownedHouse.status !== 'owned' || !hooks.houseActionsHtml(ownedHouse).includes('data-house-list')) {
+  fail('an accepted unlist must remain discoverable and expose relisting review');
+}
 await hooks.listProperty('Azura:H1', 77, noopElement);
+const listedHouse = hooks.state.currentHouses.find((entry) => entry.property_id === 'Azura:H1');
+if (!listedHouse || listedHouse.status !== 'listed' || !hooks.houseActionsHtml(listedHouse).includes('data-house-unlist')) {
+  fail('an accepted listing must refresh to the server-listed state and expose unlist');
+}
 
 assertRequest('/v1/characters', { name: 'CreatedSiteProof', world_id: 'high_city', sex: 'female', outfit_id: 'female_guard' });
 assertRequest('/v1/characters/select', { character_id: 'char-site-e2d' });
 assertRequest('/v1/work/start', { character_id: 'char-site-e2d' });
 assertRequest('/v1/work/tick', { character_id: 'char-site-e2d', contract_id: 'contract-site-e2d' });
-assertRequest('/v1/shop/purchase', { character_id: 'char-site-e2d', shop_key: 'healing_herb' });
+assertRequest('/v1/shop/purchase', { character_id: 'char-site-e2d', shop_key: 'pilgrim_mark' });
 assertRequest('/v1/property/buy', { character_id: 'char-site-e2d', property_id: 'Azura:H1' });
 assertRequest('/v1/property/unlist', { character_id: 'char-site-e2d', property_id: 'Azura:H1' });
 assertRequest('/v1/property/list', { character_id: 'char-site-e2d', property_id: 'Azura:H1', price_gold: 77 });
 
-console.log('site e2d character/gameplay verifier passed');
+console.log('site e2d Android companion authority verifier passed');

@@ -2,18 +2,23 @@
 
 This repository contains the public static Akalynth website and portal frontend.
 
-It is a pre-alpha static site for Akalynth's High City surface:
+It is an Android-only companion site for Akalynth's High City surface:
 
-- `index.html` public landing, High City preview, and Android beta call to action
-- `beta.html` public Android beta download pointer
-- `shop.html` in-game-currency shop portal for the Akalynth API
-- `houses.html` server property market portal for the Akalynth API
-- `account.html` static account portal shell for the Akalynth API
-- `register.html` paste-only beta invite entry path into the existing account portal
+- `index.html` public landing and High City presentation
+- `download.html` canonical Android APK and checksum instructions
+- `beta.html` compatibility redirect to the Android download page
+- `houses.html` public High City housing explainer
+- `market.html` server-backed House Registry companion surface
+- `shop.html` server-backed Coin Exchange and non-live Patron proposal
+- `account.html` account and character companion portal
+- `register.html` paste-only invite entry path into the existing account portal
 - `forgot.html` password-reset entry and confirmation path into the existing account portal
-- `forum.html` read-only community boards preview
+- `community.html` read-only official/seed community boards
+- `forum.html` compatibility redirect that preserves board/thread queries
+- `support.html` FAQ and safe diagnostic-copy helper; no submission channel
 - `library.html` public-safe visual lore archive
-- `css/`, `js/`, and `screenshots/` assets used by the static site
+- `wallpapers.html` secondary public visual archive
+- `css/` and `js/` assets used by the static site
 
 ## Boundary
 
@@ -25,14 +30,17 @@ or private roadmap material.
 The account, shop, wallet, work, and housing pages are static frontends that call
 named Akalynth API endpoints when available. This repository still does not
 contain account authority, session authority, receipt signing, economy authority,
-or runtime state. Shop, work, and housing pages do not use browser-local state as
-authority; purchases, work payouts, and property actions are settled only when
-the server emits the relevant receipts.
+or runtime state. Shop and housing pages do not use browser-local state as
+authority; purchases and property actions are shown as accepted only after the
+server accepts them, and server-backed state is refreshed after mutations.
 
-The account portal may submit an explicitly pasted beta invite with registration
-and may show an authenticated controlled-beta cohort status. Invite values are
-never read from the page URL. Cohort status is an optional API projection:
-failure or absence hides it without blocking account, character, or play access.
+The account portal may submit an explicitly pasted invite with registration.
+Invite values are never read from the page URL. The optional legacy access
+projection remains an internal compatibility request; it is not rendered as a
+public release stage or distribution path.
+
+The only play/distribution path advertised by this repository is the direct
+Android APK. The website does not embed or launch a browser game.
 
 ## Local Preview
 
@@ -49,17 +57,17 @@ Then open `http://127.0.0.1:8099/`.
 
 ## Verification
 
-Run the account-character site verifier before changing the account portal, beta
-page, shop/work/property API hooks, or public boundary wording:
+Run the account-character site verifier before changing the account portal,
+download compatibility route, shop/property API hooks, or public boundary wording:
 
 ```bash
 ./scripts/verify-account-character-site.sh
 ```
 
 This wraps the static route/link/API-hook smoke test, executable site E2D
-character and gameplay action proof for account-scoped
-create/select/shop/work/property requests, explicit no-session/no-CSRF inline
-helper proof for those account actions, and the public boundary guard.
+character and companion-action proof for account-scoped create/select/shop/work/property
+requests, explicit no-session/no-CSRF inline helper proof, Android-only route
+assertions, and the public boundary guard.
 
 ## License
 

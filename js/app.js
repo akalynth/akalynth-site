@@ -15,8 +15,7 @@
       : /(^|\.)(beta|staging|sim)\.akalynth\.com$/.test(location.hostname)
         ? location.origin // lane sites talk to their own same-origin /v1 (proxied to the lane server)
         : "https://" + "api." + "akalynth.com");
-  var PLAY_URL = "/play/";
-  var BETA_WAYS_URL = "beta.html";
+  var DOWNLOAD_URL = "/download/akalynth-beta-v12.apk";
   var CSRF_COOKIE = "akalynth_csrf";
   var CSRF_STORE = "akalynth.csrf.v1";
   var SELECTED_CHARACTER_STORE = "akalynth.selectedCharacter.v1";
@@ -36,21 +35,22 @@
     { world_id: "high_city", name: "High City", description: "The city beyond the gate." },
   ];
   var FALLBACK_OUTFITS = [
-    { outfit_id: "male_wanderer", sex: "male", name: "Wanderer", sprite_id: "base_human_male_01" },
-    { outfit_id: "male_guard", sex: "male", name: "City Guard", sprite_id: "guard_city_01" },
-    { outfit_id: "male_mage", sex: "male", name: "Apprentice Mage", sprite_id: "mage_apprentice_01" },
-    { outfit_id: "female_wanderer", sex: "female", name: "Wanderer", sprite_id: null },
-    { outfit_id: "female_guard", sex: "female", name: "City Guard", sprite_id: null },
-    { outfit_id: "female_mage", sex: "female", name: "Apprentice Mage", sprite_id: null },
+    { outfit_id: "male_wanderer", sex: "male", name: "Wanderer", sprite_id: "base_human_male_02" },
+    { outfit_id: "male_guard", sex: "male", name: "City Guard", sprite_id: "guard_city_02" },
+    { outfit_id: "male_mage", sex: "male", name: "Apprentice Mage", sprite_id: "mage_apprentice_02" },
+    { outfit_id: "female_wanderer", sex: "female", name: "Wanderer", sprite_id: "base_human_female_01" },
+    { outfit_id: "female_guard", sex: "female", name: "City Guard", sprite_id: "guard_city_female_01" },
+    { outfit_id: "female_mage", sex: "female", name: "Apprentice Mage", sprite_id: "mage_apprentice_female_01" },
   ];
-  var SHOP_ITEMS = [
-    { id: "healing_herb", name: "Healing Herb", tag: "Consumable", desc: "A server-authoritative in-game item. Bought with earned gold only.", gold: 5 },
-    { id: "pilgrim_mark", name: "Pilgrim Mark", tag: "Cosmetic", desc: "A non-power mark for identity and memory. No real-money purchase.", gold: 10 },
-  ];
-  var HOUSE_PLOTS = [
-    { property_id: "Azura:H1", zone: "Azura", plot_id: "H1", district: "Harbor Edge", primary_price_gold: 500, listed_price_gold: null, status: "unknown", owner_name: null, sale_count: 0 },
-    { property_id: "Azura:H2", zone: "Azura", plot_id: "H2", district: "Market Quarter", primary_price_gold: 1000, listed_price_gold: null, status: "unknown", owner_name: null, sale_count: 0 },
-    { property_id: "Azura:H3", zone: "Azura", plot_id: "H3", district: "South Gate", primary_price_gold: 2000, listed_price_gold: null, status: "unknown", owner_name: null, sale_count: 0 },
+  // Source-backed by the current High City map contract. The public market omits
+  // owned, unlisted plots, so their public ledgers are queried by these stable
+  // property ids. Fixture fields are rendered only after the market request and
+  // matching ledger request both succeed; they are never an offline ownership
+  // fallback.
+  var KNOWN_PROPERTY_FIXTURES = [
+    { property_id: "Azura:H1", zone: "Azura", plot_id: "H1", district: "Harbor Edge", primary_price_gold: 500 },
+    { property_id: "Azura:H2", zone: "Azura", plot_id: "H2", district: "Market Quarter", primary_price_gold: 1000 },
+    { property_id: "Azura:H3", zone: "Azura", plot_id: "H3", district: "South Gate", primary_price_gold: 2000 },
   ];
 
   var state = {
@@ -59,8 +59,16 @@
     selectedCharacterId: sessionStorage.getItem(SELECTED_CHARACTER_STORE) || "",
     worlds: FALLBACK_WORLDS.slice(),
     outfits: FALLBACK_OUTFITS.slice(),
-    shopItems: SHOP_ITEMS.slice(),
-    propertyOverrides: {},
+    shopItems: [],
+    shopStatus: "loading",
+    purchaseStatus: "",
+    purchaseStatusKind: "info",
+    marketStatus: "idle",
+    marketMessage: "",
+    marketMessageKind: "info",
+    marketRequest: 0,
+    pendingMutations: {},
+    currentHouses: [],
     workContract: null,
     goldBalance: null,
     apiOnline: null,
@@ -150,7 +158,14 @@
     }
   }
   function rememberSelectedCharacter(id) {
-    state.selectedCharacterId = id || "";
+    var nextId = id || "";
+    if (nextId !== state.selectedCharacterId) {
+      state.purchaseStatus = "";
+      state.purchaseStatusKind = "info";
+      state.marketMessage = "";
+      state.marketMessageKind = "info";
+    }
+    state.selectedCharacterId = nextId;
     if (state.selectedCharacterId) sessionStorage.setItem(SELECTED_CHARACTER_STORE, state.selectedCharacterId);
     else sessionStorage.removeItem(SELECTED_CHARACTER_STORE);
   }
@@ -161,6 +176,10 @@
     state.goldBalance = null;
     state.workContract = null;
     state.betaCohort = null;
+    state.purchaseStatus = "";
+    state.purchaseStatusKind = "info";
+    state.marketMessage = "";
+    state.marketMessageKind = "info";
     rememberSelectedCharacter("");
   }
   function clearLocalSessionUi(message, kind) {
@@ -226,7 +245,7 @@
     if (err.status === 409 && err.body && err.body.error === "on_cooldown") return "Work is cooling down. Try again later.";
     if (err.status === 409 && err.body && err.body.error === "invalid_contract") return "Start work again. This contract is no longer active.";
     if (err.status === 409 && err.body && err.body.error === "insufficient_presence") return "Stay present in the world before ticking work again.";
-    if (err.status === 402 && err.body && err.body.error === "insufficient_gold") return "Not enough earned gold for this action.";
+    if ((err.status === 402 || err.status === 409) && err.body && err.body.error === "insufficient_gold") return "Not enough earned gold for this action.";
     if (err.status === 404) return "That server record was not found.";
     return err.message || "Request failed.";
   }
@@ -239,6 +258,21 @@
     if (!state.account) return "Sign in with an account session before creating or selecting a character.";
     if (!csrfReady()) return "Security token missing. Sign in again before creating or selecting a character.";
     return "";
+  }
+  function mutationKey(kind, id) {
+    return kind + ":" + id;
+  }
+  function mutationPending(kind, id) {
+    return state.pendingMutations[mutationKey(kind, id)] === true;
+  }
+  function beginMutation(kind, id) {
+    var key = mutationKey(kind, id);
+    if (state.pendingMutations[key]) return false;
+    state.pendingMutations[key] = true;
+    return true;
+  }
+  function endMutation(kind, id) {
+    delete state.pendingMutations[mutationKey(kind, id)];
   }
 
   // ---- Tabs (index page only) ----------------------------------------------
@@ -261,7 +295,11 @@
     if (window.location.hash !== "#" + name) history.replaceState(null, "", "#" + name);
     var main = $("#main");
     if (main) main.focus({ preventScroll: true });
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({
+      top: 0,
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+    });
+    wireReveals();
   }
   function initTabs() {
     var panels = $all(".tab-panel");
@@ -306,6 +344,7 @@
   }
 
   function loadCatalogs() {
+    state.shopStatus = "loading";
     return Promise.all([
       api("/v1/worlds").then(function (body) {
         var worlds = (body.worlds || []).filter(validWorld);
@@ -316,18 +355,34 @@
         if (outfits.length) state.outfits = outfits;
       }).catch(function () {}),
       api("/v1/shop/catalog").then(function (body) {
-        if (body.items && body.items.length) {
-          state.shopItems = body.items.map(function (item) {
-            return {
-              id: item.shop_key,
-              name: item.name,
-              tag: item.tag,
-              desc: item.description,
-              gold: item.price_gold,
-            };
-          });
-        }
-      }).catch(function () {}),
+        if (!Array.isArray(body.items)) throw new Error("invalid_shop_catalog");
+        var items = body.items.map(function (item) {
+          return {
+            id: item && item.shop_key,
+            name: item && item.name,
+            tag: item && item.tag,
+            desc: item && item.description,
+            gold: item && item.price_gold,
+            currency: item && item.currency,
+          };
+        });
+        var validItems = items.filter(function (item) {
+          return !!(
+            typeof item.id === "string" && item.id &&
+            typeof item.name === "string" && item.name &&
+            typeof item.tag === "string" && item.tag &&
+            typeof item.desc === "string" && item.desc &&
+            item.currency === "gold" &&
+            Number.isInteger(item.gold) && item.gold >= 0
+          );
+        });
+        if (validItems.length !== items.length) throw new Error("invalid_shop_catalog_item");
+        state.shopItems = validItems;
+        state.shopStatus = "ready";
+      }).catch(function () {
+        state.shopItems = [];
+        state.shopStatus = "error";
+      }),
     ]);
   }
 
@@ -355,20 +410,22 @@
   function loadWalletState() {
     var character = selectedCharacter();
     state.goldBalance = null;
-    if (!state.account || !character) return Promise.resolve();
+    if (!state.account || !character) return Promise.resolve(false);
     return api("/v1/wallet?character_id=" + encodeURIComponent(character.character_id))
       .then(function (body) {
         state.goldBalance = typeof body.balance_gold === "number" ? body.balance_gold : null;
+        return state.goldBalance != null;
       })
       .catch(function () {
         state.goldBalance = null;
+        return false;
       });
   }
 
   function refreshLibraryDiscovery() {
     if (pageName() !== "library") return Promise.resolve();
     if (!state.account || !state.selectedCharacterId) return Promise.resolve();
-    return apiGet("/v1/library/discovery?character_id=" + encodeURIComponent(state.selectedCharacterId))
+    return api("/v1/library/discovery?character_id=" + encodeURIComponent(state.selectedCharacterId))
       .then(function (body) {
         if (window.AKALYNTH_APPLY_LIBRARY_DISCOVERY) window.AKALYNTH_APPLY_LIBRARY_DISCOVERY(body);
       })
@@ -399,12 +456,29 @@
       setText("#holdings-name", character.name || character.character_id);
       setText("#holdings-world", worldName(character.world_id));
       setText("#holdings-gold", state.goldBalance == null ? "server" : fmt(state.goldBalance));
-      setText("#holdings-premium", "Not in V1");
-      renderWorkControls(body, character);
+      setText("#holdings-premium", "Not connected");
     } else {
       if (empty) empty.hidden = false;
       if (body) body.hidden = true;
     }
+  }
+  function renderIdentityControls() {
+    var character = selectedCharacter();
+    var label = state.account && character
+      ? character.name
+      : state.account
+        ? (state.account.handle || "ACCOUNT")
+        : "SIGN IN";
+    $all("#account-summary").forEach(function (summary) {
+      summary.textContent = label;
+      summary.setAttribute("aria-label", state.account ? "Open account menu for " + label : "Open sign in menu");
+    });
+    $all("#chrome-signout").forEach(function (button) {
+      button.hidden = !state.account;
+    });
+    setText("#community-identity", state.account && character
+      ? "Reading as " + character.name + ". Posting remains locked."
+      : "Sign in to show your selected companion identity.");
   }
   function workStatusText() {
     if (!state.workContract) return "Earn gold through server work contracts.";
@@ -430,6 +504,21 @@
       $("#work-tick-btn", body)?.addEventListener("click", tickWork);
     }
     setText("#work-status", workStatusText());
+  }
+  function signOut() {
+    if (!state.account) {
+      location.href = "account.html";
+      return Promise.resolve(null);
+    }
+    return api("/v1/accounts/logout", { method: "POST", body: {} })
+      .then(function () {
+        clearLocalSessionUi("Signed out.", "ok");
+        return true;
+      })
+      .catch(function (err) {
+        clearLocalSessionUi("Signed out locally. Server logout could not be confirmed: " + apiMessage(err), "warn");
+        return null;
+      });
   }
   function startWork() {
     var character = selectedCharacter();
@@ -489,52 +578,104 @@
   function buyShopItem(itemId, err) {
     var character = selectedCharacter();
     if (err) err.textContent = "";
+    state.purchaseStatus = "";
+    state.purchaseStatusKind = "info";
     var blocked = accountActionBlockedMessage();
     if (blocked || !character) {
       if (err) err.textContent = blocked || "Select a character before buying.";
       return Promise.resolve(null);
     }
+    if (!beginMutation("shop", itemId)) {
+      if (err) err.textContent = "This purchase is already pending.";
+      return Promise.resolve(null);
+    }
+    renderShop();
+    var accepted = null;
     return api("/v1/shop/purchase", { method: "POST", body: { character_id: character.character_id, shop_key: itemId } })
       .then(function (body) {
+        accepted = body;
         if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;
-        if (err) err.textContent = "Purchase accepted by server.";
-        renderHoldings();
-        return body;
+        return loadWalletState();
+      })
+      .then(function (refreshed) {
+        state.purchaseStatus = refreshed
+          ? "Purchase accepted by the server; balance refreshed."
+          : "The server accepted the purchase, but the balance refresh failed. Do not submit it again; refresh the page.";
+        state.purchaseStatusKind = refreshed ? "ok" : "warn";
+        if (err) err.textContent = state.purchaseStatus;
+        var status = $("#cart-items");
+        if (status) status.innerHTML = '<li class="cart-empty">' + escapeHtml(state.purchaseStatus) + ' Inventory authority remains in the Android client.</li>';
+        return accepted;
       })
       .catch(function (ex) {
-        if (err) err.textContent = apiMessage(ex);
+        state.purchaseStatus = apiMessage(ex);
+        state.purchaseStatusKind = "error";
+        if (err) err.textContent = state.purchaseStatus;
         return null;
+      })
+      .then(function (result) {
+        endMutation("shop", itemId);
+        renderHoldings();
+        renderShop();
+        return result;
       });
   }
   function changeProperty(id, buy, err) {
     var character = selectedCharacter();
     if (err) err.textContent = "";
+    state.marketMessage = "";
+    state.marketMessageKind = "info";
     var blocked = accountActionBlockedMessage();
     if (blocked || !character) {
       if (err) err.textContent = blocked || "Select a character before changing property.";
       return Promise.resolve(null);
     }
+    var kind = buy ? "property-buy" : "property-unlist";
+    if (!beginMutation(kind, id)) {
+      if (err) err.textContent = "This property change is already pending.";
+      return Promise.resolve(null);
+    }
+    var accepted = null;
     return api(buy ? "/v1/property/buy" : "/v1/property/unlist", {
       method: "POST",
       body: { character_id: character.character_id, property_id: id },
     })
       .then(function (body) {
+        accepted = body;
         if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;
-        rememberHouseOverride(body.property);
-        if (err) err.textContent = buy ? "Purchase accepted by server." : "Unlisted by server.";
-        renderHoldings();
-        renderHouses();
-        return body;
+        return Promise.all([loadWalletState(), loadHouseCards()])
+          .then(function (results) { return results[0] === true; })
+          .catch(function () { return false; });
+      })
+      .then(function (refreshed) {
+        state.marketMessage = refreshed
+          ? (buy ? "Purchase accepted; balance and registry refreshed." : "Listing removed; registry refreshed.")
+          : "The server accepted the change, but the balance or registry refresh failed. Do not submit it again; refresh the page.";
+        state.marketMessageKind = refreshed ? "ok" : "warn";
+        if (err) err.textContent = refreshed
+          ? (buy ? "Purchase accepted; registry refreshed." : "Unlisted; registry refreshed.")
+          : "The server accepted the change, but the balance or registry refresh failed. Do not submit it again; refresh the page.";
+        return accepted;
       })
       .catch(function (ex) {
-        if (err) err.textContent = apiMessage(ex);
+        state.marketMessage = apiMessage(ex);
+        state.marketMessageKind = "error";
+        if (err) err.textContent = state.marketMessage;
         return null;
+      })
+      .then(function (result) {
+        endMutation(kind, id);
+        renderHoldings();
+        renderHouses();
+        return result;
       });
   }
   function listProperty(id, price, err) {
     if (err) err.textContent = "";
-    if (!Number.isInteger(price) || price < 1) {
-      if (err) err.textContent = "Enter a positive gold price.";
+    state.marketMessage = "";
+    state.marketMessageKind = "info";
+    if (!Number.isInteger(price) || price < 1 || price > 1000000) {
+      if (err) err.textContent = "Enter a whole-gold price from 1 to 1,000,000.";
       return Promise.resolve(null);
     }
     var character = selectedCharacter();
@@ -543,19 +684,41 @@
       if (err) err.textContent = blocked || "Select a character before listing property.";
       return Promise.resolve(null);
     }
+    if (!beginMutation("property-list", id)) {
+      if (err) err.textContent = "This listing is already pending.";
+      return Promise.resolve(null);
+    }
+    var accepted = null;
     return api("/v1/property/list", {
       method: "POST",
       body: { character_id: character.character_id, property_id: id, price_gold: price },
     })
       .then(function (body) {
-        rememberHouseOverride(body && body.property);
-        if (err) err.textContent = "Listed by server.";
-        renderHouses();
-        return body;
+        accepted = body;
+        return loadHouseCards()
+          .then(function () { return true; })
+          .catch(function () { return false; });
+      })
+      .then(function (refreshed) {
+        state.marketMessage = refreshed
+          ? "Listing accepted; registry refreshed."
+          : "The server accepted the listing, but the registry refresh failed. Do not submit it again; refresh the page.";
+        state.marketMessageKind = refreshed ? "ok" : "warn";
+        if (err) err.textContent = refreshed
+          ? "Listed; registry refreshed."
+          : "The server accepted the listing, but the registry refresh failed. Do not submit it again; refresh the page.";
+        return accepted;
       })
       .catch(function (ex) {
-        if (err) err.textContent = apiMessage(ex);
+        state.marketMessage = apiMessage(ex);
+        state.marketMessageKind = "error";
+        if (err) err.textContent = state.marketMessage;
         return null;
+      })
+      .then(function (result) {
+        endMutation("property-list", id);
+        renderHouses();
+        return result;
       });
   }
   function applyAccountGates() {
@@ -581,45 +744,6 @@
     }
   }
 
-  function renderBetaStatus() {
-    var root = $("#beta-account-status");
-    if (!root) return;
-    var character = selectedCharacter();
-    if (state.apiOnline === false) {
-      root.innerHTML =
-        '<p class="lede">API unavailable</p>' +
-        '<p>The beta download is available, but this browser could not confirm your account character against ' +
-        escapeHtml(API_BASE) +
-        '.</p>' +
-        '<p class="muted small">Account and character authority stay on the Akalynth API; no local beta readiness is assumed here.</p>';
-      return;
-    }
-    if (state.account && character) {
-      root.innerHTML =
-        '<p class="lede">Ready to play</p>' +
-        '<p>Selected character: <strong>' +
-        escapeHtml(character.name || character.character_id) +
-        '</strong> in ' +
-        escapeHtml(worldName(character.world_id)) +
-        '.</p>' +
-        '<p class="muted small">Sign in with this account in the browser or on Android, then select this character to enter the world.</p>' +
-        '<a class="btn btn-gold btn-block" href="' + PLAY_URL + '" rel="noopener">Play in browser ▶</a>' +
-        '<a class="btn btn-ghost btn-block" href="' + BETA_WAYS_URL + '">Or get the Android client</a>';
-      return;
-    }
-    if (state.account) {
-      root.innerHTML =
-        '<p class="lede">Account signed in; character still required</p>' +
-        '<p>Create or select a server-backed account character before playing the beta.</p>' +
-        '<a class="btn btn-gold btn-block" href="account.html">Create or select character</a>';
-      return;
-    }
-    root.innerHTML =
-      '<p class="lede">Account character required</p>' +
-      '<p>Create an account with a nickname, then create or select a character before playing the beta.</p>' +
-      '<a class="btn btn-gold btn-block" href="account.html">Create account character</a>';
-  }
-
   // ---- Account page --------------------------------------------------------
   function accountMessageHtml() {
     if (!state.message) return "";
@@ -639,7 +763,7 @@
     return (
       '<article class="parchment"><p class="lede">Create account</p>' +
       '<form class="account-form" id="register-form" novalidate>' +
-      '<div class="field"><label for="reg-invite">Beta invite code <span class="muted small">(if provided)</span></label><input type="text" id="reg-invite" name="invite_code" autocomplete="off" spellcheck="false" placeholder="Paste your invite code" /></div>' +
+      '<div class="field"><label for="reg-invite">Invite code <span class="muted small">(if provided)</span></label><input type="text" id="reg-invite" name="invite_code" autocomplete="off" spellcheck="false" placeholder="Paste your invite code" /></div>' +
       '<div class="field"><label for="reg-handle">Nickname</label><input type="text" id="reg-handle" name="handle" autocomplete="username" minlength="3" maxlength="32" required /></div>' +
       '<div class="field"><label for="reg-email">Email <span class="muted small">(optional)</span></label><input type="email" id="reg-email" name="email" autocomplete="email" /></div>' +
       '<div class="field"><label for="reg-password">Password</label><input type="password" id="reg-password" name="password" autocomplete="new-password" minlength="8" required /></div>' +
@@ -721,8 +845,8 @@
             (selected ? "Selected" : "Select character") +
             "</button>" +
             (selected
-              ? '<a class="btn btn-gold btn-block character-play-link" href="' + PLAY_URL + '" rel="noopener">Play in browser ▶</a>' +
-                '<a class="btn btn-ghost btn-block" href="' + BETA_WAYS_URL + '">Or get the Android client</a>'
+              ? '<a class="btn btn-gold btn-block character-play-link" href="' + DOWNLOAD_URL + '" download>Download / open Akalynth on Android</a>' +
+                '<a class="btn btn-ghost btn-block" href="download.html">Android install notes</a>'
               : "") +
             "</article>"
           );
@@ -745,7 +869,7 @@
       '<div class="field"><label for="char-sex">Sex</label><select id="char-sex" name="sex"><option value="male">Male</option><option value="female">Female</option></select></div>' +
       '<div class="field"><label for="char-outfit">Outfit</label><select id="char-outfit" name="outfit_id"></select></div>' +
       '<button class="btn btn-gold btn-block" type="submit">Create character</button>' +
-      '<p class="muted small">Female outfit sprites are still pending the art lane; the server catalog already reserves the IDs.</p>' +
+      '<p class="muted small">World and outfit choices are limited to the source-backed catalog.</p>' +
       "</form></article>"
     );
   }
@@ -771,7 +895,6 @@
       "</dl>" +
       '<button class="btn btn-ghost" id="logout-btn" type="button">Sign out</button>' +
       "</article>" +
-      '<article class="parchment notice" id="controlled-beta-status" aria-live="polite" hidden></article>' +
       verifyNotice +
       '<article class="parchment"><p class="lede">Characters</p>' + characterCardsHtml() + "</article>" +
       createCharacterHtml()
@@ -784,31 +907,11 @@
       accountMessageHtml() +
       (state.resetToken ? resetConfirmHtml(state.resetToken) : state.account ? dashboardHtml() : authFormsHtml());
     renderApiStatus(root);
-    renderControlledBetaStatus();
     wireAccountForms(root);
   }
   function renderControlledBetaStatus() {
-    var root = $("#controlled-beta-status");
-    if (!root) return;
-    var cohort = state.betaCohort;
-    if (
-      !cohort ||
-      typeof cohort.cohort_id !== "string" ||
-      !cohort.cohort_id ||
-      typeof cohort.release_commit !== "string" ||
-      !cohort.release_commit
-    ) {
-      root.hidden = true;
-      root.textContent = "";
-      return;
-    }
-    root.hidden = false;
-    root.innerHTML =
-      '<p class="lede">Controlled beta</p><p>' +
-      escapeHtml(cohort.cohort_id) +
-      " · release " +
-      escapeHtml(cohort.release_commit.slice(0, 12)) +
-      "</p>";
+    // The cohort endpoint is retained for operational compatibility, but it is
+    // intentionally not a public product or distribution surface.
   }
   function refreshControlledBetaStatus() {
     var requestGeneration = ++betaStatusRequestGeneration;
@@ -883,19 +986,33 @@
     });
     return data;
   }
+  function lockForm(form) {
+    if (!form || form.dataset.pending === "1") return false;
+    form.dataset.pending = "1";
+    var submit = form.querySelector('[type="submit"]');
+    if (submit) submit.disabled = true;
+    return true;
+  }
+  function unlockForm(form) {
+    if (!form) return;
+    delete form.dataset.pending;
+    var submit = form.querySelector('[type="submit"]');
+    if (submit) submit.disabled = false;
+  }
   function selectAccountCharacter(id) {
     var blocked = accountCharacterActionBlockedMessage();
     if (blocked) {
       setMessage(blocked, "error");
       return Promise.resolve(null);
     }
+    if (!beginMutation("character-select", id)) return Promise.resolve(null);
     return api("/v1/characters/select", { method: "POST", body: { character_id: id } })
       .then(function (body) {
         if (!body || body.ok !== true || !validCharacter(body.character) || typeof body.token !== "string" || !body.token) {
           throw new Error("Server returned an invalid character response.");
         }
         rememberSelectedCharacter(body.character.character_id);
-        setMessage("Character selected. Play in your browser to enter the world.", "ok");
+        setMessage("Character selected. Continue in Akalynth on Android.", "ok");
         return loadWalletState().then(function () {
           renderAll();
           return body;
@@ -904,6 +1021,10 @@
       .catch(function (err) {
         setMessage(apiMessage(err), "error");
         return null;
+      })
+      .then(function (result) {
+        endMutation("character-select", id);
+        return result;
       });
   }
   function createAccountCharacter(data) {
@@ -916,13 +1037,15 @@
       setMessage(blocked, "error");
       return Promise.resolve(null);
     }
+    var createKey = typeof data.name === "string" ? data.name : "new";
+    if (!beginMutation("character-create", createKey)) return Promise.resolve(null);
     return api("/v1/characters", { method: "POST", body: data })
       .then(function (body) {
         if (!body || body.ok !== true || !validCharacter(body.character) || typeof body.token !== "string" || !body.token) {
           throw new Error("Server returned an invalid character response.");
         }
         rememberSelectedCharacter(body.character.character_id);
-        state.message = "Character created. Play in your browser to enter the world.";
+        state.message = "Character created. Continue in Akalynth on Android.";
         state.messageKind = "ok";
         return refreshPortal().then(function () {
           return body;
@@ -931,12 +1054,17 @@
       .catch(function (err) {
         setMessage(apiMessage(err), "error");
         return null;
+      })
+      .then(function (result) {
+        endMutation("character-create", createKey);
+        return result;
       });
   }
   function wireAccountForms(root) {
     var register = $("#register-form", root);
     if (register) register.addEventListener("submit", function (e) {
       e.preventDefault();
+      if (!lockForm(register)) return;
       api("/v1/accounts/register", { method: "POST", body: registrationPayload(formData(register)) })
         .then(function (body) {
           var msg;
@@ -949,65 +1077,69 @@
           if (body.dev_verification_token) msg += " Dev token: " + body.dev_verification_token;
           setMessage(msg, "ok");
         })
-        .catch(function (err) { setMessage(apiMessage(err), "error"); });
+        .catch(function (err) { setMessage(apiMessage(err), "error"); })
+        .then(function () { unlockForm(register); });
     });
 
     var login = $("#login-form", root);
     if (login) login.addEventListener("submit", function (e) {
       e.preventDefault();
+      if (!lockForm(login)) return;
       api("/v1/accounts/login", { method: "POST", body: formData(login) })
         .then(function () {
           state.message = "Signed in.";
           state.messageKind = "ok";
           return refreshPortal();
         })
-        .catch(function (err) { setMessage(apiMessage(err), "error"); });
+        .catch(function (err) { setMessage(apiMessage(err), "error"); })
+        .then(function () { unlockForm(login); });
     });
 
     var verify = $("#verify-form", root);
     if (verify) verify.addEventListener("submit", function (e) {
       e.preventDefault();
+      if (!lockForm(verify)) return;
       api("/v1/accounts/verify-email", { method: "POST", body: formData(verify) })
         .then(function () {
           state.message = "Email verified.";
           state.messageKind = "ok";
           return refreshPortal();
         })
-        .catch(function (err) { setMessage(apiMessage(err), "error"); });
+        .catch(function (err) { setMessage(apiMessage(err), "error"); })
+        .then(function () { unlockForm(verify); });
     });
 
     var resetReq = $("#reset-request-form", root);
     if (resetReq) resetReq.addEventListener("submit", function (e) {
       e.preventDefault();
+      if (!lockForm(resetReq)) return;
       api("/v1/accounts/password-reset/request", { method: "POST", body: formData(resetReq) })
         .then(function (body) {
           var msg = body.message || "If this email has an account, a reset link has been sent.";
           if (body.dev_reset_token) msg += " Dev token: " + body.dev_reset_token;
           setMessage(msg, "ok");
         })
-        .catch(function (err) { setMessage(apiMessage(err), "error"); });
+        .catch(function (err) { setMessage(apiMessage(err), "error"); })
+        .then(function () { unlockForm(resetReq); });
     });
 
     var resetConfirm = $("#reset-confirm-form", root);
     if (resetConfirm) resetConfirm.addEventListener("submit", function (e) {
       e.preventDefault();
+      if (!lockForm(resetConfirm)) return;
       api("/v1/accounts/password-reset/confirm", { method: "POST", body: formData(resetConfirm) })
         .then(function () {
           state.resetToken = "";
           setMessage("Password updated. Sign in with the new password.", "ok");
         })
-        .catch(function (err) { setMessage(apiMessage(err), "error"); });
+        .catch(function (err) { setMessage(apiMessage(err), "error"); })
+        .then(function () { unlockForm(resetConfirm); });
     });
 
     var logout = $("#logout-btn", root);
     if (logout) logout.addEventListener("click", function () {
-      api("/v1/accounts/logout", { method: "POST", body: {} })
-        .then(function () {
-          clearLocalSessionUi("Signed out.", "ok");
-        })
-        .catch(function (err) {
-          clearLocalSessionUi("Signed out locally. Server logout could not be confirmed: " + apiMessage(err), "warn");
-        });
+      logout.disabled = true;
+      signOut().then(function () { logout.disabled = false; });
     });
 
     $all("[data-select-character]", root).forEach(function (btn) {
@@ -1025,7 +1157,8 @@
     var characterForm = $("#character-form", root);
     if (characterForm) characterForm.addEventListener("submit", function (e) {
       e.preventDefault();
-      createAccountCharacter(formData(characterForm));
+      if (!lockForm(characterForm)) return;
+      createAccountCharacter(formData(characterForm)).then(function () { unlockForm(characterForm); });
     });
   }
 
@@ -1061,10 +1194,54 @@
   }
 
   // ---- Shop page -----------------------------------------------------------
+  function findShopItem(itemId) {
+    for (var i = 0; i < state.shopItems.length; i++) {
+      if (state.shopItems[i].id === itemId) return state.shopItems[i];
+    }
+    return null;
+  }
+  function openShopConfirmation(itemId) {
+    var item = findShopItem(itemId);
+    var character = selectedCharacter();
+    var dialog = $("#shop-confirm-dialog");
+    if (!item || !dialog || !character) return;
+    dialog.dataset.itemId = itemId;
+    setText("#shop-confirm-character", character.name);
+    setText("#shop-confirm-item", item.name);
+    setText("#shop-confirm-price", fmt(item.gold) + " gold");
+    setText("#shop-confirm-balance", state.goldBalance == null ? "Server will confirm" : fmt(state.goldBalance) + " gold");
+    setText("#shop-confirm-result", projectedBalanceText(state.goldBalance, item.gold));
+    setText("#shop-confirm-error", "");
+    if (typeof dialog.showModal === "function") dialog.showModal();
+  }
   function renderShop() {
     var grid = $("#shop-grid");
     if (!grid) return;
+    var status = $("#shop-status");
+    if (state.shopStatus === "loading") {
+      grid.innerHTML = '<article class="parchment"><p class="muted">Loading the server catalog…</p></article>';
+      if (status) { status.textContent = "Loading the server catalog…"; status.dataset.kind = "info"; }
+      return;
+    }
+    if (state.shopStatus === "error") {
+      grid.innerHTML = '<article class="parchment"><p class="lede">Catalog unavailable</p><p>No local products or prices are substituted.</p></article>';
+      if (status) { status.textContent = "The Coin Exchange could not reach the server catalog."; status.dataset.kind = "error"; }
+      return;
+    }
+    if (!state.shopItems.length) {
+      grid.innerHTML = '<article class="parchment"><p class="muted">The server catalog is currently empty.</p></article>';
+      if (status) { status.textContent = "The server returned an empty catalog."; status.dataset.kind = "ok"; }
+      return;
+    }
+    var character = selectedCharacter();
+    if (status) {
+      status.textContent = state.purchaseStatus || (character
+        ? "Catalog loaded. Purchases use " + character.name + " and require server acceptance."
+        : "Catalog loaded. Sign in and select a character to purchase.");
+      status.dataset.kind = state.purchaseStatus ? state.purchaseStatusKind : "info";
+    }
     grid.innerHTML = state.shopItems.map(function (item) {
+      var pending = mutationPending("shop", item.id);
       return (
         '<article class="shop-card">' +
         '<div class="shop-card-art" aria-hidden="true">' + escapeHtml(item.tag.charAt(0)) + "</div>" +
@@ -1073,93 +1250,144 @@
         '<h3 class="shop-card-name">' + escapeHtml(item.name) + "</h3>" +
         '<p class="shop-card-desc">' + escapeHtml(item.desc) + "</p>" +
         '<div class="shop-card-price">' + fmt(item.gold) + ' gold<span class="usd">In-game currency only</span></div>' +
-        '<button class="btn btn-gold" data-shop-buy="' + escapeHtml(item.id) + '"' + (selectedCharacter() ? "" : " disabled") + ">Buy with gold</button>" +
+        '<button class="btn btn-gold" data-shop-review="' + escapeHtml(item.id) + '"' + (character && !pending ? "" : " disabled") + ">" +
+        (pending ? "Awaiting server…" : character ? "Review purchase" : "Select a character") + "</button>" +
         '<p class="field-error" id="shop-error-' + escapeHtml(item.id) + '" aria-live="polite"></p>' +
         "</div></article>"
       );
     }).join("");
+    wireReveals();
     var list = $("#cart-items");
-    if (list) list.innerHTML = '<li class="cart-empty">Purchases are submitted directly to the server. No browser cart is authoritative.</li>';
+    if (list) list.innerHTML = '<li class="cart-empty">' + escapeHtml(state.purchaseStatus || "No purchase submitted. No browser cart is authoritative.") + "</li>";
     setText("#cart-count", "0");
     setText("#cart-total", "0");
     setText("#purchase-authority", "Server");
     if (grid.dataset.wired !== "1") {
       grid.addEventListener("click", function (e) {
-        var btn = e.target.closest ? e.target.closest("[data-shop-buy]") : null;
+        var btn = e.target.closest ? e.target.closest("[data-shop-review]") : null;
         if (!btn) return;
-        var itemId = btn.getAttribute("data-shop-buy");
-        var err = $("#shop-error-" + itemId);
-        buyShopItem(itemId, err);
+        openShopConfirmation(btn.getAttribute("data-shop-review"));
       });
       grid.dataset.wired = "1";
     }
+    var confirm = $("#shop-confirm-submit");
+    if (confirm && confirm.dataset.wired !== "1") {
+      confirm.addEventListener("click", function () {
+        var dialog = $("#shop-confirm-dialog");
+        var itemId = dialog ? dialog.dataset.itemId : "";
+        var err = $("#shop-confirm-error");
+        if (!itemId || mutationPending("shop", itemId)) return;
+        confirm.disabled = true;
+        buyShopItem(itemId, err).then(function (body) {
+          confirm.disabled = false;
+          if (body) {
+            if (dialog && dialog.open) dialog.close();
+          }
+        });
+      });
+      confirm.dataset.wired = "1";
+    }
   }
 
-  // ---- Houses page ---------------------------------------------------------
-  function blankHouse(plot) {
+  // ---- House Registry ------------------------------------------------------
+  function safeOwnerName(value) {
+    if (typeof value !== "string") return null;
+    var owner = value.trim();
+    if (!owner) return null;
+    if (/^(p_|player_|guest_|acct_|account_)/i.test(owner)) return "Private owner";
+    return owner.slice(0, 64);
+  }
+  function projectedBalanceText(balance, price) {
+    if (balance == null) return "Server will confirm";
+    if (balance < price) return "Insufficient by " + fmt(price - balance) + " gold";
+    return fmt(balance - price) + " gold";
+  }
+  function validMarketListing(listing) {
+    return !!(
+      listing &&
+      typeof listing.property_id === "string" && listing.property_id &&
+      typeof listing.zone === "string" &&
+      typeof listing.plot_id === "string" &&
+      (listing.status === "unowned" || listing.status === "owned" || listing.status === "listed") &&
+      Number.isInteger(listing.primary_price_gold) && listing.primary_price_gold >= 0 &&
+      (listing.listed_price_gold == null || (Number.isInteger(listing.listed_price_gold) && listing.listed_price_gold >= 0))
+    );
+  }
+  function blankHouse(source) {
     return {
-      property_id: plot.property_id,
-      zone: plot.zone,
-      plot_id: plot.plot_id,
-      district: plot.district,
-      status: plot.status,
-      owner_name: plot.owner_name,
-      owned_by_character: false,
-      primary_price_gold: plot.primary_price_gold,
-      listed_price_gold: plot.listed_price_gold,
-      sale_count: plot.sale_count,
+      property_id: source.property_id,
+      zone: source.zone,
+      plot_id: source.plot_id,
+      district: typeof source.district === "string" ? source.district : null,
+      status: source.status,
+      owner_name: safeOwnerName(source.owner_name),
+      owned_by_character: source.owned_by_character === true,
+      primary_price_gold: source.primary_price_gold,
+      listed_price_gold: Number.isFinite(source.listed_price_gold) ? source.listed_price_gold : null,
+      sale_count: Number.isFinite(source.sale_count) ? source.sale_count : null,
     };
   }
-  function mergeHouse(target, source) {
-    if (!source) return target;
-    ["property_id", "zone", "plot_id", "district", "status", "owner_name", "primary_price_gold", "listed_price_gold", "sale_count", "owned_by_character"].forEach(function (key) {
-      if (Object.prototype.hasOwnProperty.call(source, key) && source[key] != null) target[key] = source[key];
-    });
-    return target;
-  }
-  function rememberHouseOverride(property) {
-    if (!property || typeof property.property_id !== "string" || !property.property_id) return;
-    state.propertyOverrides[property.property_id] = property;
-  }
   function loadHouseCards() {
-    var byId = {};
-    HOUSE_PLOTS.forEach(function (plot) {
-      byId[plot.property_id] = blankHouse(plot);
-    });
-
+    state.marketStatus = "loading";
     return api("/v1/property/market")
       .then(function (body) {
-        (body.listings || []).forEach(function (listing) {
-          if (!byId[listing.property_id]) byId[listing.property_id] = blankHouse(listing);
-          mergeHouse(byId[listing.property_id], listing);
+        if (!Array.isArray(body.listings)) throw new Error("invalid_property_market");
+        var validListings = body.listings.filter(validMarketListing);
+        if (validListings.length !== body.listings.length) throw new Error("invalid_property_market_listing");
+        var byId = {};
+        validListings.map(blankHouse).forEach(function (house) { byId[house.property_id] = house; });
+        var ids = KNOWN_PROPERTY_FIXTURES.map(function (fixture) { return fixture.property_id; });
+        validListings.forEach(function (listing) {
+          if (ids.indexOf(listing.property_id) === -1) ids.push(listing.property_id);
         });
-      })
-      .catch(function () {})
-      .then(function () {
-        return Promise.all(HOUSE_PLOTS.map(function (plot) {
-          return api("/v1/property/ledger?property_id=" + encodeURIComponent(plot.property_id))
+        return Promise.all(ids.map(function (propertyId) {
+          return api("/v1/property/ledger?property_id=" + encodeURIComponent(propertyId))
             .then(function (ledger) {
-              var card = byId[plot.property_id];
-              if (!card) return;
-              card.owner_name = ledger.owner_name || null;
-              card.sale_count = typeof ledger.sale_count === "number" ? ledger.sale_count : card.sale_count;
-              card.district = ledger.district || card.district;
-              if (card.status === "unknown") card.status = ledger.owner_name ? "owned" : "unowned";
+              if (!ledger || ledger.property_id !== propertyId) throw new Error("invalid_property_ledger");
+              var house = byId[propertyId];
+              if (!house) {
+                var fixture = KNOWN_PROPERTY_FIXTURES.filter(function (entry) { return entry.property_id === propertyId; })[0];
+                var owner = safeOwnerName(ledger.owner_name);
+                if (!fixture || !owner) return null;
+                house = blankHouse({
+                  property_id: fixture.property_id,
+                  zone: fixture.zone,
+                  plot_id: fixture.plot_id,
+                  district: fixture.district,
+                  status: "owned",
+                  owner_name: owner,
+                  primary_price_gold: fixture.primary_price_gold,
+                  listed_price_gold: null,
+                });
+              }
+              house.owner_name = safeOwnerName(ledger.owner_name);
+              house.sale_count = Number.isInteger(ledger.sale_count) && ledger.sale_count >= 0 ? ledger.sale_count : null;
+              house.district = typeof ledger.district === "string" ? ledger.district : house.district;
+              return house;
             })
-            .catch(function () {});
-        }));
-      })
-      .then(function () {
-        Object.keys(state.propertyOverrides).forEach(function (id) {
-          if (!byId[id]) byId[id] = blankHouse(state.propertyOverrides[id]);
-          mergeHouse(byId[id], state.propertyOverrides[id]);
+            .catch(function () { return byId[propertyId] || null; });
+        })).then(function (houses) {
+          return houses.filter(Boolean);
         });
-        return HOUSE_PLOTS.map(function (plot) { return byId[plot.property_id]; });
+      })
+      .then(function (houses) {
+        state.currentHouses = houses;
+        state.marketStatus = "ready";
+        return houses;
+      })
+      .catch(function (err) {
+        state.currentHouses = [];
+        state.marketStatus = "error";
+        throw err;
       });
   }
   function houseIsMine(h) {
     var character = selectedCharacter();
-    return !!(h.owned_by_character || (character && h.owner_name && h.owner_name === character.name));
+    // Public market data exposes the resolved character name, not a player id.
+    // Character names are globally unique in the authoritative player schema;
+    // this controls presentation only. Every mutation is re-authorized by the
+    // account-scoped server route before ownership can change.
+    return !!(h.owned_by_character || (character && h.owner_name && h.owner_name !== "Private owner" && h.owner_name === character.name));
   }
   function housePrice(h) {
     return h.status === "listed" && h.listed_price_gold != null ? h.listed_price_gold : h.primary_price_gold;
@@ -1177,21 +1405,23 @@
     var mine = houseIsMine(h);
     var price = housePrice(h);
     if (!character) {
-      return '<button class="btn btn-gold btn-block" disabled>Choose a character</button>';
+      return '<a class="btn btn-ghost btn-block" href="account.html#characters">Choose a character</a>';
     }
     if ((h.status === "unowned" || h.status === "listed") && !mine) {
-      return '<button class="btn btn-gold btn-block" data-house-buy="' + attr(h.property_id) + '">Buy - ' + fmt(price) + " gold</button>";
+      var buying = mutationPending("property-buy", h.property_id);
+      return '<button class="btn btn-gold btn-block" data-house-review="' + attr(h.property_id) + '"' + (buying ? " disabled" : "") + ">" + (buying ? "Awaiting server…" : "Review · " + fmt(price) + " gold") + "</button>";
     }
     if (mine && h.status === "listed") {
-      return '<button class="btn btn-ghost btn-block" data-house-unlist="' + attr(h.property_id) + '">Unlist</button>';
+      var unlisting = mutationPending("property-unlist", h.property_id);
+      return '<button class="btn btn-ghost btn-block" data-house-unlist="' + attr(h.property_id) + '"' + (unlisting ? " disabled" : "") + ">" + (unlisting ? "Awaiting server…" : "Unlist") + "</button>";
     }
     if (mine) {
       return (
         '<form class="resale-row" data-house-list="' + attr(h.property_id) + '" novalidate>' +
         '<label class="resale-label" for="price-' + attr(h.plot_id || h.property_id) + '">Resale price (gold)</label>' +
         '<div class="resale-controls">' +
-        '<input class="resale-input" type="number" id="price-' + attr(h.plot_id || h.property_id) + '" name="price" min="1" inputmode="numeric" placeholder="e.g. ' + fmt(h.primary_price_gold) + '" />' +
-        '<button class="btn btn-gold" type="submit">List</button>' +
+        '<input class="resale-input" type="number" id="price-' + attr(h.plot_id || h.property_id) + '" name="price" min="1" max="1000000" inputmode="numeric" placeholder="e.g. ' + fmt(h.primary_price_gold) + '" />' +
+        '<button class="btn btn-gold" type="submit">Review listing</button>' +
         "</div></form>"
       );
     }
@@ -1206,36 +1436,78 @@
       "<div><dt>Plot</dt><dd>" + escapeHtml(h.plot_id || "-") + "</dd></div>" +
       "<div><dt>Price</dt><dd><span class=\"gold\">" + fmt(price) + "</span> gold</dd></div>" +
       "<div><dt>Status</dt><dd>" + escapeHtml(houseStatusLabel(h)) + "</dd></div>" +
-      "<div><dt>Sales</dt><dd>" + fmt(h.sale_count || 0) + "</dd></div>" +
+      "<div><dt>Owner</dt><dd>" + escapeHtml(h.owner_name || "None") + "</dd></div>" +
+      "<div><dt>Sales</dt><dd>" + (h.sale_count == null ? "History unavailable" : fmt(h.sale_count)) + "</dd></div>" +
       "</dl>" +
       '<div class="house-bid">' + houseActionsHtml(h) + '<p class="field-error" id="house-error-' + attr(h.property_id) + '" aria-live="polite"></p></div>'
     );
   }
+  function openMarketConfirmation(mode, id, price) {
+    var dialog = $("#market-confirm-dialog");
+    var character = selectedCharacter();
+    var house = state.currentHouses.filter(function (entry) { return entry.property_id === id; })[0];
+    if (!dialog || !character || !house) return;
+    dialog.dataset.mode = mode;
+    dialog.dataset.propertyId = id;
+    dialog.dataset.price = String(price);
+    setText("#market-confirm-character", character.name);
+    setText("#market-confirm-property", (house.district || house.plot_id) + " · " + house.property_id);
+    setText("#market-confirm-price-label", mode === "list" ? "Listing price" : "Price");
+    setText("#market-confirm-price", fmt(price) + " gold");
+    setText("#market-confirm-kicker", mode === "list" ? "REVIEW PROPERTY LISTING" : "REVIEW PROPERTY PURCHASE");
+    setText("#market-confirm-submit", mode === "list" ? "Confirm listing" : "Confirm purchase");
+    var balanceRow = $("#market-confirm-balance-row");
+    var resultRow = $("#market-confirm-result-row");
+    if (balanceRow) balanceRow.hidden = mode === "list";
+    if (resultRow) resultRow.hidden = mode === "list";
+    setText("#market-confirm-balance", state.goldBalance == null ? "Server will confirm" : fmt(state.goldBalance) + " gold");
+    setText("#market-confirm-result", projectedBalanceText(state.goldBalance, price));
+    setText("#market-confirm-error", "");
+    if (typeof dialog.showModal === "function") dialog.showModal();
+  }
   function renderHouses() {
     var grid = $("#houses-grid");
-    if (!grid) return;
+    if (!grid) return Promise.resolve([]);
+    var status = $("#market-status");
+    var request = ++state.marketRequest;
     grid.innerHTML = '<article class="parchment"><p class="muted">Loading house market...</p></article>';
-    loadHouseCards()
+    if (status) { status.textContent = "Loading the server registry…"; status.dataset.kind = "info"; }
+    var loading = loadHouseCards()
       .then(function (houses) {
+        if (request !== state.marketRequest) return houses;
         if (!houses.length) {
           grid.innerHTML = '<article class="parchment"><p class="muted">No server property listings are available yet.</p></article>';
+          if (status) { status.textContent = "The server registry is currently empty."; status.dataset.kind = "ok"; }
           return;
         }
         grid.innerHTML = houses.map(function (h) {
           return '<article class="house-card" data-house="' + attr(h.property_id) + '">' + houseCardHtml(h) + "</article>";
         }).join("");
+        wireReveals();
+        if (status) {
+          status.textContent = state.marketMessage || (selectedCharacter() ? "Registry refreshed for " + selectedCharacter().name + "." : "Registry loaded. Select a character to buy or list.");
+          status.dataset.kind = state.marketMessage ? state.marketMessageKind : "info";
+        }
       })
       .catch(function () {
+        if (request !== state.marketRequest) return;
         grid.innerHTML = '<article class="parchment"><p class="muted">Could not reach the server property market. No local ownership preview is used.</p></article>';
+        if (status) { status.textContent = "The House Registry is unavailable. No local listing or ownership data is substituted."; status.dataset.kind = "error"; }
       });
     if (grid.dataset.wired !== "1") {
       grid.addEventListener("click", function (e) {
-        var buy = e.target.closest ? e.target.closest("[data-house-buy]") : null;
+        var buy = e.target.closest ? e.target.closest("[data-house-review]") : null;
         var unlist = e.target.closest ? e.target.closest("[data-house-unlist]") : null;
-        var id = buy ? buy.getAttribute("data-house-buy") : unlist ? unlist.getAttribute("data-house-unlist") : "";
+        var id = buy ? buy.getAttribute("data-house-review") : unlist ? unlist.getAttribute("data-house-unlist") : "";
         if (!id) return;
-        var err = $("#house-error-" + id);
-        changeProperty(id, !!buy, err);
+        if (buy) {
+          var house = state.currentHouses.filter(function (entry) { return entry.property_id === id; })[0];
+          if (house) openMarketConfirmation("buy", id, housePrice(house));
+          return;
+        }
+        unlist.disabled = true;
+        var err = document.getElementById("house-error-" + id);
+        changeProperty(id, false, err);
       });
       grid.addEventListener("submit", function (e) {
         var form = e.target.closest ? e.target.closest("[data-house-list]") : null;
@@ -1243,21 +1515,47 @@
         e.preventDefault();
         var id = form.getAttribute("data-house-list");
         var input = form.querySelector('input[name="price"]');
-        var price = input ? parseInt(input.value, 10) : NaN;
-        var err = $("#house-error-" + id);
-        listProperty(id, price, err);
+        var price = input ? Number(input.value) : NaN;
+        var err = document.getElementById("house-error-" + id);
+        if (!Number.isInteger(price) || price < 1 || price > 1000000) {
+          if (err) err.textContent = "Enter a whole-gold price from 1 to 1,000,000.";
+          return;
+        }
+        openMarketConfirmation("list", id, price);
       });
       grid.dataset.wired = "1";
     }
+    var confirm = $("#market-confirm-submit");
+    if (confirm && confirm.dataset.wired !== "1") {
+      confirm.addEventListener("click", function () {
+        var dialog = $("#market-confirm-dialog");
+        var mode = dialog ? dialog.dataset.mode : "";
+        var id = dialog ? dialog.dataset.propertyId : "";
+        var price = dialog ? Number(dialog.dataset.price) : NaN;
+        var err = $("#market-confirm-error");
+        if (!id || (mode !== "buy" && mode !== "list") || !Number.isInteger(price) || price < 1) return;
+        confirm.disabled = true;
+        var action = mode === "list" ? listProperty(id, price, err) : changeProperty(id, true, err);
+        action.then(function (body) {
+          confirm.disabled = false;
+          if (body) {
+            if (dialog && dialog.open) dialog.close();
+          }
+        });
+      });
+      confirm.dataset.wired = "1";
+    }
+    return loading;
   }
 
   function renderAll() {
     renderHoldings();
+    renderIdentityControls();
     applyAccountGates();
     renderAccountPortal();
-    renderBetaStatus();
     renderShop();
     renderHouses();
+    wireReveals();
   }
 
   function initMisc() {
@@ -1265,10 +1563,50 @@
     if (y) y.textContent = new Date().getFullYear();
   }
 
+  var revealObserver = null;
+  function wireReveals() {
+    if (!("IntersectionObserver" in window) || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!revealObserver) {
+      revealObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-revealed");
+          revealObserver.unobserve(entry.target);
+        });
+      }, { rootMargin: "0px 0px -6%", threshold: 0.08 });
+    }
+    $all(".parchment, .visual-card, .ak-card, .step-card, .shop-card, .house-card").forEach(function (el) {
+      if (el.classList.contains("reveal-ready") || el.classList.contains("is-revealed")) return;
+      el.classList.add("reveal-ready");
+      revealObserver.observe(el);
+    });
+  }
+  function initMotion() {
+    wireReveals();
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var art = $(".ak-hero__art");
+    var cta = $(".ak-cta__art");
+    if (!art && !cta) return;
+    var queued = false;
+    function paint() {
+      queued = false;
+      var offset = Math.min(window.scrollY || 0, 900);
+      if (art) art.style.transform = "translate3d(0," + (offset * 0.06) + "px,0)";
+      if (cta) cta.style.transform = "translate3d(0," + (offset * -0.025) + "px,0)";
+    }
+    window.addEventListener("scroll", function () {
+      if (queued) return;
+      queued = true;
+      window.requestAnimationFrame(paint);
+    }, { passive: true });
+  }
+
   // Mobile nav: close the hamburger menu after a selection or Escape.
   // No-ops where the toggle is absent (re-added after the PR #19 app.js rewrite).
   function initNav() {
     var toggle = document.getElementById("nav-toggle");
+    var signout = document.getElementById("chrome-signout");
+    if (signout) signout.addEventListener("click", signOut);
     if (!toggle) return;
     var nav = document.querySelector(".top-nav");
     if (nav) {
@@ -1277,7 +1615,10 @@
       });
     }
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") toggle.checked = false;
+      if (e.key === "Escape") {
+        toggle.checked = false;
+        $all(".account-control[open]").forEach(function (menu) { menu.removeAttribute("open"); });
+      }
     });
   }
 
@@ -1285,6 +1626,7 @@
     initTabs();
     initNav();
     initMisc();
+    initMotion();
     handleAccountQuery();
     refreshPortal();
   }
@@ -1305,6 +1647,12 @@
       registrationPayload: registrationPayload,
       refreshControlledBetaStatus: refreshControlledBetaStatus,
       handleAccountQuery: handleAccountQuery,
+      loadCatalogs: loadCatalogs,
+      loadHouseCards: loadHouseCards,
+      safeOwnerName: safeOwnerName,
+      projectedBalanceText: projectedBalanceText,
+      houseIsMine: houseIsMine,
+      houseActionsHtml: houseActionsHtml,
     });
   }
 

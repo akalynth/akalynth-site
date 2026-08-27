@@ -11,7 +11,7 @@
  * Security: posts are free user text. ALL user/author strings reach the DOM via
  * textContent only — never innerHTML — so post content cannot inject markup.
  *
- * Loaded only on forum.html, after js/app.js (which owns the shared chrome).
+ * Loaded only on community.html, after js/app.js (which owns the shared chrome).
  */
 (function () {
   "use strict";
@@ -218,9 +218,9 @@
     wrap.appendChild(p);
     return wrap;
   }
-  function boardHref(id) { return "forum.html?board=" + encodeURIComponent(id); }
+  function boardHref(id) { return "community.html?board=" + encodeURIComponent(id); }
   function threadHref(boardId, threadId) {
-    return "forum.html?board=" + encodeURIComponent(boardId) + "&thread=" + encodeURIComponent(threadId);
+    return "community.html?board=" + encodeURIComponent(boardId) + "&thread=" + encodeURIComponent(threadId);
   }
 
   // ---- Mutations ------------------------------------------------------------
@@ -283,7 +283,7 @@
     if (!board) return renderBoardIndex();
     clear(root);
     var state = loadForum();
-    root.appendChild(breadcrumb([{ text: "Community Boards", href: "forum.html" }, { text: board.name }]));
+    root.appendChild(breadcrumb([{ text: "Community", href: "community.html" }, { text: board.name }]));
     root.appendChild(el("h1", "page-title", board.name));
 
     var head = el("article", "parchment");
@@ -333,12 +333,14 @@
     if (!board) return renderBoardIndex();
     var state = loadForum();
     var all = allThreads(state), thread = null;
-    for (var i = 0; i < all.length; i++) { if (all[i].id === threadId) { thread = all[i]; break; } }
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].id === threadId && all[i].boardId === boardId) { thread = all[i]; break; }
+    }
     if (!thread) return renderBoardView(boardId);
 
     clear(root);
     root.appendChild(breadcrumb([
-      { text: "Community Boards", href: "forum.html" },
+      { text: "Community", href: "community.html" },
       { text: board.name, href: boardHref(boardId) },
       { text: thread.title }
     ]));
@@ -361,7 +363,7 @@
     if (!board) return renderBoardIndex();
     clear(root);
     root.appendChild(breadcrumb([
-      { text: "Community Boards", href: "forum.html" },
+      { text: "Community", href: "community.html" },
       { text: board.name, href: boardHref(boardId) },
       { text: "New thread" }
     ]));

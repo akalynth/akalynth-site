@@ -4,7 +4,22 @@ set -euo pipefail
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
-required_pages=(index.html beta.html library.html wallpapers.html shop.html houses.html account.html register.html forgot.html forum.html)
+required_pages=(
+  index.html
+  download.html
+  houses.html
+  market.html
+  shop.html
+  account.html
+  register.html
+  forgot.html
+  library.html
+  wallpapers.html
+  community.html
+  support.html
+  beta.html
+  forum.html
+)
 
 for page in "${required_pages[@]}"; do
   if [[ ! -f "$page" ]]; then
@@ -91,9 +106,12 @@ for literal in \
   'api("/v1/characters/select", { method: "POST"' \
   'api("/v1/characters", { method: "POST"' \
   'api("/v1/wallet?character_id="' \
+  'api("/v1/shop/catalog")' \
   'api("/v1/shop/purchase", { method: "POST"' \
   'api("/v1/work/start", { method: "POST"' \
   'api("/v1/work/tick", { method: "POST"' \
+  'api("/v1/property/market")' \
+  'api("/v1/property/ledger?property_id="' \
   '"/v1/property/buy"' \
   'api("/v1/property/list"' \
   '"/v1/property/unlist"'; do
@@ -101,9 +119,14 @@ for literal in \
 done
 
 require_literal "account.html" 'id="account-portal-root"' "Account character portal hook"
-require_literal "beta.html" 'href="/download/akalynth-beta-v12.apk"' "Immutable direct Android v12 download"
-require_literal "beta.html" 'href="/download/akalynth-beta-v12.apk.sha256"' "Immutable direct Android v12 checksum"
-if grep -Fq 'https://beta.akalynth.com/download/akalynth-beta.apk' beta.html; then
+require_literal "download.html" 'href="/download/akalynth-beta-v12.apk"' "Immutable direct Android v12 download"
+require_literal "download.html" 'href="/download/akalynth-beta-v12.apk.sha256"' "Immutable direct Android v12 checksum"
+require_literal "support.html" 'href="/download/akalynth-beta-v12.apk.sha256"' "Support checksum guidance"
+require_literal "beta.html" '<meta http-equiv="refresh" content="0; url=download.html" />' "Legacy download compatibility redirect"
+require_literal "beta.html" '<link rel="canonical" href="https://akalynth.com/download.html" />' "Legacy download canonical target"
+require_literal "forum.html" 'location.replace("community.html" + location.search + location.hash);' "Legacy forum compatibility redirect"
+require_literal "forum.html" '<link rel="canonical" href="https://akalynth.com/community.html" />' "Legacy forum canonical target"
+if grep -RIFq 'https://beta.akalynth.com/download/akalynth-beta.apk' -- *.html js; then
   printf '::error::Direct Android download must not use the mutable generic APK alias.\n' >&2
   exit 1
 fi
@@ -114,9 +137,9 @@ forbid_literal "forgot.html" 'params.get("reset")' "Query password-reset token c
 forbid_literal "js/app.js" 'params.get("reset")' "Account query password-reset token consumption"
 require_literal "account.html" '<meta name="referrer" content="no-referrer" />' "Account token referrer suppression"
 require_literal "README.md" 'executable site E2D' "Site E2D proof documentation"
-require_literal "README.md" 'create/select/shop/work/property requests' "Site E2D character and gameplay proof documentation"
+require_literal "README.md" 'create/select/shop/work/property' "Site E2D character and gameplay proof documentation"
 require_literal "README.md" 'explicit no-session/no-CSRF inline' "Site E2D no-session/no-CSRF helper proof documentation"
-require_literal "README.md" '`register.html` paste-only beta invite entry path' "Paste-only registration documentation"
+require_literal "README.md" '`register.html` paste-only invite entry path' "Paste-only registration documentation"
 require_literal "README.md" '`forgot.html` password-reset entry and confirmation path' "Password-reset documentation"
 
 for literal in \
@@ -128,9 +151,8 @@ for literal in \
   'requestGeneration !== betaStatusRequestGeneration' \
   'state.account.account_id !== accountId' \
   'void refreshControlledBetaStatus();' \
-  'history.replaceState(null, "", "account.html");' \
-  'id="controlled-beta-status"'; do
-  require_literal "js/app.js" "$literal" "Beta player-readiness portal behavior"
+  'history.replaceState(null, "", "account.html");'; do
+  require_literal "js/app.js" "$literal" "Account compatibility behavior"
 done
 
 if grep -Fq 'get("invite")' js/app.js register.html ||
@@ -154,14 +176,11 @@ for literal in \
   require_literal "js/app.js" "$literal" "Account character portal field"
 done
 
-for literal in \
-  'id="beta-account-status"' \
-  '<script src="js/app.js" defer></script>'; do
-  require_literal "beta.html" "$literal" "Beta account-character readiness hook"
-done
-
-require_literal "js/app.js" 'data-shop-buy="' "Direct server shop action hook"
+require_literal "js/app.js" 'data-shop-review="' "Server shop purchase review hook"
 require_literal "shop.html" 'id="purchase-authority"' "Direct server shop status hook"
+require_literal "shop.html" 'id="shop-confirm-dialog"' "Server shop purchase review dialog"
+require_literal "shop.html" 'id="shop-confirm-balance"' "Shop available-gold review field"
+require_literal "shop.html" 'id="shop-confirm-result"' "Shop resulting-balance review field"
 require_literal "js/app.js" 'state.goldBalance = typeof body.balance_gold === "number" ? body.balance_gold : null;' "Server-backed wallet balance load"
 require_literal "js/app.js" 'setText("#holdings-gold", state.goldBalance == null ? "server" : fmt(state.goldBalance));' "Server-backed wallet balance render"
 require_literal "js/app.js" 'if (typeof body.balance_gold === "number") state.goldBalance = body.balance_gold;' "Server-backed mutation balance refresh"
@@ -173,13 +192,13 @@ require_literal "js/app.js" 'body: { character_id: character.character_id, prope
 require_literal "js/app.js" 'window.__AKALYNTH_SITE_E2D_TEST_HOOKS__.install({' "Site E2D gameplay test hooks"
 require_literal "js/app.js" 'selectAccountCharacter: selectAccountCharacter' "Site E2D character select test hook"
 require_literal "js/app.js" 'createAccountCharacter: createAccountCharacter' "Site E2D character create test hook"
-require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "site e2d character/gameplay verifier passed" "Site E2D character/gameplay verifier success output"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "site e2d Android companion authority verifier passed" "Site E2D Android companion verifier success output"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "site e2d character/gameplay verifier failed" "Site E2D character/gameplay verifier failure output"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertRequest('/v1/characters', { name: 'CreatedSiteProof', world_id: 'high_city', sex: 'female', outfit_id: 'female_guard' });" "Site E2D character create request proof"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertRequest('/v1/characters/select', { character_id: 'char-site-e2d' });" "Site E2D character select request proof"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertRequest('/v1/work/start', { character_id: 'char-site-e2d' });" "Site E2D work start request proof"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertRequest('/v1/work/tick', { character_id: 'char-site-e2d', contract_id: 'contract-site-e2d' });" "Site E2D work tick request proof"
-require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertRequest('/v1/shop/purchase', { character_id: 'char-site-e2d', shop_key: 'healing_herb' });" "Site E2D shop request proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertRequest('/v1/shop/purchase', { character_id: 'char-site-e2d', shop_key: 'pilgrim_mark' });" "Site E2D shop request proof"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertRequest('/v1/property/buy', { character_id: 'char-site-e2d', property_id: 'Azura:H1' });" "Site E2D property buy request proof"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertRequest('/v1/property/unlist', { character_id: 'char-site-e2d', property_id: 'Azura:H1' });" "Site E2D property unlist request proof"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "assertRequest('/v1/property/list', { character_id: 'char-site-e2d', property_id: 'Azura:H1', price_gold: 77 });" "Site E2D property list request proof"
@@ -202,11 +221,18 @@ require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "reset fragment
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "controlled beta status must retain the authorized cohort projection" "Site E2D controlled-beta status proof"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "beta status transport failure must clear the optional projection" "Site E2D nonblocking beta status proof"
 require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "stale controlled beta response must not overwrite the current account projection" "Site E2D cross-account beta status isolation proof"
-require_literal "js/app.js" 'Purchase accepted by server.' "Server-backed purchase success message"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "shop UI state must come from the server catalog without a local product fallback" "Site E2D server-catalog authority proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "house registry must use public market/ledger data and mask raw-looking owner identifiers" "Site E2D server-market authority proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "raw-looking public owner identifiers must not be rendered" "Site E2D public owner masking proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "malformed shop catalog items must fail closed instead of reaching the renderer" "Site E2D malformed-catalog proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "malformed market payloads must fail closed instead of becoming a successful empty registry" "Site E2D malformed-market proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "an accepted property purchase must remain discoverable from its source-backed ledger and expose listing review" "Site E2D owned-property discovery proof"
+require_literal "scripts/verify-site-e2d-character-gameplay.mjs" "purchase review must show an honest balance or shortfall" "Site E2D purchase-balance proof"
+require_literal "js/app.js" 'Purchase accepted by the server; balance refreshed.' "Server-backed purchase success message"
 require_literal "js/app.js" 'Work complete: +' "Server-backed work completion message"
-require_literal "js/app.js" 'rememberHouseOverride(body.property);' "Server-backed property mutation mirror"
-require_literal "js/app.js" 'Listed by server.' "Server-backed property list success message"
-require_literal "js/app.js" 'Unlisted by server.' "Server-backed property unlist success message"
+require_literal "js/app.js" 'Purchase accepted; balance and registry refreshed.' "Server-backed property purchase refresh message"
+require_literal "js/app.js" 'Listing accepted; registry refreshed.' "Server-backed property listing refresh message"
+require_literal "js/app.js" 'Listing removed; registry refreshed.' "Server-backed property unlist refresh message"
 require_literal "js/app.js" 'function clearAccountScopedUiState()' "Account-scoped UI clear helper"
 require_literal "js/app.js" 'clearAccountScopedUiState();' "Account-scoped UI clear call"
 require_literal "js/app.js" 'function clearLocalSessionUi(message, kind)' "Local session UI clear helper"
@@ -234,6 +260,188 @@ require_literal "js/app.js" 'Start work again. This contract is no longer active
 require_literal "js/app.js" 'Stay present in the world before ticking work again.' "Work presence error message"
 require_literal "js/app.js" 'Not enough earned gold for this action.' "Insufficient gold error message"
 require_literal "js/app.js" 'var blocked = accountActionBlockedMessage();' "Account action guard call"
+
+# Consequential companion actions must fail closed in the browser: one mutation
+# at a time per target, and accepted mutations are followed by fresh server
+# reads before the UI claims a new balance, listing, or ownership state.
+for literal in \
+  'pendingMutations: {}' \
+  'function beginMutation(kind, id)' \
+  'function endMutation(kind, id)' \
+  'if (!beginMutation("shop", itemId))' \
+  'endMutation("shop", itemId);' \
+  'if (!beginMutation(kind, id))' \
+  'endMutation(kind, id);' \
+  'if (!beginMutation("property-list", id))' \
+  'endMutation("property-list", id);' \
+  'return loadWalletState();' \
+  'return Promise.all([loadWalletState(), loadHouseCards()])' \
+  'return loadHouseCards()'; do
+  require_literal "js/app.js" "$literal" "Server refresh / duplicate-submit guard"
+done
+forbid_literal "js/app.js" 'confirmedProperties' "Browser-local property authority mirror"
+forbid_literal "js/app.js" 'rememberHouseOverride' "Browser-local property authority helper"
+require_literal "js/app.js" 'function houseIsMine(h)' "Source-backed selected-character property ownership helper"
+require_literal "js/app.js" 'h.owner_name === character.name' "Globally unique public owner-name inference"
+require_literal "js/app.js" 'var KNOWN_PROPERTY_FIXTURES = [' "Source-backed owned-property discovery fixtures"
+require_literal "js/app.js" 'return "Insufficient by " + fmt(price - balance) + " gold";' "Honest insufficient-balance projection"
+forbid_literal "js/app.js" 'Math.max(0, state.goldBalance -' "Fabricated zero balance projection"
+
+for literal in \
+  'id="market-status"' \
+  'id="houses-grid"' \
+  'id="market-confirm-dialog"' \
+  'id="market-confirm-character"' \
+  'id="market-confirm-property"' \
+  'id="market-confirm-balance"' \
+  'id="market-confirm-result"'; do
+  require_literal "market.html" "$literal" "House Registry state / review hook"
+done
+require_literal "market.html" 'Fixed-price only.' "House Registry auction boundary"
+require_literal "js/app.js" 'document.getElementById("house-error-" + id)' "Property IDs remain literal DOM identifiers"
+require_literal "js/app.js" 'var price = input ? Number(input.value) : NaN;' "Listing price parses the complete numeric value"
+forbid_literal "js/app.js" '$("#house-error-" + id)' "Property ID CSS-selector interpolation"
+forbid_literal "js/app.js" 'var price = input ? parseInt(input.value, 10) : NaN;' "Truncating listing-price parser"
+
+require_literal "shop.html" 'High City Patron Pack' "Patron proposal title"
+require_literal "shop.html" 'DESIGN PROPOSAL' "Patron proposal classification"
+require_literal "shop.html" 'NOT YET AVAILABLE' "Patron non-live state"
+require_literal "shop.html" 'PRICE NOT SET' "Patron unknown-price state"
+forbid_literal "shop.html" 'data-checkout' "Patron checkout action"
+
+require_literal "community.html" '<strong>READ ONLY.</strong>' "Community read-only state"
+require_literal "community.html" 'id="forum-root"' "Community board hook"
+require_literal "community.html" 'Posting, replies, reactions, and local drafts are not connected.' "Community posting boundary"
+require_literal "community.html" '<script src="js/forum.js" defer></script>' "Community read-only board renderer"
+require_literal "js/forum.js" 'all[i].id === threadId && all[i].boardId === boardId' "Community thread-to-board binding"
+for literal in 'fetch(' 'XMLHttpRequest' 'WebSocket' 'sendBeacon' 'indexedDB' 'localStorage' 'sessionStorage' 'contenteditable'; do
+  forbid_literal "js/forum.js" "$literal" "Community client-side posting authority"
+done
+
+require_literal "support.html" "WARDEN'S HELP DESK" "Support title"
+require_literal "support.html" 'SUPPORT CHANNEL NOT CONNECTED' "Disconnected support channel state"
+require_literal "support.html" 'id="diagnostic-form"' "Safe diagnostic helper"
+require_literal "support.html" 'id="copy-diagnostics" type="button"' "Copy-only diagnostic action"
+require_literal "support.html" '<script src="js/support.js" defer></script>' "Safe diagnostic helper script"
+for literal in \
+  'Version: 0.1.19-prod-v12' \
+  'Build: 2026082401' \
+  'Supported Android: 8.0+ (API 26+)' \
+  'Page: " + location.pathname.split("/").pop()' \
+  'Device model: ' \
+  'Android version: ' \
+  'Issue category: '; do
+  require_literal "js/support.js" "$literal" "Safe diagnostic field"
+done
+for literal in 'fetch(' 'XMLHttpRequest' 'WebSocket' 'sendBeacon' 'indexedDB' 'document.cookie' 'localStorage' 'sessionStorage' 'csrf' 'bearer'; do
+  forbid_literal "js/support.js" "$literal" "Support diagnostic secret/network access"
+done
+
+require_literal "js/app.js" 'var DOWNLOAD_URL = "/download/akalynth-beta-v12.apk";' "Canonical Android download target"
+forbid_literal "js/app.js" 'PLAY_URL' "Browser-play URL constant"
+
+# Enforce the public product direction without outlawing the immutable APK
+# filename or the internal /v1/beta/me compatibility request. HTML is checked
+# as rendered text, so comments, URLs, and source-only compatibility names do
+# not masquerade as visible release-stage marketing.
+python3 - "$repo_root" "${required_pages[@]}" <<'PY'
+import re
+import sys
+from html.parser import HTMLParser
+from pathlib import Path
+from urllib.parse import urlparse
+
+root = Path(sys.argv[1]).resolve()
+pages = [Path(value) for value in sys.argv[2:]]
+canonical_apk = "/download/akalynth-beta-v12.apk"
+canonical_checksum = canonical_apk + ".sha256"
+errors = []
+
+
+class PublicTextParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.hidden_depth = 0
+        self.visible = []
+        self.apk_hrefs = []
+        self.named_fields = []
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag in {"script", "style", "template"}:
+            self.hidden_depth += 1
+        href = attrs.get("href", "")
+        if href and ".apk" in urlparse(href).path:
+            self.apk_hrefs.append(href)
+        if tag in {"input", "select", "textarea"} and attrs.get("name"):
+            self.named_fields.append(attrs["name"])
+
+    def handle_endtag(self, tag):
+        if tag in {"script", "style", "template"} and self.hidden_depth:
+            self.hidden_depth -= 1
+
+    def handle_data(self, data):
+        if not self.hidden_depth:
+            self.visible.append(data)
+
+
+stage_re = re.compile(r"\b(?:pre[ -]?alpha|alpha|beta)\b", re.IGNORECASE)
+for page in pages:
+    parser = PublicTextParser()
+    source = (root / page).read_text(encoding="utf-8")
+    parser.feed(source)
+    if re.search(r"(?:href|src)\s*=\s*[\"']/play(?:/|[\"'])", source, re.IGNORECASE):
+        errors.append(f"{page}: browser-play route is forbidden")
+    if re.search(r"f[ -]?droid", source, re.IGNORECASE):
+        errors.append(f"{page}: F-Droid distribution reference is forbidden")
+    visible = " ".join(parser.visible)
+    visible = visible.replace("akalynth-beta-v12.apk.sha256", "")
+    visible = visible.replace("akalynth-beta-v12.apk", "")
+    match = stage_re.search(visible)
+    if match:
+        errors.append(f"{page}: visible release-stage wording is forbidden: {match.group(0)!r}")
+    if re.search(r"play\s+in\s+(?:your\s+)?browser", visible, re.IGNORECASE):
+        errors.append(f"{page}: browser-play marketing wording is forbidden")
+    if re.search(r"f[ -]?droid", visible, re.IGNORECASE):
+        errors.append(f"{page}: F-Droid distribution wording is forbidden")
+    for href in parser.apk_hrefs:
+        if href not in {canonical_apk, canonical_checksum}:
+            errors.append(f"{page}: non-canonical APK/checksum target: {href}")
+    if page == Path("support.html"):
+        fields = set(parser.named_fields)
+        if fields != {"device", "android", "category"}:
+            errors.append(
+                "support.html: diagnostic named fields must be exactly "
+                f"device/android/category; found {sorted(fields)!r}"
+            )
+
+js_string_re = re.compile(r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\'|`(?:\\.|[^`\\])*`')
+for relative in (Path("js/app.js"), Path("js/forum.js"), Path("js/support.js")):
+    source = (root / relative).read_text(encoding="utf-8")
+    if re.search(r"(?:^|[\"'])/play(?:/|[\"'])", source):
+        errors.append(f"{relative}: browser-play route is forbidden")
+    if re.search(r"play\s+in\s+(?:your\s+)?browser", source, re.IGNORECASE):
+        errors.append(f"{relative}: browser-play marketing wording is forbidden")
+    if re.search(r"f[ -]?droid", source, re.IGNORECASE):
+        errors.append(f"{relative}: F-Droid distribution wording is forbidden")
+    for token in js_string_re.findall(source):
+        value = token[1:-1]
+        value = value.replace(canonical_checksum, "")
+        value = value.replace(canonical_apk, "")
+        value = value.replace("/v1/beta/me", "")
+        match = stage_re.search(value)
+        if match:
+            errors.append(
+                f"{relative}: release-stage wording in a client-visible string is forbidden: {value!r}"
+            )
+
+if errors:
+    for error in errors:
+        print(f"::error::{error}", file=sys.stderr)
+    sys.exit(1)
+
+print("Android-only public route/copy check passed.")
+PY
 
 guard_call_count="$(grep -F 'var blocked = accountActionBlockedMessage();' js/app.js | wc -l | tr -d '[:space:]')"
 if [[ "$guard_call_count" -lt 5 ]]; then
@@ -295,6 +503,38 @@ for label, marker, window in selected_character_checks:
             errors.append(f"{label}: missing nearby selected-character guard before line {idx + 1}")
         if label == "wallet read" and "state.account" not in context:
             errors.append(f"{label}: missing nearby account guard before line {idx + 1}")
+
+refresh_checks = [
+    (
+        "shop purchase",
+        'api("/v1/shop/purchase", { method: "POST"',
+        30,
+        ("loadWalletState", 'endMutation("shop", itemId)'),
+    ),
+    (
+        "property buy/unlist",
+        'api(buy ? "/v1/property/buy" : "/v1/property/unlist"',
+        35,
+        ("loadWalletState", "loadHouseCards", "endMutation(kind, id)"),
+    ),
+    (
+        "property list",
+        'api("/v1/property/list"',
+        35,
+        ("loadHouseCards", 'endMutation("property-list", id)'),
+    ),
+]
+
+for label, marker, window, required in refresh_checks:
+    for idx, line in enumerate(lines):
+        if marker not in line:
+            continue
+        context = "\n".join(lines[idx : idx + window + 1])
+        for expected in required:
+            if expected not in context:
+                errors.append(
+                    f"{label}: missing nearby post-acceptance {expected} before line {idx + window + 1}"
+                )
 
 if errors:
     for error in errors:
@@ -358,8 +598,9 @@ def should_skip(ref):
     if ref.startswith("#"):
         return True
     path = parsed.path or ref
-    # Prod game lane paths (/play/, /download/) are hosted outside this static site repo.
-    if path == "/play" or path.startswith("/play/") or path.startswith("/download/"):
+    # APK and checksum artifacts are served alongside, but outside, this static
+    # repository. Browser-game routes are deliberately not exempted.
+    if path.startswith("/download/"):
         return True
     return False
 
