@@ -426,6 +426,25 @@ body.theme-dark .ak-release div {
 }
 body.theme-dark .ak-release dt { color: var(--td-muted); }
 body.theme-dark .ak-release dd { margin: 0; font-weight: 600; color: var(--td-text); }
+
+body.theme-dark .release-inspector-status {
+  margin: 12px 0;
+  border-left: 3px solid var(--td-gold);
+  padding: 10px 12px;
+}
+body.theme-dark .release-inspector-status[data-kind="ok"] {
+  border-left-color: #51d88a;
+  color: #b8f1cf;
+}
+body.theme-dark .release-inspector-status[data-kind="error"] {
+  border-left-color: #e5b75c;
+  color: var(--td-muted);
+}
+body.theme-dark .release-inspector-fields code {
+  color: var(--td-text);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 body.theme-dark .ak-steps { margin: 0; padding-left: 22px; }
 body.theme-dark .ak-steps li { margin-bottom: 14px; line-height: 1.62; color: var(--td-soft); }
 body.theme-dark .ak-steps strong { color: var(--td-text); }

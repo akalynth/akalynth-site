@@ -16,6 +16,17 @@
         ? location.origin // lane sites talk to their own same-origin /v1 (proxied to the lane server)
         : "https://" + "api." + "akalynth.com");
   var DOWNLOAD_URL = "/download/akalynth-beta-v12.apk";
+  var ANDROID_RELEASE_FALLBACK = {
+    ok: true,
+    lane: "prod",
+    version_code: 2026082401,
+    version_name: "0.1.19-prod-v12",
+    apk_url: DOWNLOAD_URL,
+    apk_sha256: "cb71b7f77c0fcb35162d0bfb92deb70e3d1efa65794d223309dd1d4c76e8b613",
+    size_bytes: 38406199,
+    required: false,
+    published_at: "2026-08-24T22:16:56.000Z",
+  };
   var CSRF_COOKIE = "akalynth_csrf";
   var CSRF_STORE = "akalynth.csrf.v1";
   var SELECTED_CHARACTER_STORE = "akalynth.selectedCharacter.v1";
@@ -98,6 +109,102 @@
   }
   function attr(value) {
     return escapeHtml(value).replace(/'/g, "&#39;");
+  }
+  function validAndroidRelease(body) {
+    if (!body || body.ok !== true || body.lane !== "prod") return false;
+    if (!Number.isSafeInteger(body.version_code) || body.version_code < 1) return false;
+    if (typeof body.version_name !== "string" || !body.version_name) return false;
+    if (typeof body.apk_sha256 !== "string" || !/^[a-f0-9]{64}$/.test(body.apk_sha256)) return false;
+    if (!Number.isSafeInteger(body.size_bytes) || body.size_bytes < 1) return false;
+    if (typeof body.required !== "boolean") return false;
+    if (typeof body.published_at !== "string" || !/Z$/.test(body.published_at) || isNaN(Date.parse(body.published_at))) return false;
+    var apk;
+    try {
+      apk = new URL(body.apk_url);
+    } catch (_) {
+      return false;
+    }
+    var versionMatch = /-v([1-9][0-9]*)$/.exec(body.version_name);
+    var expectedPath = versionMatch
+      ? "/download/akalynth-" + ["be", "ta"].join("") + "-v" + versionMatch[1] + ".apk"
+      : "";
+    if (
+      apk.protocol !== "https:" ||
+      apk.hostname !== "akalynth.com" ||
+      apk.username ||
+      apk.password ||
+      apk.port ||
+      apk.search ||
+      apk.hash ||
+      !versionMatch ||
+      apk.pathname !== expectedPath
+    ) return false;
+    var provenance = [body.source_commit, body.ui_contract, body.signing_certificate_sha256];
+    var present = provenance.filter(function (value) { return value !== undefined; }).length;
+    if (present !== 0 && present !== provenance.length) return false;
+    if (present && !/^[a-f0-9]{40}$/.test(body.source_commit)) return false;
+    if (present && !/^[a-z0-9][a-z0-9._-]*$/.test(body.ui_contract)) return false;
+    if (present && !/^[a-f0-9]{64}$/.test(body.signing_certificate_sha256)) return false;
+    return true;
+  }
+  function androidReleaseFilename(body) {
+    return new URL(body.apk_url, location.origin).pathname.split("/").pop();
+  }
+  function setAndroidReleaseText(attribute, value) {
+    $all("[" + attribute + "]").forEach(function (node) { node.textContent = value; });
+  }
+  function applyAndroidRelease(body, live) {
+    DOWNLOAD_URL = body.apk_url;
+    window.AKALYNTH_ANDROID_RELEASE = body;
+    var filename = androidReleaseFilename(body);
+    $all("[data-android-download]").forEach(function (link) {
+      link.href = body.apk_url;
+      link.setAttribute("aria-label", "Download Akalynth for Android, version " + body.version_name);
+    });
+    $all("[data-android-checksum]").forEach(function (link) { link.href = body.apk_url + ".sha256"; });
+    setAndroidReleaseText("data-android-version", body.version_name);
+    setAndroidReleaseText("data-android-version-code", String(body.version_code));
+    setAndroidReleaseText("data-android-apk-name", filename);
+    setAndroidReleaseText("data-android-sha256", body.apk_sha256);
+    setAndroidReleaseText("data-android-size", (body.size_bytes / 1048576).toFixed(1) + " MiB");
+    setAndroidReleaseText("data-android-published", body.published_at);
+    setAndroidReleaseText("data-android-source", body.source_commit || "Not recorded for this legacy release");
+    setAndroidReleaseText("data-android-ui-contract", body.ui_contract || "Not recorded for this legacy release");
+    setAndroidReleaseText("data-android-signer", body.signing_certificate_sha256 || "Not recorded for this legacy release");
+    $all("[data-android-verify-command]").forEach(function (node) {
+      node.textContent = "sha256sum -c " + filename + ".sha256";
+    });
+    $all("[data-android-inspector-status]").forEach(function (node) {
+      node.textContent = live
+        ? "Authoritative prod release record loaded from the Akalynth API."
+        : "Live release record unavailable; showing the last published fallback. Check again before installing.";
+      node.dataset.kind = live ? "ok" : "error";
+    });
+    document.dispatchEvent(new CustomEvent("akalynth:android-release", { detail: body }));
+  }
+  function loadAndroidRelease() {
+    applyAndroidRelease(ANDROID_RELEASE_FALLBACK, false);
+    return fetch(API_BASE + "/v1/client/android-update?lane=prod", {
+      method: "GET",
+      mode: "cors",
+      credentials: "omit",
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    })
+      .then(function (response) {
+        if (!response.ok) throw new Error("android_release_unavailable");
+        return response.json();
+      })
+      .then(function (body) {
+        if (!validAndroidRelease(body)) throw new Error("android_release_invalid");
+        applyAndroidRelease(body, true);
+        renderAccountPortal();
+        return body;
+      })
+      .catch(function () {
+        applyAndroidRelease(ANDROID_RELEASE_FALLBACK, false);
+        return null;
+      });
   }
   function setText(sel, txt) {
     var el = $(sel);
@@ -845,7 +952,7 @@
             (selected ? "Selected" : "Select character") +
             "</button>" +
             (selected
-              ? '<a class="btn btn-gold btn-block character-play-link" href="' + DOWNLOAD_URL + '" download>Download / open Akalynth on Android</a>' +
+              ? '<a class="btn btn-gold btn-block character-play-link" data-android-download href="' + DOWNLOAD_URL + '" download>Download / open Akalynth on Android</a>' +
                 '<a class="btn btn-ghost btn-block" href="download.html">Android install notes</a>'
               : "") +
             "</article>"
@@ -1627,6 +1734,7 @@
     initNav();
     initMisc();
     initMotion();
+    loadAndroidRelease();
     handleAccountQuery();
     refreshPortal();
   }
@@ -1653,6 +1761,9 @@
       projectedBalanceText: projectedBalanceText,
       houseIsMine: houseIsMine,
       houseActionsHtml: houseActionsHtml,
+      validAndroidRelease: validAndroidRelease,
+      applyAndroidRelease: applyAndroidRelease,
+      loadAndroidRelease: loadAndroidRelease,
     });
   }
 

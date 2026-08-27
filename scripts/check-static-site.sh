@@ -121,6 +121,9 @@ done
 require_literal "account.html" 'id="account-portal-root"' "Account character portal hook"
 require_literal "download.html" 'href="/download/akalynth-beta-v12.apk"' "Immutable direct Android v12 download"
 require_literal "download.html" 'href="/download/akalynth-beta-v12.apk.sha256"' "Immutable direct Android v12 checksum"
+require_literal "download.html" 'data-android-release-inspector' "Public Android release inspector"
+require_literal "download.html" 'data-android-source' "Android source provenance field"
+require_literal "download.html" 'data-android-signer' "Android signing-certificate field"
 require_literal "support.html" 'href="/download/akalynth-beta-v12.apk.sha256"' "Support checksum guidance"
 require_literal "beta.html" '<meta http-equiv="refresh" content="0; url=download.html" />' "Legacy download compatibility redirect"
 require_literal "beta.html" '<link rel="canonical" href="https://akalynth.com/download.html" />' "Legacy download canonical target"
@@ -324,8 +327,8 @@ require_literal "support.html" 'id="diagnostic-form"' "Safe diagnostic helper"
 require_literal "support.html" 'id="copy-diagnostics" type="button"' "Copy-only diagnostic action"
 require_literal "support.html" '<script src="js/support.js" defer></script>' "Safe diagnostic helper script"
 for literal in \
-  'Version: 0.1.19-prod-v12' \
-  'Build: 2026082401' \
+  '"Version: " + release.version_name' \
+  '"Build: " + release.version_code' \
   'Supported Android: 8.0+ (API 26+)' \
   'Page: " + location.pathname.split("/").pop()' \
   'Device model: ' \
@@ -338,6 +341,10 @@ for literal in 'fetch(' 'XMLHttpRequest' 'WebSocket' 'sendBeacon' 'indexedDB' 'd
 done
 
 require_literal "js/app.js" 'var DOWNLOAD_URL = "/download/akalynth-beta-v12.apk";' "Canonical Android download target"
+require_literal "js/app.js" 'fetch(API_BASE + "/v1/client/android-update?lane=prod"' "Authoritative prod Android release lookup"
+require_literal "js/app.js" 'credentials: "omit"' "Credential-free public release lookup"
+require_literal "js/app.js" 'apk.hostname !== "akalynth.com"' "Android release URL authority validation"
+require_literal "js/app.js" 'present !== 0 && present !== provenance.length' "Complete Android provenance set"
 forbid_literal "js/app.js" 'PLAY_URL' "Browser-play URL constant"
 
 # Enforce the public product direction without outlawing the immutable APK
@@ -373,6 +380,10 @@ class PublicTextParser(HTMLParser):
         href = attrs.get("href", "")
         if href and ".apk" in urlparse(href).path:
             self.apk_hrefs.append(href)
+            if href.endswith(".apk.sha256") and "data-android-checksum" not in attrs:
+                errors.append(f"APK checksum link is not bound to the release record: {href}")
+            if href.endswith(".apk") and "data-android-download" not in attrs:
+                errors.append(f"APK link is not bound to the release record: {href}")
         if tag in {"input", "select", "textarea"} and attrs.get("name"):
             self.named_fields.append(attrs["name"])
 

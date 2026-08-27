@@ -69,6 +69,24 @@ character and companion-action proof for account-scoped create/select/shop/work/
 requests, explicit no-session/no-CSRF inline helper proof, Android-only route
 assertions, and the public boundary guard.
 
+## Android release binding
+
+The checked-in `/download/akalynth-beta-v12.apk` links are the current
+no-JavaScript fallback. At runtime `js/app.js` reads the public,
+credential-free prod Android update record, validates its Akalynth HTTPS
+authority and complete provenance shape, then updates every
+`data-android-download` and `data-android-checksum` target.
+
+`download.html` exposes the same version, build, checksum, source commit, UI
+contract, and public signing-certificate fingerprint in a release inspector.
+Legacy releases without provenance are labelled as such; the browser never
+invents missing values or treats its local state as artifact authority.
+
+Website deployment is owned by the main `akalynth/akalynth` operator runbook
+and publisher. This repository does not deploy itself. The operator must name
+the exact reviewed site commit, and `/download/` remains the independent
+Android artifact lane.
+
 ## License
 
 See `LICENSE`.
