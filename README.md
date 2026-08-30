@@ -71,7 +71,7 @@ assertions, and the public boundary guard.
 
 ## Android release binding
 
-The checked-in `/download/akalynth-beta-v12.apk` links are the current
+The checked-in `/download/akalynth-beta-v13.apk` links are the current
 no-JavaScript fallback. At runtime `js/app.js` reads the public,
 credential-free prod Android update record, validates its Akalynth HTTPS
 authority and complete provenance shape, then updates every

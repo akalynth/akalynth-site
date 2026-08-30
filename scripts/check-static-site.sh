@@ -119,12 +119,12 @@ for literal in \
 done
 
 require_literal "account.html" 'id="account-portal-root"' "Account character portal hook"
-require_literal "download.html" 'href="/download/akalynth-beta-v12.apk"' "Immutable direct Android v12 download"
-require_literal "download.html" 'href="/download/akalynth-beta-v12.apk.sha256"' "Immutable direct Android v12 checksum"
+require_literal "download.html" 'href="/download/akalynth-beta-v13.apk"' "Immutable direct Android v13 download"
+require_literal "download.html" 'href="/download/akalynth-beta-v13.apk.sha256"' "Immutable direct Android v13 checksum"
 require_literal "download.html" 'data-android-release-inspector' "Public Android release inspector"
 require_literal "download.html" 'data-android-source' "Android source provenance field"
 require_literal "download.html" 'data-android-signer' "Android signing-certificate field"
-require_literal "support.html" 'href="/download/akalynth-beta-v12.apk.sha256"' "Support checksum guidance"
+require_literal "support.html" 'href="/download/akalynth-beta-v13.apk.sha256"' "Support checksum guidance"
 require_literal "beta.html" '<meta http-equiv="refresh" content="0; url=download.html" />' "Legacy download compatibility redirect"
 require_literal "beta.html" '<link rel="canonical" href="https://akalynth.com/download.html" />' "Legacy download canonical target"
 require_literal "forum.html" 'location.replace("community.html" + location.search + location.hash);' "Legacy forum compatibility redirect"
@@ -340,7 +340,7 @@ for literal in 'fetch(' 'XMLHttpRequest' 'WebSocket' 'sendBeacon' 'indexedDB' 'd
   forbid_literal "js/support.js" "$literal" "Support diagnostic secret/network access"
 done
 
-require_literal "js/app.js" 'var DOWNLOAD_URL = "/download/akalynth-beta-v12.apk";' "Canonical Android download target"
+require_literal "js/app.js" 'var DOWNLOAD_URL = "/download/akalynth-beta-v13.apk";' "Canonical Android download target"
 require_literal "js/app.js" 'fetch(API_BASE + "/v1/client/android-update?lane=prod"' "Authoritative prod Android release lookup"
 require_literal "js/app.js" 'credentials: "omit"' "Credential-free public release lookup"
 require_literal "js/app.js" 'apk.hostname !== "akalynth.com"' "Android release URL authority validation"
@@ -360,7 +360,7 @@ from urllib.parse import urlparse
 
 root = Path(sys.argv[1]).resolve()
 pages = [Path(value) for value in sys.argv[2:]]
-canonical_apk = "/download/akalynth-beta-v12.apk"
+canonical_apk = "/download/akalynth-beta-v13.apk"
 canonical_checksum = canonical_apk + ".sha256"
 errors = []
 
@@ -406,8 +406,8 @@ for page in pages:
     if re.search(r"f[ -]?droid", source, re.IGNORECASE):
         errors.append(f"{page}: F-Droid distribution reference is forbidden")
     visible = " ".join(parser.visible)
-    visible = visible.replace("akalynth-beta-v12.apk.sha256", "")
-    visible = visible.replace("akalynth-beta-v12.apk", "")
+    visible = visible.replace("akalynth-beta-v13.apk.sha256", "")
+    visible = visible.replace("akalynth-beta-v13.apk", "")
     match = stage_re.search(visible)
     if match:
         errors.append(f"{page}: visible release-stage wording is forbidden: {match.group(0)!r}")

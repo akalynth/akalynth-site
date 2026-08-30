@@ -15,17 +15,20 @@
       : /(^|\.)(beta|staging|sim)\.akalynth\.com$/.test(location.hostname)
         ? location.origin // lane sites talk to their own same-origin /v1 (proxied to the lane server)
         : "https://" + "api." + "akalynth.com");
-  var DOWNLOAD_URL = "/download/akalynth-beta-v12.apk";
+  var DOWNLOAD_URL = "/download/akalynth-beta-v13.apk";
   var ANDROID_RELEASE_FALLBACK = {
     ok: true,
     lane: "prod",
-    version_code: 2026082401,
-    version_name: "0.1.19-prod-v12",
+    version_code: 2026082701,
+    version_name: "0.1.20-prod-v13",
     apk_url: DOWNLOAD_URL,
-    apk_sha256: "cb71b7f77c0fcb35162d0bfb92deb70e3d1efa65794d223309dd1d4c76e8b613",
-    size_bytes: 38406199,
+    apk_sha256: "3dc2786e7a0d989841d9889793494db2b51d307758ce59b7245784017d0070b2",
+    size_bytes: 38599401,
     required: false,
-    published_at: "2026-08-24T22:16:56.000Z",
+    published_at: "2026-08-30T10:55:00.000Z",
+    source_commit: "bd1f1484d2cbc376da4e8bb0bf9e95e75fc737f1",
+    ui_contract: "hud-v2-four-way",
+    signing_certificate_sha256: "47716d7964aba535224ec336ead9c3499ab1f5bac5b485fa59ec9fd08d7c4980",
   };
   var CSRF_COOKIE = "akalynth_csrf";
   var CSRF_STORE = "akalynth.csrf.v1";

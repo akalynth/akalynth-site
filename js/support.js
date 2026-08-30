@@ -7,8 +7,8 @@
   var copy = document.getElementById("copy-diagnostics");
   if (!form || !output || !status || !copy) return;
   var release = window.AKALYNTH_ANDROID_RELEASE || {
-    version_name: "0.1.19-prod-v12",
-    version_code: 2026082401,
+    version_name: "0.1.20-prod-v13",
+    version_code: 2026082701,
   };
 
   function safeValue(name) {

@@ -15,11 +15,11 @@ for accounts, characters, gold, inventory, property ownership, or receipts.
 The Android client source in `akalynth/akalynth` currently establishes:
 
 - application ID `com.akalynth.client`;
-- version name `0.1.19-prod-v12`;
-- version code `2026082401`;
+- version name `0.1.20-prod-v13`;
+- version code `2026082701`;
 - minimum SDK 26, equivalent to Android 8.0 or newer;
-- direct APK path `/download/akalynth-beta-v12.apk`;
-- checksum path `/download/akalynth-beta-v12.apk.sha256`.
+- direct APK path `/download/akalynth-beta-v13.apk`;
+- checksum path `/download/akalynth-beta-v13.apk.sha256`.
 
 The immutable filename retains `beta` for artifact compatibility. That filename
 is not used as a public release-stage claim. Neither APK byte size nor a digest
