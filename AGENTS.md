@@ -16,13 +16,16 @@ Skills live in `.agents/skills/<name>/SKILL.md`.
 | --- | --- |
 | [`site-steward`](.agents/skills/site-steward/SKILL.md) | Any change, check, or publish handoff in this repo, including APK download links and the release inspector |
 
-Cursor and Codex load `.agents/skills/` directly. Claude Code loads it through
-the `.claude/skills` symlink, and reads this file only when no `CLAUDE.md`,
-`.claude/CLAUDE.md`, or `CLAUDE.local.md` exists in the working directory or
-above (Claude Code v2.1.277 or later). Grok reads this file, but its documented
-project skill folder is `.grok/skills/`, which this repo does not ship, so Grok
-skill loading is unproven. `.cursorignore` hides the symlink so Cursor indexes
-each skill once.
+How each tool finds them:
+
+- Cursor and Codex read `.agents/skills/` directly.
+- Claude Code reads them through the `.claude/skills` symlink.
+- Grok reads them through the `.grok/skills` symlink; `./.grok/skills/` is the project path in Grok's skills docs.
+- `.cursorignore` lists both symlinks so Cursor indexes each skill once.
+
+Claude Code reads this `AGENTS.md` only when there is no `CLAUDE.md` or
+`CLAUDE.local.md` in the working directory or above (`.claude/CLAUDE.md` counts
+as a `CLAUDE.md`), and only on Claude Code 2.1.277 or later.
 
 A new skill gets its own folder, with `name` equal to the folder name, a short
 description that leads with when to use it, and `metadata.version`. Use only

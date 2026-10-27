@@ -1,2 +1,3 @@
-# .claude/skills is a symlink to .agents/skills; ignore it so Cursor indexes each skill once.
+# .claude/skills and .grok/skills are symlinks to .agents/skills; ignore both so Cursor indexes each skill once.
 .claude/skills
+.grok/skills
