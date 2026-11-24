@@ -4,6 +4,7 @@ import vm from 'node:vm';
 const appSource = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const requests = [];
 let hooks;
+let rosterCapabilities = {};
 let betaStatusMode = 'success';
 const deferredBetaStatusResponses = [];
 let shopPurchaseMode = 'success';
@@ -209,7 +210,7 @@ function responseFor(request) {
     };
   }
   if (request.path === '/v1/characters' && request.method === 'GET') {
-    return { characters: hooks ? hooks.state.characters : [] };
+    return { characters: hooks ? hooks.state.characters : [], ...rosterCapabilities };
   }
   if (request.path.startsWith('/v1/wallet')) {
     return { balance_gold: 15 };
@@ -290,9 +291,8 @@ function fail(message) {
 }
 
 function assertRequest(path, expectedBody) {
-  const request = requests.find((entry) => entry.path === path);
-  if (!request) fail(`missing request ${path}`);
-  if (request.method !== 'POST') fail(`${path} must use POST`);
+  const request = requests.find((entry) => entry.path === path && entry.method === 'POST');
+  if (!request) fail(`missing POST ${path}`);
   if (request.credentials !== 'include') fail(`${path} must include account session cookies`);
   if (request.csrf !== 'csrf-site-e2d') fail(`${path} must carry CSRF header`);
   for (const [key, value] of Object.entries(expectedBody)) {
@@ -600,6 +600,13 @@ deferredShopPurchaseResponses[0].resolve({
 });
 await firstPendingPurchase;
 
+rosterCapabilities = { character_creation_enabled: false };
+await hooks.loadAccountState();
+if (hooks.dashboardHtml().includes('id="character-form"')) fail('account-only dashboard rendered character creation');
+await assertNoNewRequests('account-only character creation', () => hooks.createAccountCharacter(validCreateBody()));
+rosterCapabilities = {};
+await hooks.loadAccountState();
+if (!hooks.dashboardHtml().includes('id="character-form"')) fail('full-game dashboard lost character creation');
 await hooks.createAccountCharacter(validCreateBody());
 hooks.state.characters = [validCharacter()];
 hooks.rememberSelectedCharacter('char-site-e2d');

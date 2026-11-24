@@ -67,6 +67,7 @@
   var state = {
     account: null,
     characters: [],
+    characterCreationEnabled: true,
     selectedCharacterId: sessionStorage.getItem(SELECTED_CHARACTER_STORE) || "",
     worlds: FALLBACK_WORLDS.slice(),
     outfits: FALLBACK_OUTFITS.slice(),
@@ -497,8 +498,9 @@
     return api("/v1/accounts/me")
       .then(function (body) {
         state.apiOnline = true;
-        state.account = body.account || null;
         return api("/v1/characters").then(function (chars) {
+          state.characterCreationEnabled = chars.character_creation_enabled !== false;
+          state.account = body.account || null;
           state.characters = (chars.characters || []).filter(validCharacter);
           selectedCharacter();
         });
@@ -965,7 +967,7 @@
   function createCharacterHtml() {
     // Email verification is a later, non-blocking lane — characters can be created
     // on an unverified or email-less (nickname-only) account.
-    if (!state.account) return "";
+    if (!state.account || !state.characterCreationEnabled) return "";
     return (
       '<article class="parchment"><p class="lede">Create character</p>' +
       '<form class="account-form" id="character-form" novalidate>' +
@@ -1135,6 +1137,7 @@
       });
   }
   function createAccountCharacter(data) {
+    if (!state.characterCreationEnabled) return Promise.resolve(null);
     if (!validWorldId(data.world_id) || !validSex(data.sex) || !validOutfitId(data.outfit_id)) {
       setMessage("Select a valid world, sex, and outfit from the server catalog.", "error");
       return Promise.resolve(null);
@@ -1755,6 +1758,8 @@
       registrationPayload: registrationPayload,
       refreshControlledBetaStatus: refreshControlledBetaStatus,
       handleAccountQuery: handleAccountQuery,
+      loadAccountState: loadAccountState,
+      dashboardHtml: dashboardHtml,
       loadCatalogs: loadCatalogs,
       loadHouseCards: loadHouseCards,
       safeOwnerName: safeOwnerName,
