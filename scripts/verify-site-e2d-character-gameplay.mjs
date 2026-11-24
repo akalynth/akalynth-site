@@ -4,6 +4,8 @@ import vm from 'node:vm';
 const appSource = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const requests = [];
 let hooks;
+let rosterCapabilities = {};
+let accountId = 'acc-site-e2d';
 let betaStatusMode = 'success';
 const deferredBetaStatusResponses = [];
 let shopPurchaseMode = 'success';
@@ -198,7 +200,7 @@ function responseFor(request) {
     };
   }
   if (request.path === '/v1/accounts/me') {
-    return { account: { account_id: 'acc-site-e2d', email_verified: true, status: 'active' } };
+    return { account: { account_id: accountId, email_verified: true, status: 'active' }, csrf_token: 'csrf-' + accountId };
   }
   if (request.path === '/v1/beta/me') {
     return {
@@ -209,7 +211,7 @@ function responseFor(request) {
     };
   }
   if (request.path === '/v1/characters' && request.method === 'GET') {
-    return { characters: hooks ? hooks.state.characters : [] };
+    return { characters: hooks ? hooks.state.characters : [], ...rosterCapabilities };
   }
   if (request.path.startsWith('/v1/wallet')) {
     return { balance_gold: 15 };
@@ -290,9 +292,8 @@ function fail(message) {
 }
 
 function assertRequest(path, expectedBody) {
-  const request = requests.find((entry) => entry.path === path);
-  if (!request) fail(`missing request ${path}`);
-  if (request.method !== 'POST') fail(`${path} must use POST`);
+  const request = requests.find((entry) => entry.path === path && entry.method === 'POST');
+  if (!request) fail(`missing POST ${path}`);
   if (request.credentials !== 'include') fail(`${path} must include account session cookies`);
   if (request.csrf !== 'csrf-site-e2d') fail(`${path} must carry CSRF header`);
   for (const [key, value] of Object.entries(expectedBody)) {
@@ -600,6 +601,13 @@ deferredShopPurchaseResponses[0].resolve({
 });
 await firstPendingPurchase;
 
+rosterCapabilities = { character_creation_enabled: false };
+await hooks.loadAccountState();
+if (hooks.dashboardHtml().includes('id="character-form"')) fail('account-only dashboard rendered character creation');
+await assertNoNewRequests('account-only character creation', () => hooks.createAccountCharacter(validCreateBody()));
+rosterCapabilities = {};
+await hooks.loadAccountState();
+if (!hooks.dashboardHtml().includes('id="character-form"')) fail('full-game dashboard lost character creation');
 await hooks.createAccountCharacter(validCreateBody());
 hooks.state.characters = [validCharacter()];
 hooks.rememberSelectedCharacter('char-site-e2d');
@@ -633,4 +641,53 @@ assertRequest('/v1/property/buy', { character_id: 'char-site-e2d', property_id: 
 assertRequest('/v1/property/unlist', { character_id: 'char-site-e2d', property_id: 'Azura:H1' });
 assertRequest('/v1/property/list', { character_id: 'char-site-e2d', property_id: 'Azura:H1', price_gold: 77 });
 
+// Hold exactly one response after the server has chosen its result. All
+// subsequent requests, including logout and a new refresh, finish normally.
+function delayNextResponse(path, status = 200) {
+  const ordinaryFetch = context.fetch;
+  let markRequested, release;
+  const requested = new Promise(resolve => { markRequested = resolve; });
+  const hold = new Promise(resolve => { release = resolve; });
+  context.fetch = async (url, options) => {
+    if (new URL(url).pathname !== path) return ordinaryFetch(url, options);
+    context.fetch = ordinaryFetch;
+    const reply = await ordinaryFetch(url, options);
+    const text = await reply.text();
+    markRequested();
+    await hold;
+    return { ok: status === 200, status, text: async () => text };
+  };
+  return { requested, release };
+}
+
+for (const path of ['/v1/characters', '/v1/accounts/me']) {
+  await hooks.loadAccountState();
+  const late = delayNextResponse(path);
+  const refresh = hooks.loadAccountState();
+  await late.requested;
+  await hooks.signOut();
+  late.release();
+  await refresh;
+  if (hooks.state.account || hooks.state.characters.length || store.has('akalynth.csrf.v1')) {
+    fail('a late ' + path + ' response restored signed-out state');
+  }
+}
+
+for (const status of [200, 401]) {
+  accountId = 'acc-previous';
+  rosterCapabilities = { character_creation_enabled: false };
+  const late = delayNextResponse('/v1/characters', status);
+  const previous = hooks.loadAccountState();
+  await late.requested;
+  accountId = 'acc-current';
+  rosterCapabilities = {};
+  await hooks.loadAccountState();
+  late.release();
+  await previous;
+  if (hooks.state.account?.account_id !== accountId || !hooks.state.characterCreationEnabled ||
+      store.get('akalynth.csrf.v1') !== 'csrf-acc-current') {
+    fail('a superseded roster response changed the current account');
+  }
+}
+console.log('Delayed account and roster responses passed logout and account-switch checks.');
 console.log('site e2d Android companion authority verifier passed');
