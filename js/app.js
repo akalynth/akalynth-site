@@ -90,6 +90,7 @@
     accountView: "",
     betaCohort: null,
   };
+  var accountGeneration = 0;
   var betaStatusRequestGeneration = 0;
 
   function $(sel, root) {
@@ -291,6 +292,7 @@
     rememberSelectedCharacter("");
   }
   function clearLocalSessionUi(message, kind) {
+    accountGeneration += 1;
     sessionStorage.removeItem(CSRF_STORE);
     clearAccountScopedUiState();
     state.message = message;
@@ -320,7 +322,6 @@
         } catch (err) {
           body = { ok: false, error: text || res.statusText };
         }
-        rememberCsrf(body);
         if (!res.ok) {
           var message = body.message || body.error || res.statusText || "Request failed";
           var e = new Error(message);
@@ -494,11 +495,15 @@
     ]);
   }
 
-  function loadAccountState() {
+  function loadAccountState(generation = ++accountGeneration) {
+    if (generation !== accountGeneration) return Promise.resolve();
     return api("/v1/accounts/me")
       .then(function (body) {
-        state.apiOnline = true;
+        if (generation !== accountGeneration) return;
         return api("/v1/characters").then(function (chars) {
+          if (generation !== accountGeneration) return;
+          state.apiOnline = true;
+          rememberCsrf(body);
           state.characterCreationEnabled = chars.character_creation_enabled !== false;
           state.account = body.account || null;
           state.characters = (chars.characters || []).filter(validCharacter);
@@ -506,6 +511,7 @@
         });
       })
       .catch(function (err) {
+        if (generation !== accountGeneration) return;
         if (err && err.status === 401) {
           state.apiOnline = true;
           clearAccountScopedUiState();
@@ -517,16 +523,18 @@
   }
 
   function loadWalletState() {
+    var generation = accountGeneration;
     var character = selectedCharacter();
     state.goldBalance = null;
     if (!state.account || !character) return Promise.resolve(false);
     return api("/v1/wallet?character_id=" + encodeURIComponent(character.character_id))
       .then(function (body) {
+        if (generation !== accountGeneration) return false;
         state.goldBalance = typeof body.balance_gold === "number" ? body.balance_gold : null;
         return state.goldBalance != null;
       })
       .catch(function () {
-        state.goldBalance = null;
+        if (generation === accountGeneration) state.goldBalance = null;
         return false;
       });
   }
@@ -534,18 +542,22 @@
   function refreshLibraryDiscovery() {
     if (pageName() !== "library") return Promise.resolve();
     if (!state.account || !state.selectedCharacterId) return Promise.resolve();
+    var generation = accountGeneration;
     return api("/v1/library/discovery?character_id=" + encodeURIComponent(state.selectedCharacterId))
       .then(function (body) {
+        if (generation !== accountGeneration) return;
         if (window.AKALYNTH_APPLY_LIBRARY_DISCOVERY) window.AKALYNTH_APPLY_LIBRARY_DISCOVERY(body);
       })
       .catch(function () {});
   }
 
   function refreshPortal() {
+    var generation = ++accountGeneration;
     return loadCatalogs()
-      .then(loadAccountState)
-      .then(loadWalletState)
+      .then(function () { return loadAccountState(generation); })
+      .then(function () { if (generation === accountGeneration) return loadWalletState(); })
       .then(function () {
+        if (generation !== accountGeneration) return;
         renderAll();
         void refreshControlledBetaStatus();
         return refreshLibraryDiscovery();
@@ -1196,7 +1208,8 @@
       e.preventDefault();
       if (!lockForm(login)) return;
       api("/v1/accounts/login", { method: "POST", body: formData(login) })
-        .then(function () {
+        .then(function (body) {
+          rememberCsrf(body);
           state.message = "Signed in.";
           state.messageKind = "ok";
           return refreshPortal();
@@ -1758,6 +1771,7 @@
       registrationPayload: registrationPayload,
       refreshControlledBetaStatus: refreshControlledBetaStatus,
       handleAccountQuery: handleAccountQuery,
+      signOut: signOut,
       loadAccountState: loadAccountState,
       dashboardHtml: dashboardHtml,
       loadCatalogs: loadCatalogs,

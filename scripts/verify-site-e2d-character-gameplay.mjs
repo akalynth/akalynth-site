@@ -5,6 +5,7 @@ const appSource = readFileSync(new URL('../js/app.js', import.meta.url), 'utf8')
 const requests = [];
 let hooks;
 let rosterCapabilities = {};
+let accountId = 'acc-site-e2d';
 let betaStatusMode = 'success';
 const deferredBetaStatusResponses = [];
 let shopPurchaseMode = 'success';
@@ -199,7 +200,7 @@ function responseFor(request) {
     };
   }
   if (request.path === '/v1/accounts/me') {
-    return { account: { account_id: 'acc-site-e2d', email_verified: true, status: 'active' } };
+    return { account: { account_id: accountId, email_verified: true, status: 'active' }, csrf_token: 'csrf-' + accountId };
   }
   if (request.path === '/v1/beta/me') {
     return {
@@ -640,4 +641,53 @@ assertRequest('/v1/property/buy', { character_id: 'char-site-e2d', property_id: 
 assertRequest('/v1/property/unlist', { character_id: 'char-site-e2d', property_id: 'Azura:H1' });
 assertRequest('/v1/property/list', { character_id: 'char-site-e2d', property_id: 'Azura:H1', price_gold: 77 });
 
+// Hold exactly one response after the server has chosen its result. All
+// subsequent requests, including logout and a new refresh, finish normally.
+function delayNextResponse(path, status = 200) {
+  const ordinaryFetch = context.fetch;
+  let markRequested, release;
+  const requested = new Promise(resolve => { markRequested = resolve; });
+  const hold = new Promise(resolve => { release = resolve; });
+  context.fetch = async (url, options) => {
+    if (new URL(url).pathname !== path) return ordinaryFetch(url, options);
+    context.fetch = ordinaryFetch;
+    const reply = await ordinaryFetch(url, options);
+    const text = await reply.text();
+    markRequested();
+    await hold;
+    return { ok: status === 200, status, text: async () => text };
+  };
+  return { requested, release };
+}
+
+for (const path of ['/v1/characters', '/v1/accounts/me']) {
+  await hooks.loadAccountState();
+  const late = delayNextResponse(path);
+  const refresh = hooks.loadAccountState();
+  await late.requested;
+  await hooks.signOut();
+  late.release();
+  await refresh;
+  if (hooks.state.account || hooks.state.characters.length || store.has('akalynth.csrf.v1')) {
+    fail('a late ' + path + ' response restored signed-out state');
+  }
+}
+
+for (const status of [200, 401]) {
+  accountId = 'acc-previous';
+  rosterCapabilities = { character_creation_enabled: false };
+  const late = delayNextResponse('/v1/characters', status);
+  const previous = hooks.loadAccountState();
+  await late.requested;
+  accountId = 'acc-current';
+  rosterCapabilities = {};
+  await hooks.loadAccountState();
+  late.release();
+  await previous;
+  if (hooks.state.account?.account_id !== accountId || !hooks.state.characterCreationEnabled ||
+      store.get('akalynth.csrf.v1') !== 'csrf-acc-current') {
+    fail('a superseded roster response changed the current account');
+  }
+}
+console.log('Delayed account and roster responses passed logout and account-switch checks.');
 console.log('site e2d Android companion authority verifier passed');
