@@ -1274,7 +1274,7 @@
     var fragment = location.hash && location.hash.charAt(0) === "#"
       ? new URLSearchParams(location.hash.slice(1))
       : new URLSearchParams();
-    var verify = params.get("verify");
+    var verify = fragment.get("verify") || params.get("verify");
     var reset = fragment.get("reset");
     var view = params.get("view");
     if (view === "register" || view === "forgot") state.accountView = view;
